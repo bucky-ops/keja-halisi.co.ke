@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // PATCH /api/dashboard/units — toggle unit availability (with confirm on client)
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";

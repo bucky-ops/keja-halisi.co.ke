@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // GET /api/trust/check — SCAM SHIELD: look up an agent by TikTok handle or phone digits
 // and return an explainable trust verdict from catalog evidence (verification status,
 // viewing-fee signals, community reports, reviews). Nothing here is a guarantee —

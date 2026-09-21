@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // POST /api/verify/otp/check — verify code + Truecaller phone-age mock (>6 months)
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";

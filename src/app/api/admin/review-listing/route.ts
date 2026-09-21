@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // POST /api/admin/review-listing — approve/reject listing (publish_state)
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // GET /api/admin/analytics — 14-day trust trend buckets (listings / reports / leads).
 // SQLite-friendly: fetch last-14d createdAt rows and bucket in JS (demo dataset is small).
 import { NextResponse } from "next/server";

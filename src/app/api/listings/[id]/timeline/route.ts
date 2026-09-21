@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // GET /api/listings/[id]/timeline — public trust ledger for one listing.
 // Append-only audit_events filtered to meaningful lifecycle events (viewed noise excluded).
 import { NextRequest, NextResponse } from "next/server";

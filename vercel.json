@@ -2,6 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "regions": ["fra1"],
+  "buildCommand": "prisma generate --schema prisma/schema.postgres.prisma && next build",
+  "installCommand": "bun install",
   "crons": [
     {
       "path": "/api/cron/expire-listings",

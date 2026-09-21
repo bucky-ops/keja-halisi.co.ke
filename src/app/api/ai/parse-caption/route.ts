@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // POST /api/ai/parse-caption — Gemini Vision caption parse (mock) + TikTok link validation
 import { NextRequest, NextResponse } from "next/server";
 

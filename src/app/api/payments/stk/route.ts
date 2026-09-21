@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // POST /api/payments/stk — M-Pesa Daraja STK Push SIMULATION (no real payment)
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // POST /api/leads — log lead with masked phone (minimum necessary contact data)
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";

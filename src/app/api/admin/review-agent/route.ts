@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // POST /api/admin/review-agent — approve/reject verification (audit logged)
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";

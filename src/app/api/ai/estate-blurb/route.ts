@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // POST /api/ai/estate-blurb — LLM estate orientation guide (Gemini-class model)
 // Server-only SDK call with deterministic offline fallback + in-memory cache.
 // lang: "en" (default) | "sheng" — Nairobi Sheng-English street mix for round-10 toggle.

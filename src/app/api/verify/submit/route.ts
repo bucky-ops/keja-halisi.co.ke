@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // POST /api/verify/submit — role-aware verification submission (pending → admin queue)
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";

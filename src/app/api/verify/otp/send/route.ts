@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // POST /api/verify/otp/send — Africa's Talking OTP mock (returns demo code)
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";

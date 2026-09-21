@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // POST /api/reports — submit report; 3 reports => auto-hide (publish_state=rejected)
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
