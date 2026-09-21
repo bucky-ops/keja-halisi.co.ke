@@ -238,6 +238,12 @@ async function main() {
     await db.lead.create({ data: { listingId: listingIds[idx], action, phoneMasked: masked, createdAt: new Date(now - hoursAgo * H) } });
   }
 
+  // backfill listingsCount per agent from approved listings
+  for (const [handle, agentId] of agentMap) {
+    const n = await db.listing.count({ where: { posterId: agentId, publishState: "approved" } });
+    await db.agent.update({ where: { id: agentId }, data: { listingsCount: n } });
+  }
+
   console.log("Seeding audit events...");
   const audits: [string, string, string, string][] = [
     ["admin", "listing.approved", "listing", listingIds[0]],
