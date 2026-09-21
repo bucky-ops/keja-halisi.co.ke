@@ -122,3 +122,51 @@ Stage Summary:
 - Files: NEW src/components/keja/views/saved.tsx, src/components/keja/rating.tsx; MODIFIED store.ts (saved ViewName, activity, lowData), nav.tsx (Saved nav + Data Saver + footer links + bottom nav), listing.tsx (rate card + call bar + lowdata embed), agent.tsx (identity card fix + upvote/rate), map.tsx (pin colors), modals.tsx (onLeadLogged), page.tsx (saved route + skip link)
 - Store additions are backward-compatible (persisted keys: activity, lowData merge into existing keja-halisi-state)
 - Next-round ideas: dark mode (needs token refactor), renter reports view, admin export CSV, listing edit for posters, i18n Swahili toggle
+
+---
+Task ID: cron-r3 (2026-09-21 17:49 review round)
+Agent: main orchestrator (Z.ai Code)
+Task: QA sweep + dark mode + i18n + compare + notifications + admin CSV + report log
+
+Work Log:
+- QA via agent-browser (1440 + 390): all views healthy, no runtime errors. Found issues:
+  1. Header nav duplicated/cluttered (Saved ×2, Dashboard ×2 pills) → FIXED: full header redesign
+  2. compare.tsx grid missing `grid` class (stacked instead of columns) → FIXED
+  3. compare.tsx VerificationBadge called without status prop (all showed "Pending review") → FIXED: passes status+role, mirrors card logic
+  4. FeeWarningBadge overlapped new compare button on cards → FIXED: moved to bottom-right of cover
+  5. Lint: setState-in-effect (compare-bar) + components-created-during-render (compare Best/Row) → FIXED
+
+DARK MODE (full token refactor):
+- globals.css: keja tokens (surface/body/kbg/kline/kmuted, trust/verified/pending/scam-softs, ok/warn/danger-strong, shimmer, map-grid) converted to CSS vars under :root with .dark overrides; ink stays solid-dark for bg-ink text-white surfaces
+- Mechanical sweep: text-ink→text-body (198 hits), bg-white→bg-surface (102 hits); on-dark glass pills (hero/stats/footer/embeds) reverted to bg-white/x; hex text colors swept to semantic tokens (text-ok/warn/warn-strong/danger-strong/ok-strong)
+- ThemeToggle in header + persisted via store (zustand persist) applied to <html>.dark in page.tsx effect
+- Verified dark on home/find card/estate/listing/dashboard/payments/admin — all readable, shadows+glows intact
+
+I18N (EN/Kiswahili):
+- src/lib/i18n.ts: 90-key dictionary + useT() hook (EN fallback); LangPill toggle in header (SW/EN)
+- Wired into TopBar, Header nav labels, BottomNav, Footer, home (hero eyebrow/title/sub, trust snapshot labels, find card, budget, boroughs, featured, how-it-works, banner, trust pills); listing/estate data intentionally untranslated
+- Browser-verified: "Acha Kusogeza Keja bandia." + "Hali ya Uaminifu" + Swahili nav render correctly
+
+COMPARE FEATURE:
+- store: compare[] (cap 3 + toasts), toggleCompare/clearCompare
+- listing-card: Scale toggle button on cover (active = trust blue)
+- compare-bar.tsx: floating tray bar (chips + Compare now / "1 more…" + clear), hidden on compare view, above bottom nav on mobile
+- views/compare.tsx: side-by-side table (up to 3), per-row BEST pills (lowest price, biggest size, fastest response, closest road, no-fee, evidence 5/5), poster badges mirrored, CTA row + anti-scam reminder; responsive min-w scroll on mobile
+
+NOTIFICATIONS:
+- store: activity.notifications (cap 12) + lastReadAt + notify()/markAllRead(); toggleSaved auto-notifies
+- nav: NotificationsBell — unread badge (pop animation), dropdown feed (kind-colored dots, relTime, click-outside/Escape close, auto mark-read after 1.2s, privacy note, empty state)
+- Wired: lead logged (call/whatsapp) + report submitted (listing.tsx via new ReportModal onReported callback), publish (post.tsx), OTP verified (verify.tsx), STK simulated (payments.tsx), upvote (store), CSV export (admin)
+
+OTHER:
+- admin.tsx: CSV export button (agents/listings/reports tabs) — blob download, masked fields only, notify on export
+- saved.tsx: "Your scam reports" (status chips: Hidden•3 strikes / Under review) + "Recent activity" feed sections
+- page.tsx: key={view} + .view-in animation (reduced-motion safe); PWA public/manifest.webmanifest + manifest/theme-color in layout.tsx
+- Styling polish: global focus-visible trust-blue rings, ::selection tint, header h-64px, FeeWarningBadge repositioned
+
+Verification: eslint 0 problems; tsc clean for app code (pre-existing examples/skills errors unrelated); browser-verified flows: theme toggle both ways, SW/EN switch, 3-listing compare table with BEST pills, bell badge + feed after save, admin CSV button present, mobile 390 menu + bottom nav compare badge, dark mode on 6 views
+
+Stage Summary:
+- Files: NEW src/lib/i18n.ts, src/components/keja/compare-bar.tsx, src/components/keja/views/compare.tsx, public/manifest.webmanifest; MODIFIED globals.css (token refactor), store.ts (theme/lang/compare/notifications/reportLog), nav.tsx (redesigned), page.tsx, listing-card.tsx, modals.tsx (onReported), views/{home,listing,saved,admin,post,verify,payments}.tsx
+- Backward-compatible store migrations (new persisted keys merge into keja-halisi-state)
+- Next-round ideas: estate/listing view i18n expansion, auto-translate listing titles via Gemini, renter auth (real accounts), map cluster sizing, keyboard shortcuts, print-friendly listing sheet
