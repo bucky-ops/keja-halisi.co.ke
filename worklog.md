@@ -69,3 +69,29 @@ Stage Summary:
 - Files created (only): src/components/keja/views/home.tsx, src/components/keja/views/estate.tsx, src/components/keja/views/listing.tsx — default exports HomeView/EstateView/ListingView, 'use client', no props, wrapped in mx-auto max-w-[1440px] px-4 py-6, touch-target/min-h-11 controls, brand tokens only, no Header/TopBar/Footer/BottomNav rendered
 - Decisions: (1) home stats count-up re-runs 1.8s once fetchHomeStats resolves (fallback seeds 1247/3421/892 so hero never shows 0); (2) estate loading = derived from JSON queryKey vs stored payload key → zero sync setState in effects (react-hooks/set-state-in-effect clean) and correct skeletons on every filter change; (3) amenities filtered client-side (documented API limitation), trust filters pass through to API; (4) estate search input bound directly to filters.q (no debounce layer — store is source of truth, Clear filters syncs automatically); (5) report auto-hide detection via silent re-fetch on ReportModal close (modal's submitReport response isn't exposed to the view, 404 = 3-strike hide) then toast error + redirect to estate; (6) oEmbed attempted for real but offline-safe styled fallback is the primary visual; (7) featured rail prefers freshH ≤24 when ≥4 exist, else shows full response-sorted result
 - Wiring for orchestrator (task 4): navigate("home") → HomeView, navigate("estate"[, {borough?,subCounty?,estate?,beds?,q?,minPrice?,maxPrice?}]) → EstateView (params auto-applied to filters on mount), navigate("listing", {listingId}) → ListingView
+
+---
+Task ID: 4
+Agent: main orchestrator (Z.ai Code)
+Task: SPA integration, end-to-end QA via agent-browser, git phase tags
+
+Work Log:
+- Integrated page.tsx as SPA shell: TopBar + Header + ActiveView switch + Footer (mt-auto sticky) + mobile BottomNav; per-view document.title sync
+- Removed agent temp dirs (tmp_spec/, agent-ctx/); `bun run lint` → 0 problems
+- Fixed noisy prisma query logging (log: ['error','warn'])
+- agent-browser QA (desktop 1440 + mobile 390):
+  * Home: hero "Stop Scrolling Fake Kejas.", count-up trust snapshot (1,246/3,421/892), Find Keja card, Market Pulse live (123 verified today/36 scams/11min/13 fresh), Trustbar, Featured Verified TikTok rail, How-it-works, Hakuna Kulipa banner ✓
+  * Estate: breadcrumb, smart filters sidebar, trust chips — No Viewing Fee toggle → 17→14 listings ✓, Fresh ≤24h → 13 ✓, search Umoja → 1 ✓, cards/map toggle, weather, SEO box ✓
+  * Listing detail: TikTok embed fallback (oEmbed attempt + offline-safe), price panel KES 35,000 + pulsing Available, agent card + Verified badge, Call Agent → ContactModal masked "07** *** 001" → Log Lead • Reveal → "+254712345001" + lead persisted in DB ✓, specs/amenities/location strip, Report modal 6 reasons ✓
+  * 3-STRIKE AUTO-HIDE: submitted 3rd report on Umoja listing (had 2) → DB {reportsCount:3, publishState:rejected, status:Taken}, toasts "Thanks! Review in 1h — listing hidden after 3 reports" + "Listing hidden after 3 reports", removed from grid ✓
+  * Admin: tabs with counts, @pending_agent_ke Approve → verificationStatus=verified + audit "agent.approved" ✓, cron panel buttons, private-vault ID preview toast ✓
+  * Payments: ENFORCED policy bar, escrow card, wallet KES 12,400, Pro/Enterprise cards; STK modal → 4 steps auto-advance → KRA receipt "KH-2026-4934" + "STK Push simulated • no real payment was made" ✓
+  * Verify: 4 role cards → OTP send (demo code returned) → 6-box fill → verified → auto-advance to Evidence; session pill "OTP OK • 07123456****" ✓
+  * Mobile 390px: no horizontal scroll, single-col cards, bottom nav (Home/Estates/Post/Verify/Leads), hamburger menu ✓
+- Reseeded pristine demo state + backfilled agents.listingsCount
+- Git: 9 phase commits with conventional messages, 10 tags (v0.0.1-init → v1.0.0)
+
+Stage Summary:
+- ALL core flows browser-verified working; no console errors; lint clean
+- Known intentional demo states: fee-signal listings (Zimmerman/Langata/Umoja), taken Kasarani 1BR, pending agent, Umoja at 2/3 reports
+- External integrations (TikTok oEmbed, Maps, OpenWeather, Africa's Talking, Gemini, M-Pesa) are sandbox-mocked with production slot documented in .env.example + docs/architecture.md
