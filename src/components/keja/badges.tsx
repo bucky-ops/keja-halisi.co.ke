@@ -21,7 +21,7 @@ export function GoldBadge({ className, label = "Gold Developer" }: { className?:
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full bg-gold/25 border border-gold/50 text-warn px-2 py-0.5 text-[10.5px] font-extrabold",
+        "badge-shimmer relative inline-flex items-center gap-1 overflow-hidden rounded-full bg-gold/25 border border-gold/50 text-warn px-2 py-0.5 text-[10.5px] font-extrabold",
         className
       )}
     >

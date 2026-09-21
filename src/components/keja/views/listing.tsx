@@ -15,6 +15,7 @@ import { VerificationBadge, TrustChecksNotice, PrivacyNotice, FeeWarning } from 
 import { ReportModal, ContactModal } from "../modals";
 import { ViewingModal } from "../viewing";
 import { RatingSheet } from "../rating";
+import { FairPriceWidget } from "../fair-price";
 import type { ListingDTO } from "@/lib/types";
 
 type Oembed = { thumb: string | null; author: string | null } | null;
@@ -419,7 +420,7 @@ export default function ListingView() {
           <section>
             <button
               onClick={() => navigate("agent", { handle: l.poster.tiktokHandle })}
-              className="w-full rounded-3xl border border-kline bg-surface p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
+              className="w-full card-lift rounded-3xl border border-kline bg-surface p-4 text-left"
               aria-label={`Open agent profile ${l.poster.tiktokHandle}`}
             >
               <div className="flex items-center gap-3">
@@ -501,7 +502,10 @@ export default function ListingView() {
             </div>
           </section>
 
-          {/* 7. location */}
+          {/* 5. fair-price radar (anti-bait) */}
+          <FairPriceWidget listing={l} />
+
+          {/* 6. location */}
           <section className="rounded-3xl border border-kline bg-surface p-4" aria-label="Location">
             <p className="flex items-start gap-1.5 text-[12px] font-bold leading-relaxed text-body">
               <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-trust" />

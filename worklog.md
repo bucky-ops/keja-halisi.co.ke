@@ -196,3 +196,40 @@ Stage Summary:
 - Files: NEW src/components/keja/command-palette.tsx, src/components/keja/viewing.tsx; MODIFIED store.ts (recent/pushRecent/clearRecent, viewingLog/logViewing, persist merge + defensive spreads), nav.tsx (Search trigger, TopBar print:hidden, footer view-aware padding), logo.tsx (mobile tagline/nowrap), listing-card.tsx (badge max-w), views/listing.tsx (recent push, viewing modal, share/print/save, KES/sqm, print sheet, pb fixes), views/home.tsx (recent rail), views/saved.tsx (viewing bookings card), views/saved i18n keys in i18n.ts, globals.css (print rules), app/page.tsx (CommandPalette mount)
 - Store changes are backward-compatible for OLD sessions thanks to persist merge(); new sessions get everything by default
 - Next-round ideas: mobile palette entry in burger sheet, viewing reminders (cron nudge before slot), saved-search alerts, agent response-time simulation on lead, i18n for estate/admin chrome, listing edit for posters
+---
+Task ID: cron-r5 (2026-09-21 18:49 review round)
+Agent: main orchestrator (Z.ai Code)
+Task: QA sweep (agent-browser 1440+390) + trust-tools feature round: fair-price radar, scam safety quiz, agent leaderboard, owner poster tools, styling polish
+
+Work Log:
+- QA sweep desktop 1440 + mobile 390 across all 12 existing views: server 200, lint clean, 0 horizontal overflow, no runtime errors. No regressions found (suspected "Beddsitter" typo was a false positive — source verified correct).
+- BUG FIX: agents podium used lowercase <medal> JSX variable → React threw "tag <medal> is unrecognized" on leaderboard mount → renamed to MedalIcon (capitalized component).
+
+NEW FEATURES (all browser-verified desktop + mobile):
+1. FAIR-PRICE RADAR ("Is this price fair?") — anti-bait pricing widget on listing detail right rail.
+   - NEW API GET /api/market/fair-price (src/app/api/market/fair-price/route.ts): tiered comps engine — same estate+beds → same sub-county+beds → same borough+beds → seeded estate-average fallback (multipliers Bedsitter 0.7 / 1BR 1.0 / 2BR 1.55 / 3BR 2.0 calibrated against seed catalog). Returns min/p25/median/p75/max, compCount, scope + verdict band: ≤0.62 bait 🚩 · ≤0.85 below · ≤1.15 fair · ≤1.4 above · else high, each with tone + guidance note.
+   - NEW component src/components/keja/fair-price.tsx: verdict pill (ok/warn/scam tones), range bar with p25-p75 shaded band + clamped price marker, comp source line, "not a valuation" disclaimer; payload-keyed state (no cascading setState, lint-clean); fails silent (renders null) so trust UI never breaks. Verified: Kasarani bedsitter 8k → "fair" (seed-avg 9k), Kileleshwa 1BR 9k → "bait" (live comps median 40k), Lavington 42k → "fair" (3 sub-county comps), Umoja 2BR 25k → "above".
+2. SCAM SAFETY QUIZ ("Scam au Legit?") — NEW view quiz.tsx + store ViewName "quiz".
+   - 8 real Nairobi scenarios (viewing-fee-before-viewing, bait pricing, WhatsApp VIP groups, reposted videos, masked phone, evidence checklist, deposit-after-viewing, caretaker mandate); each scam/legit pick → instant green/red feedback, Sheng explanation + RULE pill; progress bar, live ✓ count, per-question toasts.
+   - Score screen: % + badge tiers (Fresh Renters <50 / Still Learning 50 / Keja Guardian 70 / Scam Detective 90) with NEW BEST confetti + gradient skill bar; best score + run count persisted via new store.recordQuiz(pct) (activity.quizBest/quizRuns, backward-compatible via partialize+merge).
+   - Intro screen with best-score chip; wired into home (Scam Radar tile showing "Best score N%"), More menu, burger sheet, footer quick links, palette.
+3. AGENT TRUST LEADERBOARD — NEW view agents.tsx + ViewName "agents".
+   - Composite trust score: rating×10 + listings×2 + speed bonus (20 − response min) + tier bonus (Gold 30 / Verified 20 / Caretaker 14) + 8 per local community vouch; unverified/rejected never rank.
+   - Top-3 podium cards (1st gold-tinted + Crown, -translate-y-2 lift), ranked table rows (#4+) with Vouch buttons (reuses toggleUpvote), 4 filter chips (All/Verified/Gold/Caretakers) + 4 sort keys (Trust score/Rating/Fastest/Most listings), methodology card + "Get verified" CTA. Entry: home Top-trusted teaser (top 3 rows), More menu, burger sheet, footer, palette.
+4. OWNER POSTER TOOLS — dashboard Owner tab "Your live listings" panel (demo persona @east_hub).
+   - Inline rent edit (price pill → input → save; KES 1,000–1,000,000 validation), Mark taken/available toggle, Relist 7d button (appears when expiring <48h or Taken) → all backed by extended PATCH /api/listings/[id] which now accepts {status} | {price, deposit?} | {action:"relist"} (relist = status Available + expiresAt+7d + freshH 0, all audit-logged).
+   - Browser-verified round-trip: price 30,000→31,500 reflected in UI + audit trail; Taken→Available toggle; invalid price rejected server-side; demo seed prices restored after tests.
+5. STYLING POLISH (mandatory round):
+   - GoldBadge now has badge-shimmer: diagonal white shine sweep every 3.2s (disabled under prefers-reduced-motion).
+   - New .card-lift utility (lift −3px + trust-blue ring + deeper shadow on hover, reduced-motion safe) applied to listing cards, mini rail cards, borough cards, agent card on listing detail.
+   - Home Trustbar card (was sparse/empty bottom half) now balanced with core trust-rules list (no fee before viewing / masked phone / vault door number / 3-strike hide).
+   - New home section 5a: Scam Radar quiz tile (TikTok gradient + glows + best score chip) paired with Top trusted agents teaser — fills the pulse/trustbar band with actionable trust tools.
+
+Files: NEW src/app/api/market/fair-price/route.ts, src/components/keja/fair-price.tsx, src/components/keja/views/quiz.tsx, src/components/keja/views/agents.tsx; MODIFIED store.ts (views quiz/agents, quizBest/quizRuns + recordQuiz), i18n.ts (+34 EN/SW keys), api.ts (fetchFairPrice/updateListingPrice/relistListing + FairPrice type), page.tsx (routes + titles), nav.tsx (More/burger/footer entries), command-palette.tsx (2 nav entries + icons), views/home.tsx (section 5a + teaser), views/dashboard.tsx (OwnerListings component), views/listing.tsx (widget + card-lift), market-pulse.tsx (trust rules), badges.tsx (shimmer), listing-card.tsx (card-lift), globals.css (goldShine keyframe + card-lift).
+
+Verification: eslint 0 problems; fair-price API verified across 5 estates incl. bait/below/fair/above bands + seed fallback; PATCH price/status/relist verified via curl incl. validation error; agent-browser walk: quiz full 8-question run → 100% Scam Detective + NEW BEST + confetti; leaderboard podium/table/vouch renders; owner tools edit + toggle round-trip; all 14 views navigated via palette with zero console errors; mobile 390 overflow 0px; light + dark verified.
+
+Stage Summary:
+- Round 5 shipped: fair-price radar, scam quiz, trust leaderboard, poster tools, shimmer/lift polish — anti-scam mission extended from detection (reports/flags) into education (quiz) and price-transparency (fair-price).
+- Store/API changes fully backward-compatible; demo seed data restored after destructive tests (Karen 85k / South C 30k / Available).
+- Next-round ideas: saved-search alerts (notify when new listings match filters), viewing reminders via cron nudge, map cluster sizing, AI-generated estate blurbs, share-to-TikTok deep links with OG images, agent response-time simulation on lead.

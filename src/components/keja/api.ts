@@ -128,6 +128,49 @@ export async function toggleListingStatus(id: string, status: string) {
   return res.json();
 }
 
+export async function updateListingPrice(id: string, price: number, deposit?: number) {
+  const res = await fetch(`/api/listings/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ price, deposit }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? "Price update failed");
+  }
+  return res.json() as Promise<{ id: string; price: number; deposit: number }>;
+}
+
+export async function relistListing(id: string) {
+  const res = await fetch(`/api/listings/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "relist" }),
+  });
+  if (!res.ok) throw new Error("Relist failed");
+  return res.json() as Promise<{ id: string; status: string; expiresAt: string }>;
+}
+
+export type FairPrice = {
+  price: number;
+  band: "bait" | "below" | "fair" | "above" | "high";
+  verdict: { label: string; tone: "ok" | "warn" | "scam"; note: string };
+  stats: { min: number; p25: number; median: number; p75: number; max: number };
+  compCount: number;
+  scope: "estate" | "sub-county" | "borough" | "seed-average";
+  estate: string;
+  beds: string;
+};
+
+export async function fetchFairPrice(estate: string, beds: string, price: number, exclude?: string): Promise<FairPrice> {
+  const res = await fetch(
+    `/api/market/fair-price?estate=${encodeURIComponent(estate)}&beds=${encodeURIComponent(beds)}&price=${price}${exclude ? `&exclude=${exclude}` : ""}`,
+    { cache: "no-store" }
+  );
+  if (!res.ok) throw new Error("Fair price unavailable");
+  return res.json();
+}
+
 export async function reviewAgent(agentId: string, decision: "verified" | "rejected", reason?: string) {
   const res = await fetch("/api/admin/review-agent", {
     method: "POST",

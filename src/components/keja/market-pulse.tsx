@@ -1,6 +1,6 @@
 "use client";
 // KEJA HALISI — Market Pulse widget + Trustbar pills + stats strip
-import { ShieldCheck, Flag, Timer, Zap, TrendingUp } from "lucide-react";
+import { ShieldCheck, Flag, Timer, Zap, TrendingUp, Ban, Smartphone, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MarketPulse, HomeStats } from "@/lib/types";
 
@@ -44,6 +44,12 @@ export function Trustbar({ className }: { className?: string }) {
     { label: "Reported Red", cls: "bg-scam text-white", icon: Flag },
     { label: "Fresh ≤24h", cls: "bg-white/10 text-white border border-white/20", icon: Zap },
   ];
+  const rules = [
+    { label: "No viewing fee before viewing — ever", icon: Ban },
+    { label: "Phone masked until you log the lead", icon: Smartphone },
+    { label: "Exact door number stays in the vault", icon: MapPin },
+    { label: "3 community reports = auto-hide", icon: Flag },
+  ];
   return (
     <section className={cn("rounded-3xl bg-tiktok text-white p-4", className)} aria-label="Trustbar">
       <p className="text-[9.5px] font-extrabold tracking-[0.14em] text-white/60">TRUSTBAR PILLS</p>
@@ -57,6 +63,16 @@ export function Trustbar({ className }: { className?: string }) {
       <p className="mt-2.5 text-[10.5px] leading-relaxed text-white/60">
         Every card shows freshH, response mins, fee boolean, verified. Filters hide fee listings when No Fee is active.
       </p>
+      <ul className="mt-3.5 grid gap-1.5 border-t border-white/10 pt-3.5" aria-label="Core trust rules">
+        {rules.map((r) => (
+          <li key={r.label} className="flex items-center gap-2 text-[10.5px] font-bold text-white/75">
+            <span className="grid h-4.5 w-4.5 shrink-0 place-items-center rounded-full bg-white/10">
+              <r.icon className="h-2.5 w-2.5 text-tiktok-cyan" />
+            </span>
+            {r.label}
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

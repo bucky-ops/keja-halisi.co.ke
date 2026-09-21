@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Home, Building2, PlusCircle, ShieldCheck, Menu, X, MapPin, Bell, Sun, Moon,
   Scale, LayoutDashboard, ShieldAlert, Wallet, Zap, ZapOff, Globe, ChevronDown, Heart, Search,
+  Trophy, GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast, type KejaNotification } from "@/lib/store";
@@ -19,6 +20,8 @@ const NAV_ITEMS: { key: string; labelKey: DictKey }[] = [
 ];
 
 const MORE_ITEMS: { key: string; labelKey: DictKey; icon: typeof LayoutDashboard }[] = [
+  { key: "agents", labelKey: "navAgents", icon: Trophy },
+  { key: "quiz", labelKey: "navQuiz", icon: GraduationCap },
   { key: "compare", labelKey: "navCompare", icon: Scale },
   { key: "verify", labelKey: "navVerify", icon: ShieldCheck },
   { key: "dashboard", labelKey: "navDashboard", icon: LayoutDashboard },
@@ -332,6 +335,8 @@ export function Header() {
               { key: "compare", labelKey: "navCompare" as DictKey },
               { key: "post", labelKey: "navPost" as DictKey },
               { key: "verify", labelKey: "navVerify" as DictKey },
+              { key: "agents", labelKey: "navAgents" as DictKey },
+              { key: "quiz", labelKey: "navQuiz" as DictKey },
               { key: "dashboard", labelKey: "navDashboard" as DictKey },
               { key: "payments", labelKey: "navPayments" as DictKey },
               { key: "admin", labelKey: "navAdmin" as DictKey },
@@ -442,6 +447,8 @@ export function Footer() {
               { key: "saved", label: t("footerSaved") },
               { key: "map", label: t("footerMap") },
               { key: "compare", label: t("navCompare") },
+              { key: "agents", label: t("navAgents") },
+              { key: "quiz", label: t("navQuiz") },
               { key: "post", label: t("footerPost") },
               { key: "verify", label: t("footerVerify") },
               { key: "payments", label: t("footerPricing") },
