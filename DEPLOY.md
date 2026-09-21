@@ -17,6 +17,8 @@
 | **Supabase Postgres URLs** | Dashboard → **Connect** → copy *Connection pooler* (port 6543) + *Direct connection* (port 5432), insert your DB password |
 | **Vercel project name** | `keja-halisi` |
 
+**LIVE NOW:** https://keja-halisi.vercel.app  ·  GitHub: https://github.com/bucky-ops/keja-halisi.co.ke
+
 **Fastest path — 3 commands** (details below):
 
 ```bash
