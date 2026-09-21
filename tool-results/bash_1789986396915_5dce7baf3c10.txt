@@ -1,3 +1,4 @@
+172 /home/z/my-project/worklog.md
 # KEJA HALISI — Worklog (shared handover document)
 
 ---
@@ -12,7 +13,7 @@ Work Log:
 - Brand tokens in globals.css: Trust Blue #1976D2, Verified #0E9F6E, M-Pesa #12B44A, Scam #E02424, Pending #C27803, TikTok #161616/#FF0050/#00F2EA, Sora display + Inter body, shimmer/shake/pop/buzz/bouncePin keyframes
 - SPA architecture: single route (sandbox shows "/" only) with zustand view-router (src/lib/store.ts): home|estate|listing|agent|verify|post|dashboard|admin|payments|map
 - Shared components: toaster, logo, badges (Verified/Gold/Caretaker/Pending/Scam/NoFee/Fresh/FeeWarning + TrustChecks/Privacy/FeeWarning notices), listing-card (all states + skeleton + mini), market-pulse + trustbar + stats strip, nav (TopBar/Header/BottomNav/Footer), modals (Report 6 reasons, Contact masked-phone, M-Pesa STK 4-step sim), evidence checklist + OTP input + confetti
-- API routes: /api/listings (GET+POST, evidence enforcement, AI flags), /api/listings/[id], /api/agents(+[handle]), /api/reports (3-strike auto-hide), /api/leads (masked), /api/verify/otp/send+check+submit, /api/admin/queue+review-agent+review-listing, /api/dashboard/developer+units, /api/payments/stk, /api/ai/parse-caption, /api/market-pulse, /api/market-trends, /api/stats, /api/cron/expire-listings + nudge-availability
+- API routes: /api/listings (GET+POST, evidence enforcement, AI flags), /api/listings/[id], /api/agents(+andle]), /api/reports (3-strike auto-hide), /api/leads (masked), /api/verify/otp/send+check+submit, /api/admin/queue+review-agent+review-listing, /api/dashboard/developer+units, /api/payments/stk, /api/ai/parse-caption, /api/market-pulse, /api/market-trends, /api/stats, /api/cron/expire-listings + nudge-availability
 - Docs: README (anti-scam rules), docs/architecture.md (7 mermaid diagrams), supabase/migrations/0001_init.sql (exact production SQL + RLS), .env.example, vercel.json (2 crons)
 - Git: committed + tagged v0.0.1-init
 
@@ -170,29 +171,3 @@ Stage Summary:
 - Files: NEW src/lib/i18n.ts, src/components/keja/compare-bar.tsx, src/components/keja/views/compare.tsx, public/manifest.webmanifest; MODIFIED globals.css (token refactor), store.ts (theme/lang/compare/notifications/reportLog), nav.tsx (redesigned), page.tsx, listing-card.tsx, modals.tsx (onReported), views/{home,listing,saved,admin,post,verify,payments}.tsx
 - Backward-compatible store migrations (new persisted keys merge into keja-halisi-state)
 - Next-round ideas: estate/listing view i18n expansion, auto-translate listing titles via Gemini, renter auth (real accounts), map cluster sizing, keyboard shortcuts, print-friendly listing sheet
----
-Task ID: cron-r4 (2026-09-21 18:20 review round)
-Agent: main orchestrator (Z.ai Code)
-Task: QA sweep (agent-browser 1440+390) + bug fixes + power-user & renter-journey features (⌘K palette, Book Viewing, Recently viewed, Share/Print sheet)
-
-Work Log:
-- QA sweep desktop 1440 + mobile 390 across all 12 views (home/estate/listing/agent/map/verify/dashboard/payments/saved/post/admin) — all previously healthy, lint clean, server 200. Found 4 bugs:
-  1. MOBILE HEADER OVERFLOW: header scrollWidth 418px vs 390 viewport → document scrolled 28px horizontally. Fixes: LogoLockup tagline hidden below sm + whitespace-nowrap; Post House icon-only below sm; More dropdown hidden below sm (burger sheet already covers all views). Overflow now 0px.
-  2. BADGE OVERLAP on listing cards: Gold/Caretaker badge rows collided with the compare (scale) button at top-right. Fix: badges container max-w changed from 75% to calc(100%-112px) so rows wrap before the action buttons.
-  3. DOUBLE PHONE ICON: listing detail "Call Agent" had <Phone/> icon + 📞 emoji → removed emoji.
-  4. CRASH: Book Viewing confirm → TypeError spreading undefined. Root cause: zustand persist REPLACES nested `activity` on hydration, so sessions persisted before a schema addition lack the new arrays (viewingLog). Fixed BOTH ways: defensive `(a.viewingLog ?? [])` spreads in logViewing/notify/logReport AND a persist `merge()` that deep-merges filters/session/activity so future field additions hydrate safely.
-
-NEW FEATURES (all browser-verified):
-- ⌘K COMMAND PALETTE (src/components/keja/command-palette.tsx): global ⌘K/Ctrl+K + header Search pill trigger (hidden on mobile, burger covers it). Three groups: Navigate (12 views w/ HERE badge), Estates (unique estates fetched from /api/listings, run = setFilters + go estate), Actions (theme toggle, EN/SW toggle, Data Saver, clear compare tray, reset filters). Full keyboard nav (↑↓ move w/ scrollIntoView, ↵ run, esc close), fuzzy filter over label+keywords+group, kbd footer legend + session dot. Remount pattern (PaletteDialog mounts fresh per open) = zero reset-state effects; React-Compiler-safe (no manual memoization).
-- BOOK VIEWING (src/components/keja/viewing.tsx): modal on listing detail ("Book viewing • free" CTA). 5-day chips (Today/Tomorrow/weekday + d/m), 4 EAT slots, optional Sheng note, green escrow notice ("Viewing is 100% free — hakuna kulipa…"). Confirm → simulated SMS latency → store logViewing → notification + toast. Viewing bookings card in Saved (estate/date/slot/Open button) + viewingLog persisted (cap 8).
-- RECENTLY VIEWED rail on home (between Market Pulse and Featured): store.recent (cap 8, most-recent-first) pushed in ListingView effect; resolved against home catalog; Clear button; i18n keys recentTitle/recentSub/clear (EN+SW).
-- SHARE + PRINT + SAVE quick actions on listing price panel: Share uses navigator.share (canShare guard, AbortError passthrough) → clipboard API → execCommand fallback, always toasts; Save mirrors card heart w/ active state; Print opens browser print. Price panel now also shows KES/sqm derived metric.
-- PRINT-FRIENDLY LISTING SHEET: print-only block in listing view (brand header, specs, agent, TikTok url, HAKUNA KULIPA footer) + @media print rules in globals.css (hide header/footer/nav/dialogs/TikTok/CTAs/report/mobile call bar; TopBar print:hidden; quick actions + Report button print:hidden). Verified via headless PDF export — clean 1-page-ish spec sheet.
-- MOBILE POLISH: listing container gains pb-36 when status Available so the fixed call bar doesn't cover "Book viewing"; Footer gets pb-[128px] on listing view (mobile) so the copyright line clears the call bar.
-
-Verification: eslint 0 problems; tsc-era app code compiles (server 200s); browser-verified: Ctrl+K open/type "kasarani"/Enter → Estates filtered w/ toast; palette "dark" action → dark theme + palette re-renders dark; booking flow Today + 4:30 PM → toast "Viewing booked • Monday, 21 Sept 4:30 PM • SMS sent (simulated)" + bell badge 1 + Saved "Viewing bookings • 1" card + activity feed entry; recent rail shows Kasarani card on home after viewing; Share → clipboard toast (fallback chain OK); print PDF renders spec sheet without app chrome; mobile 390 overflow 0px; listing bottom clear of call bar.
-
-Stage Summary:
-- Files: NEW src/components/keja/command-palette.tsx, src/components/keja/viewing.tsx; MODIFIED store.ts (recent/pushRecent/clearRecent, viewingLog/logViewing, persist merge + defensive spreads), nav.tsx (Search trigger, TopBar print:hidden, footer view-aware padding), logo.tsx (mobile tagline/nowrap), listing-card.tsx (badge max-w), views/listing.tsx (recent push, viewing modal, share/print/save, KES/sqm, print sheet, pb fixes), views/home.tsx (recent rail), views/saved.tsx (viewing bookings card), views/saved i18n keys in i18n.ts, globals.css (print rules), app/page.tsx (CommandPalette mount)
-- Store changes are backward-compatible for OLD sessions thanks to persist merge(); new sessions get everything by default
-- Next-round ideas: mobile palette entry in burger sheet, viewing reminders (cron nudge before slot), saved-search alerts, agent response-time simulation on lead, i18n for estate/admin chrome, listing edit for posters
