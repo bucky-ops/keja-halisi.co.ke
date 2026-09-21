@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search, ArrowRight, BadgeCheck, ShieldCheck, Building2, Flag, CalendarClock,
   Play, Zap, MapPin, Smartphone, Ban, ChevronRight, History as HistoryIcon,
-  GraduationCap, Trophy, Star, CalendarCheck, Calculator, BellRing, X, ShieldQuestion,
+  GraduationCap, Trophy, Star, CalendarCheck, Calculator, BellRing, X, ShieldQuestion, Backpack, ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
@@ -14,6 +14,7 @@ import { BOROUGHS, BOROUGH_INFO, BEDS_OPTIONS } from "@/lib/nairobi";
 import { fetchListings, fetchMarketPulse, fetchHomeStats, fetchAgents } from "../api";
 import { MiniListingCard } from "../listing-card";
 import { MarketPulse, Trustbar, StatsStrip } from "../market-pulse";
+import { ViewingSafetyKit } from "../viewing-kit";
 import type { AgentDTO, HomeStats, ListingDTO, MarketPulse as MarketPulseData } from "@/lib/types";
 
 /* ---------- count-up (rAF, 1.8s ease-out) ---------- */
@@ -139,6 +140,29 @@ export default function HomeView() {
       .sort((a, b) => (a.ts ?? 0) - (b.ts ?? 0))[0];
   }, [activity.viewingLog]);
 
+  /* 24h viewing reminder — bell notification fires once per booking (device-local flag) */
+  const notify = useKeja((s) => s.notify);
+  useEffect(() => {
+    const now = Date.now();
+    for (const v of activity.viewingLog ?? []) {
+      if (typeof v.ts !== "number" || v.ts < now || v.ts > now + 24 * 3600e3) continue;
+      const flag = `keja-reminder-${v.id}`;
+      try {
+        if (localStorage.getItem(flag)) continue;
+        localStorage.setItem(flag, "1");
+      } catch {
+        continue;
+      }
+      notify(
+        "info",
+        "Viewing reminder — {hours}".replace("{hours}", Math.max(1, Math.round((v.ts - now) / 3600e3)) + "h"),
+        `${v.estate} • ${v.date} • ${v.slot} EAT. Carry your ID — and remember: viewing is FREE, hakuna kulipa.`
+      );
+    }
+  }, [activity.viewingLog, notify]);
+
+  const [kitOpen, setKitOpen] = useState(false);
+
   /* saved-search alerts with fresh matches (banner + notification center) */
   const newAlerts = useMemo(() => savedSearches.filter((s) => s.newCount > 0), [savedSearches]);
   const newAlertsTotal = useMemo(() => newAlerts.reduce((s, a) => s + a.newCount, 0), [newAlerts]);
@@ -236,24 +260,44 @@ export default function HomeView() {
         // mb-24 compensates the Find Keja card's -mt-16 pull-up so the card
         // overlaps empty margin instead of covering this banner
         <div className="relative z-10 mx-auto -mt-2 mb-24 max-w-[880px]">
-          <button
-            onClick={() => navigate("listing", { listingId: upcomingViewing.listingId })}
-            className="card-lift flex w-full items-center gap-3 rounded-2xl border border-trust/30 bg-trust-soft/60 px-4 py-3 text-left"
-            aria-label="Open your upcoming viewing"
-          >
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-trust text-white">
-              <CalendarCheck className="h-4.5 w-4.5" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[12.5px] font-extrabold text-body">
-                Viewing {upcomingViewing.estate} • {upcomingViewing.date} • {upcomingViewing.slot} EAT
+          <div className="flex items-stretch gap-2">
+            <button
+              onClick={() => navigate("listing", { listingId: upcomingViewing.listingId })}
+              className="card-lift flex min-w-0 flex-1 items-center gap-3 rounded-2xl border border-trust/30 bg-trust-soft/60 px-4 py-3 text-left"
+              aria-label="Open your upcoming viewing"
+            >
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-trust text-white">
+                <CalendarCheck className="h-4.5 w-4.5" />
               </span>
-              <span className="block truncate text-[10.5px] font-semibold text-kmuted">
-                Reminder • go with your ID, ask for water + gate, viewing is free — hakuna kulipa.
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[12.5px] font-extrabold text-body">
+                  Viewing {upcomingViewing.estate} • {upcomingViewing.date} • {upcomingViewing.slot} EAT
+                </span>
+                <span className="block truncate text-[10.5px] font-semibold text-kmuted">
+                  Reminder • go with your ID, ask for water + gate, viewing is free — hakuna kulipa.
+                </span>
               </span>
-            </span>
-            <ChevronRight className="h-4 w-4 shrink-0 text-trust" />
-          </button>
+              <ChevronRight className="h-4 w-4 shrink-0 text-trust" />
+            </button>
+            <button
+              onClick={() => setKitOpen((v) => !v)}
+              aria-expanded={kitOpen}
+              aria-controls="viewing-safety-kit"
+              className={cn(
+                "touch-target flex shrink-0 flex-col items-center justify-center gap-0.5 rounded-2xl border px-3 text-[9px] font-extrabold uppercase tracking-wide transition-colors",
+                kitOpen ? "border-trust bg-trust text-white" : "border-trust/30 bg-surface text-trust hover:bg-trust-soft"
+              )}
+            >
+              <Backpack className="h-4 w-4" />
+              Kit
+              <ChevronDown className={cn("h-3 w-3 transition-transform", kitOpen && "rotate-180")} />
+            </button>
+          </div>
+          {kitOpen && (
+            <div id="viewing-safety-kit" className="card-in mt-2">
+              <ViewingSafetyKit viewing={upcomingViewing} onClose={() => setKitOpen(false)} />
+            </div>
+          )}
         </div>
       )}
 

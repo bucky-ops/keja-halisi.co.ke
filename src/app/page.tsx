@@ -7,6 +7,7 @@ import { TopBar, Header, Footer, BottomNav } from "@/components/keja/nav";
 import { CompareBar } from "@/components/keja/compare-bar";
 import { CommandPalette } from "@/components/keja/command-palette";
 import { PwaInstall } from "@/components/keja/pwa-install";
+import { SwRegister } from "@/components/keja/sw-register";
 import HomeView from "@/components/keja/views/home";
 import EstateView from "@/components/keja/views/estate";
 import SavedView from "@/components/keja/views/saved";
@@ -67,12 +68,19 @@ export default function Page() {
   const view = useKeja((s) => s.view);
   const theme = useKeja((s) => s.theme);
   const lowData = useKeja((s) => s.lowData);
+  const navigate = useKeja((s) => s.navigate);
 
   // apply persisted theme + data-saver flag to <html> (tokens flip in globals.css)
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
     document.documentElement.classList.toggle("low-data", lowData);
   }, [theme, lowData]);
+
+  // QR "Verify Me" posters deep-link here as /?shield=@handle → open the shield verdict
+  useEffect(() => {
+    const shieldQ = new URLSearchParams(window.location.search).get("shield");
+    if (shieldQ) navigate("shield", { q: shieldQ });
+  }, [navigate]);
 
   // keep document title in sync with the active view (SEO nicety inside SPA)
   useEffect(() => {
@@ -117,6 +125,7 @@ export default function Page() {
       <BottomNav />
       <CommandPalette />
       <PwaInstall />
+      <SwRegister />
     </div>
   );
 }

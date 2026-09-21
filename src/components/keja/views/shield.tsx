@@ -1,7 +1,7 @@
 "use client";
 // KEJA HALISI — Scam Shield: check any agent handle / phone number before you trust it.
 // Explainable verdict from catalog evidence + per-verdict action checklist + lookup history.
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ShieldCheck, ShieldAlert, ShieldQuestion, ShieldX, Search, Phone,
   AtSign, CircleCheck, TriangleAlert, Star, ListChecks, History, Trash2, ArrowRight,
@@ -48,10 +48,38 @@ export default function ShieldView() {
   const t = useT();
   const navigate = useKeja((s) => s.navigate);
   const notify = useKeja((s) => s.notify);
+  const initialQuery = useKeja((s) => s.params.q);
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ShieldResult | null>(null);
   const [history, setHistory] = useState<LookupEntry[]>([]);
+
+  // device-local lookup history — persisted so the weekly digest can count shield checks
+  useEffect(() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem("keja-shield-history") || "[]") as LookupEntry[];
+      if (Array.isArray(raw)) setHistory(raw.slice(0, 6));
+    } catch {
+      /* fresh device */
+    }
+  }, []);
+
+  const persistHistory = (entries: LookupEntry[]) => {
+    try {
+      localStorage.setItem("keja-shield-history", JSON.stringify(entries.slice(0, 6)));
+    } catch {
+      /* private mode */
+    }
+  };
+
+  // deep link entry (?shield=@handle / QR poster / palette) → auto-run once
+  const autoRanRef = useRef(false);
+  useEffect(() => {
+    if (initialQuery && !autoRanRef.current) {
+      autoRanRef.current = true;
+      window.setTimeout(() => void run(initialQuery), 0);
+    }
+  }, [initialQuery]);
 
   const run = async (raw?: string) => {
     const q = (raw ?? query).trim();
@@ -64,9 +92,14 @@ export default function ShieldView() {
       if (!res.ok) throw new Error("check failed");
       const data: ShieldResult = await res.json();
       setResult(data);
-      setHistory((h) =>
-        [{ q, verdict: data.verdict, at: Date.now(), handle: data.agent?.handle }, ...h.filter((e) => e.q !== q)].slice(0, 6)
-      );
+      setHistory((h) => {
+        const next = [
+          { q, verdict: data.verdict, at: Date.now(), handle: data.agent?.handle },
+          ...h.filter((e) => e.q !== q),
+        ].slice(0, 6);
+        persistHistory(next);
+        return next;
+      });
       if (data.verdict === "danger") {
         notify("warning", "Scam Shield — red verdict", `${data.agent?.handle ?? q} carries multiple scam signals. Keep your M-Pesa closed.`);
       } else if (data.verdict === "safe") {
@@ -297,7 +330,14 @@ export default function ShieldView() {
               <History className="h-3.5 w-3.5" /> Recent checks — private to this device
             </h3>
             <button
-              onClick={() => setHistory([])}
+              onClick={() => {
+                setHistory([]);
+                try {
+                  localStorage.removeItem("keja-shield-history");
+                } catch {
+                  /* ignore */
+                }
+              }}
               className="touch-target inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-extrabold text-kmuted transition-colors hover:bg-kbg hover:text-scam"
             >
               <Trash2 className="h-3 w-3" /> Clear

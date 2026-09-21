@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Offline — Keja Halisi</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #F5F7FA;
+      color: #111827;
+      padding: 24px;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #0d1117; color: #f3f4f6; }
+      .card { background: #16181d !important; border-color: #2a2e37 !important; }
+      .muted { color: #9ca3af !important; }
+    }
+    .card {
+      max-width: 420px;
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 24px;
+      padding: 32px 28px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(17,25,40,.08);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #1976D2;
+      color: #fff;
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: .14em;
+      padding: 8px 14px;
+      border-radius: 999px;
+    }
+    h1 { font-size: 22px; font-weight: 800; margin: 18px 0 8px; }
+    p { font-size: 13.5px; line-height: 1.6; font-weight: 600; }
+    .muted { color: #6b7280; }
+    .rule {
+      margin-top: 18px;
+      background: #e6f4ec;
+      color: #0e6e3c;
+      border: 1px solid #bfe5cf;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      min-height: 44px;
+      border: 0;
+      border-radius: 999px;
+      background: #111827;
+      color: #fff;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    button:hover { transform: scale(1.01); }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <span class="badge">● OFFLINE MODE</span>
+    <h1>Hakuna net — but the rule stands.</h1>
+    <p class="muted">
+      You're offline, so Keja Halisi can't fetch fresh kejas right now.
+      Cached listings may still be available — go back and check what you already viewed.
+    </p>
+    <div class="rule">HAKUNA KULIPA KABLA YA KUONA NYUMBA — offline or online, never pay a viewing fee before you see the house.</div>
+    <button onclick="location.reload()">Try reconnecting</button>
+  </main>
+</body>
+</html>

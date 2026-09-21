@@ -188,6 +188,24 @@ const EN = {
   affordAlertLabel: "My safe band ≤",
   affordSaveAlert: "Save this band as an alert — ping me on fresh kejas",
   affordAlertSaved: "Alert saved — we watch for fresh kejas in this band",
+  // agent verify-me QR poster
+  qrCardTitle: "Verify Me — QR poster",
+  qrCardSub: "Print it, paste it at the gate. Tenants scan to see your verified shield verdict.",
+  qrCardCta: "Show my QR poster",
+  qrModalTitle: "Verify Me poster",
+  qrPosterTagline: "Scan → Scam Shield verdict in 2 seconds",
+  qrPosterHow: "Tenants scan this code and instantly see your verification status, community reports and reviews — straight from the Keja catalog.",
+  qrDownload: "Download PNG",
+  qrCopied: "Copied ✓",
+  qrCopy: "Copy link",
+  qrTryShield: "Preview my shield verdict",
+  qrPosterFoot: "Print tip: attach it to gate posters, corner boards or your TikTok pinned video — offline trust that lands in the catalog. Scams hate receipts.",
+  qrToastDownload: "Stick it where tenants can scan it — gate, poster, or TikTok bio.",
+  qrToastCopyTitle: "Shield deep link copied",
+  qrToastCopyFail: "Could not copy — long-press the link instead",
+  // viewing safety kit
+  kitTitle: "Viewing safety kit",
+  kitDone: "Safa! You're ready — walk in confident, walk out if they ask for a fee.",
 } as const;
 
 export type DictKey = keyof typeof EN;
@@ -352,6 +370,24 @@ const SW: Partial<Record<DictKey, string>> = {
   affordAlertLabel: "Bei yangu salama ≤",
   affordSaveAlert: "Hifadhi bei hii kama alert — nipingishe keja mpya",
   affordAlertSaved: "Alert imehifadhiwa — tunafuatilia keja mpya kwenye bei hii",
+  // agent verify-me QR poster
+  qrCardTitle: "Nithibitishe — QR poster",
+  qrCardSub: "Printi, bande kwenye lango. Wakazi kodi wanascan kuona verdict yako ya shield.",
+  qrCardCta: "Onyesha QR yangu",
+  qrModalTitle: "Poster ya uthibitisho",
+  qrPosterTagline: "Scan → verdict ya Scam Shield kwa sekunde 2",
+  qrPosterHow: "Wakazi kodi wanaposcann hii, wanaona hali yako ya uthibitisho, report za jirani na reviews — moja kwa moja kutoka katalogi ya Keja.",
+  qrDownload: "Pakua PNG",
+  qrCopied: "Imenakiliwa ✓",
+  qrCopy: "Nakili link",
+  qrTryShield: "Ona verdict yangu ya shield",
+  qrPosterFoot: "Tip ya printi: bande kwenye mabango ya lango, kona za mtaa au video yako ya pinned TikTok — uaminifu wa mtaa unatoka kwenye katalogi. Scam haina risiti.",
+  qrToastDownload: "Banda mahali wakazi wataweza kuscan — lango, bango, au TikTok bio.",
+  qrToastCopyTitle: "Deep link ya shield imenakiliwa",
+  qrToastCopyFail: "Imeshindikana kunakili — bonyeza link muda mrefu",
+  // viewing safety kit
+  kitTitle: "Kit ya usalama wa viewing",
+  kitDone: "Safa! Uko tayari — ingia na ujasiri, toka wakizaomba fee.",
 };
 
 const DICTS: Record<Lang, Partial<Record<DictKey, string>>> = { en: EN, sw: SW };

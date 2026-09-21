@@ -24,6 +24,7 @@ import { useKeja, toast } from "@/lib/store";
 import { fetchAgentProfile, voteReviewHelpful, replyToReview, type TenantReview, type RatingSummary } from "../api";
 import { VerificationBadge } from "../badges";
 import { ListingCard, ListingCardSkeleton } from "../listing-card";
+import { VerifyQrCard } from "../verify-qr";
 import { RatingSheet } from "../rating";
 import type { AgentDTO, ListingDTO } from "@/lib/types";
 
@@ -350,6 +351,9 @@ export default function AgentView() {
               })}
             </ol>
           </div>
+
+          {/* verify-me QR poster — offline trust loop */}
+          <VerifyQrCard handle={agent.tiktokHandle} verified={isVerifiedPoster} />
 
           {/* caretaker mandate panel */}
           {agent.role === "Caretaker" && (

@@ -2,12 +2,13 @@
 // KEJA HALISI — SavedView: renter's shortlist + personal dashboard
 // Blueprint "Renter dashboard": Saved / Fresh matches / Leads / Reports + rate-after-viewing loop.
 import { useEffect, useMemo, useState } from "react";
-import { Heart, Zap, Phone, Flag, SearchX, ArrowRight, Star, ShieldCheck, ArrowLeft, Bell, CalendarCheck, BellRing, Play, Trash2, SlidersHorizontal } from "lucide-react";
+import { Heart, Zap, Phone, Flag, SearchX, ArrowRight, Star, ShieldCheck, ArrowLeft, Bell, CalendarCheck, BellRing, Play, Trash2, SlidersHorizontal, Sparkles, Backpack, AtSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
 import { fetchListings } from "../api";
 import { ListingCard, ListingCardSkeleton, MiniListingCard } from "../listing-card";
 import { RatingSheet } from "../rating";
+import { ViewingSafetyKit, readKitProgress } from "../viewing-kit";
 import type { ListingDTO } from "@/lib/types";
 
 interface RatingMemory {
@@ -21,12 +22,21 @@ export default function SavedView() {
   const { saved, toggleSaved, activity, navigate, back, savedSearches, runSearch, removeSearch } = useKeja();
   const [all, setAll] = useState<ListingDTO[] | null>(null);
   const [rateTarget, setRateTarget] = useState<RatingMemory | null>(null);
+  const [kitFor, setKitFor] = useState<number | null>(null);
+  const [shieldChecks, setShieldChecks] = useState(0);
 
   useEffect(() => {
     let alive = true;
     fetchListings({ limit: 60 })
       .then((rows) => alive && setAll(rows))
       .catch(() => alive && setAll([]));
+    try {
+      const raw = JSON.parse(localStorage.getItem("keja-shield-history") || "[]") as { at: number }[];
+      const weekAgo = Date.now() - 7 * 86400e3;
+      if (alive) setShieldChecks(Array.isArray(raw) ? raw.filter((e) => e.at > weekAgo).length : 0);
+    } catch {
+      if (alive) setShieldChecks(0);
+    }
     return () => {
       alive = false;
     };
@@ -66,6 +76,37 @@ export default function SavedView() {
     { label: "Reports", value: activity.reports, icon: Flag, color: "text-scam" },
   ];
 
+  /* ---- weekly trust digest (last 7 days, device-local truth) ---- */
+  const digest = useMemo(() => {
+    const weekAgo = Date.now() - 7 * 86400e3;
+    const viewings = (activity.viewingLog ?? []).filter((v) => v.at > weekAgo).length;
+    const reports = (activity.reportLog ?? []).filter((r) => r.at > weekAgo).length;
+    const newMatches = savedSearches.reduce((s, x) => s + x.newCount, 0);
+    const kitDone = (activity.viewingLog ?? []).filter((v) => readKitProgress(v.id) >= 6).length;
+    const score =
+      Math.min(newMatches, 10) * 3 + // hunting
+      viewings * 15 + // footwork
+      reports * 10 + // community policing
+      shieldChecks * 8 + // checking before trusting
+      kitDone * 12 + // safety prep
+      Math.min(activity.quizBest, 100) * 0.2; // scam literacy
+    return {
+      viewings,
+      reports,
+      newMatches,
+      shieldChecks,
+      kitDone,
+      score: Math.round(Math.min(100, score)),
+    };
+  }, [activity.viewingLog, activity.reportLog, activity.quizBest, savedSearches, shieldChecks]);
+
+  const digestChips = [
+    { icon: Zap, label: "new matches", value: digest.newMatches, color: "text-verified", action: digest.newMatches > 0 ? "alerts" : null },
+    { icon: CalendarCheck, label: "viewings", value: digest.viewings, color: "text-trust", action: null },
+    { icon: Flag, label: "reports", value: digest.reports, color: "text-scam", action: null },
+    { icon: AtSign, label: "shield checks", value: digest.shieldChecks, color: "text-trust", action: "shield" },
+  ];
+
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-6">
       <header className="flex flex-wrap items-center gap-3">
@@ -97,6 +138,59 @@ export default function SavedView() {
           </div>
         ))}
       </div>
+
+      {/* ===== weekly trust digest ===== */}
+      <section
+        className="relative mt-5 overflow-hidden rounded-3xl border border-verified/25 bg-gradient-to-br from-verified-soft/70 via-surface to-trust-soft/50 p-4"
+        aria-label="Weekly trust digest"
+      >
+        <div className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-verified/10 blur-2xl" aria-hidden />
+        <div className="relative flex flex-wrap items-center gap-2">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-verified text-white shadow-md">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[12.5px] font-extrabold text-body">Your week on Keja</p>
+            <p className="text-[10.5px] font-semibold text-kmuted">
+              Trust score {digest.score}/100 — computed on this device, resets with your history
+            </p>
+          </div>
+          <div className="relative grid h-12 w-12 shrink-0 place-items-center" role="img" aria-label={`Trust score ${digest.score} of 100`}>
+            <svg viewBox="0 0 36 36" className="h-12 w-12 -rotate-90">
+              <circle cx="18" cy="18" r="15.5" fill="none" stroke="currentColor" strokeWidth="3.5" className="text-kbg" />
+              <circle
+                cx="18" cy="18" r="15.5" fill="none" strokeWidth="3.5" strokeLinecap="round"
+                className="text-verified transition-all duration-700"
+                stroke="currentColor"
+                strokeDasharray={`${(digest.score / 100) * 97.4} 97.4`}
+              />
+            </svg>
+            <span className="absolute font-display text-[11px] font-extrabold text-body tabular-nums">{digest.score}</span>
+          </div>
+        </div>
+        <div className="relative mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {digestChips.map((c) => (
+            <button
+              key={c.label}
+              onClick={() => {
+                if (c.action === "alerts") toast("success", `${digest.newMatches} fresh matches waiting — open Saved searches below and hit Run.`);
+                else if (c.action === "shield") navigate("shield");
+              }}
+              disabled={c.action === null}
+              className={cn(
+                "flex min-h-11 items-center gap-2 rounded-xl border border-kline/70 bg-surface/80 px-3 py-2 text-left transition-colors",
+                c.action ? "hover:border-verified/40 hover:bg-verified-soft/40" : "cursor-default"
+              )}
+            >
+              <c.icon className={cn("h-3.5 w-3.5 shrink-0", c.color)} />
+              <span className="min-w-0">
+                <span className="block font-display text-[13px] font-extrabold leading-none text-body tabular-nums">{c.value}</span>
+                <span className="block truncate text-[9px] font-extrabold uppercase tracking-wide text-kmuted">{c.label}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* ===== saved searches (alert manager) ===== */}
       <section className="mt-5 rounded-3xl border border-kline bg-card p-4" aria-label="Saved searches">
@@ -248,24 +342,42 @@ export default function SavedView() {
               </p>
               <ul className="keja-scroll mt-3 max-h-56 space-y-2 overflow-y-auto">
                 {activity.viewingLog.map((v) => (
-                  <li
-                    key={v.id}
-                    className="flex items-center justify-between gap-2 rounded-xl border border-trust/20 bg-surface px-3 py-2.5"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-[11.5px] font-extrabold text-body">
-                        {v.estate} • {v.date}
-                      </p>
-                      <p className="text-[10px] font-semibold text-kmuted">
-                        {v.slot} EAT • booked {new Date(v.at).toLocaleDateString()} • SMS simulated
-                      </p>
+                  <li key={v.id} className="rounded-xl border border-trust/20 bg-surface px-3 py-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-[11.5px] font-extrabold text-body">
+                          {v.estate} • {v.date}
+                        </p>
+                        <p className="text-[10px] font-semibold text-kmuted">
+                          {v.slot} EAT • booked {new Date(v.at).toLocaleDateString()} • SMS simulated
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <button
+                          onClick={() => setKitFor((cur) => (cur === v.id ? null : v.id))}
+                          aria-expanded={kitFor === v.id}
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[9.5px] font-extrabold transition-colors",
+                            kitFor === v.id
+                              ? "border-trust bg-trust text-white"
+                              : "border-trust/30 bg-trust-soft text-trust hover:bg-trust hover:text-white"
+                          )}
+                        >
+                          <Backpack className="h-3 w-3" /> Kit
+                        </button>
+                        <button
+                          onClick={() => navigate("listing", { listingId: v.listingId })}
+                          className="rounded-full bg-ink px-2.5 py-1 text-[9.5px] font-extrabold text-white transition-transform hover:scale-105"
+                        >
+                          Open
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => navigate("listing", { listingId: v.listingId })}
-                      className="shrink-0 rounded-full bg-trust px-2.5 py-1 text-[9.5px] font-extrabold text-white transition-transform hover:scale-105"
-                    >
-                      Open
-                    </button>
+                    {kitFor === v.id && (
+                      <div className="card-in mt-2.5">
+                        <ViewingSafetyKit viewing={v} onClose={() => setKitFor(null)} />
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
