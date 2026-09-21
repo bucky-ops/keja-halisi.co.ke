@@ -30,7 +30,28 @@ export async function fetchAgents(): Promise<AgentDTO[]> {
   return res.json();
 }
 
-export async function fetchAgentProfile(handle: string): Promise<{ agent: AgentDTO; listings: ListingDTO[]; verifications: { docType: string; status: string }[] }> {
+export interface TenantReview {
+  id: string;
+  authorHandle: string;
+  stars: number;
+  text: string;
+  verifiedStay: boolean;
+  createdAt: string;
+}
+
+export interface RatingSummary {
+  count: number;
+  avg: number;
+  dist: number[]; // [1★..5★] counts
+}
+
+export async function fetchAgentProfile(handle: string): Promise<{
+  agent: AgentDTO;
+  listings: ListingDTO[];
+  verifications: { docType: string; status: string }[];
+  reviews: TenantReview[];
+  ratingSummary: RatingSummary;
+}> {
   const res = await fetch(`/api/agents/${encodeURIComponent(handle)}`, { cache: "no-store" });
   if (!res.ok) throw new Error("Agent not found");
   return res.json();

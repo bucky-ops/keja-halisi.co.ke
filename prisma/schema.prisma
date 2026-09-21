@@ -55,6 +55,7 @@ model Agent {
 
   listings      Listing[]
   verifications Verification[]
+  reviews       Review[]
   developer     Developer?
   payments      Payment[]
 
@@ -175,6 +176,20 @@ model AuditEvent {
   metadata  String? // JSON
 
   @@index([object, objectId])
+}
+
+// tenant reviews — post-viewing trust feedback (public-safe, no PII)
+model Review {
+  id           String   @id @default(uuid())
+  agentId      String
+  agent        Agent    @relation(fields: [agentId], references: [id])
+  authorHandle String // masked community handle, e.g. "@wanjiku_m"
+  stars        Int // 1..5
+  text         String
+  verifiedStay Boolean  @default(false) // lead existed for this agent when review was left
+  createdAt    DateTime @default(now())
+
+  @@index([agentId, createdAt])
 }
 
 // OTP codes (Africa's Talking mock)

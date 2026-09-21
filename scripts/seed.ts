@@ -107,6 +107,7 @@ async function main() {
   await db.payment.deleteMany();
   await db.lead.deleteMany();
   await db.report.deleteMany();
+  await db.review.deleteMany();
   await db.unit.deleteMany();
   await db.developer.deleteMany();
   await db.verification.deleteMany();
@@ -261,6 +262,44 @@ async function main() {
   for (const [handle, agentId] of agentMap) {
     const n = await db.listing.count({ where: { posterId: agentId, publishState: "approved" } });
     await db.agent.update({ where: { id: agentId }, data: { listingsCount: n } });
+  }
+
+  console.log("Seeding tenant reviews (post-viewing trust feedback)...");
+  // [handle, author, stars, text, verifiedStay, daysAgo]
+  const REVIEWS: [string, string, number, string, boolean, number][] = [
+    ["@keja_kile", "@wanjiku_m", 5, "Keja ni real, water ni 24/7 kama kwa video. Alinipeana number ya owner baada ya kuonana.", true, 3],
+    ["@keja_kile", "@brian_otis", 5, "Viewing was free hakuna kulipa. Agent showed up on time with keys.", true, 9],
+    ["@keja_kile", "@shiks_254", 4, "Nyumba iko poa ila parking ni kidogo. Otherwise legit guy.", true, 15],
+    ["@keja_kile", "@mutua_ke", 5, "Alinisaidia kupata 1BR same week. Hakuna scam hapa.", false, 22],
+    ["@keja_hunter_nairobi", "@ailyah_n", 5, "Fresh listings daily, anajibu dalam seconds. Got my Kasarani crib through him.", true, 5],
+    ["@keja_hunter_nairobi", "@deji_hassan", 5, "Very professional, video matched the house 100%. No bait pricing.", true, 12],
+    ["@keja_hunter_nairobi", "@cyndie_w", 4, "Solid agent, some houses get taken fast so be ready to view same day.", true, 19],
+    ["@syokimau_developer", "@peter_km", 5, "Syokimau Heights unit A3 — tiles, fibre, borehole ziko. Title deed niliona yenyewe.", true, 7],
+    ["@syokimau_developer", "@grace_njoki", 5, "Deposit refund policy ilifanya kazi when I relocated. Very transparent developer.", true, 14],
+    ["@syokimau_developer", "@otieno_j", 5, "M-Pesa receipt ilitumwa mara moja, hakuna story ya midway payments.", true, 28],
+    ["@kasa_homes", "@linda_kaveke", 5, "Caretaker wa Kileleshwa Green Court — mandate letter yake iko verified. Nyumba safi.", true, 4],
+    ["@kasa_homes", "@steve_mose", 4, "Anashughulika sana but house was exactly as the TikTok.", true, 11],
+    ["@kasa_homes", "@fatuma_a", 5, "Water issue fixed within a day. Caretaker anafanya kazi yake.", true, 18],
+    ["@east_hub", "@kevo_mwas", 5, "Owner mwenyewe, hakuna commission. Utawala keja ni halisi.", true, 6],
+    ["@east_hub", "@njeri_s", 5, "South C 1BR — quiet estate, bathroom ini clean. Direct owner ni best.", true, 10],
+    ["@east_hub", "@kaunda_x", 4, "Took a while to reply but the Karen house was real and worth it.", false, 25],
+    ["@eastlands_homes", "@mwende_88", 5, "Buruburu 2BR ensuite kama kwenye video. Tuja ya ku-show around ilikuwa free.", true, 8],
+    ["@eastlands_homes", "@omar_bakari", 4, "Umoja house ilichukuliwa quickly, akapata mwingine same day. Fair guy.", true, 16],
+    ["@eastlands_homes", "@vic_shikuku", 5, "Kayole borehole unit — maji hakuna shida. Agent ni straight.", true, 24],
+    ["@utawala_keys", "@careen_n", 5, "Utawala 1BR near bypass — 50m to road! Anakupa honest directions.", true, 2],
+    ["@utawala_keys", "@dennis_k", 5, "Pipeline bedsitter ilipatikana haraka. No viewing fee, niliiona mwenyewe kwanza.", true, 13],
+    ["@utawala_keys", "@hawa_z", 4, "Good follow-up even after moving in. Tokens ni own meter.", true, 21],
+    ["@roy_homes", "@quinto_a", 5, "Kahawa West 2BR — family friendly, gate iko secure. Legit.", true, 17],
+    ["@roy_homes", "@triza_n", 4, "Zimmerman options were many. Ni appoint time za viewing early.", true, 26],
+    ["@lavi_living", "@nate_kim", 5, "Lavington premium 1BR — gym, fibre, everything worked. High-end service.", true, 5],
+    ["@lavi_living", "@vivian_w", 5, "Kileleshwa rooftop gym unit ni real. Agent anarespect wakati yako.", true, 12],
+    ["@pending_agent_ke", "@amani_j", 2, "Aliniomba viewing fee kabla sijaona nyumba — niliripoti. Tenant beware.", false, 6],
+    ["@pending_agent_ke", "@salome_k", 3, "House was okay but price kwenye TikTok ilikuwa different.", false, 20],
+  ];
+  for (const [handle, author, stars, text, verifiedStay, daysAgo] of REVIEWS) {
+    await db.review.create({
+      data: { agentId: agentMap.get(handle)!, authorHandle: author, stars, text, verifiedStay, createdAt: new Date(now - daysAgo * D) },
+    });
   }
 
   console.log("Seeding audit events...");

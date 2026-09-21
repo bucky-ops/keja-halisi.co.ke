@@ -19,7 +19,8 @@ export type ViewName =
   | "map"
   | "compare"
   | "agents"
-  | "quiz";
+  | "quiz"
+  | "afford";
 
 export interface ViewParams {
   borough?: string;
@@ -33,6 +34,8 @@ export interface ViewParams {
   q?: string;
   minPrice?: number;
   maxPrice?: number;
+  // affordability prefill (rent reality check)
+  income?: number;
 }
 
 // ---- notifications (trust feedback loop) ----

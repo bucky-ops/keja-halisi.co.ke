@@ -1,7 +1,9 @@
 "use client";
 // KEJA HALISI — MapView: Nairobi discovery map (illustrative GIS) + market pulse analytics
+// Density clustering: sub-counties with 3+ listings collapse into sized cluster
+// bubbles (tap to open a cluster panel); 1-2 listing areas stay individual pins.
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CloudSun, MapPin, Minus, Play, RefreshCw, TrendingUp, X } from "lucide-react";
+import { CloudSun, MapPin, Minus, Play, RefreshCw, TrendingUp, X, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ALL_SUB_COUNTIES, BOROUGH_INFO, estateWeather, kes } from "@/lib/nairobi";
 import { toast, useKeja } from "@/lib/store";
@@ -52,6 +54,7 @@ export default function MapView() {
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [openCluster, setOpenCluster] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -72,6 +75,57 @@ export default function MapView() {
   }, [load]);
 
   const selected = useMemo(() => listings.find((l) => l.id === selectedId) ?? null, [listings, selectedId]);
+
+  // density clustering — group by sub-county; 3+ listings become a cluster bubble
+  const { clusters, singles } = useMemo(() => {
+    const groups = new Map<string, ListingDTO[]>();
+    for (const l of listings) {
+      const arr = groups.get(l.subCounty) ?? [];
+      arr.push(l);
+      groups.set(l.subCounty, arr);
+    }
+    const clusters: { subCounty: string; items: ListingDTO[]; left: number; top: number; freshRatio: number }[] = [];
+    const singles: ListingDTO[] = [];
+    for (const [subCounty, items] of groups) {
+      if (items.length >= 3) {
+        const left = items.reduce((s, l) => s + pinPos(l).left, 0) / items.length;
+        const top = items.reduce((s, l) => s + pinPos(l).top, 0) / items.length;
+        const freshRatio = items.filter((l) => l.freshH <= 24).length / items.length;
+        clusters.push({ subCounty, items, left, top, freshRatio });
+      } else {
+        singles.push(...items);
+      }
+    }
+    // relaxation pass — nudge overlapping cluster bubbles apart so neighbors
+    // (e.g. Kasarani vs Roysambu) never hide each other. Deterministic.
+    const MIN_DIST = 9; // % of map box — clears the largest 52px bubble
+    for (let iter = 0; iter < 12; iter++) {
+      let moved = false;
+      for (let i = 0; i < clusters.length; i++) {
+        for (let j = i + 1; j < clusters.length; j++) {
+          const a = clusters[i];
+          const b = clusters[j];
+          const dx = b.left - a.left;
+          const dy = b.top - a.top;
+          const dist = Math.hypot(dx, dy);
+          if (dist < MIN_DIST) {
+            const push = (MIN_DIST - dist) / 2;
+            const nx = dist === 0 ? 1 : dx / dist;
+            const ny = dist === 0 ? -0.6 : dy / dist;
+            a.left = clamp(a.left - nx * push, 4, 96);
+            a.top = clamp(a.top - ny * push, 6, 92);
+            b.left = clamp(b.left + nx * push, 4, 96);
+            b.top = clamp(b.top + ny * push, 6, 92);
+            moved = true;
+          }
+        }
+      }
+      if (!moved) break;
+    }
+    return { clusters, singles };
+  }, [listings]);
+
+  const clusterItems = openCluster ? listings.filter((l) => l.subCounty === openCluster) : [];
 
   // group trends: borough -> deduped sub-counties
   const byBorough = useMemo(() => {
@@ -157,8 +211,8 @@ export default function MapView() {
                 <div key={r.cls} aria-hidden className={cn("pointer-events-none absolute -left-[10%] h-1.5 w-[120%] bg-kline/80", r.cls)} style={{ top: r.top }} />
               ))}
 
-              {/* pins */}
-              {listings.map((l, i) => {
+              {/* individual pins (areas with only 1-2 listings) */}
+              {singles.map((l, i) => {
                 const p = pinPos(l);
                 const active = l.id === selectedId;
                 const fresh = l.freshH <= 24; // green = fresh/available-heavy per legend
@@ -183,6 +237,96 @@ export default function MapView() {
                   </div>
                 );
               })}
+
+              {/* density clusters — sub-counties with 3+ listings, sized by count */}
+              {clusters.map((c) => {
+                const size = c.items.length >= 7 ? 52 : c.items.length >= 5 ? 46 : 40;
+                const open = openCluster === c.subCounty;
+                return (
+                  <div
+                    key={c.subCounty}
+                    className="absolute"
+                    style={{ left: `${c.left}%`, top: `${c.top}%`, transform: "translate(-50%, -50%)" }}
+                  >
+                    <button
+                      onClick={() => setOpenCluster(open ? null : c.subCounty)}
+                      aria-label={`${c.subCounty} cluster — ${c.items.length} listings`}
+                      aria-pressed={open}
+                      style={{ width: size, height: size, animationDelay: `${(c.subCounty.length % 8) * 110}ms` }}
+                      className={cn(
+                        "bounce-pin grid place-items-center rounded-full text-center shadow-lg ring-[3px] ring-white/90 transition-all hover:scale-110",
+                        open
+                          ? "z-10 bg-ink text-white"
+                          : c.freshRatio >= 0.6
+                            ? "bg-verified text-white"
+                            : "bg-trust text-white"
+                      )}
+                    >
+                      <span className="leading-none">
+                        <span className="block font-display text-[14px] font-extrabold tabular-nums">{c.items.length}</span>
+                        <span className="block text-[7px] font-extrabold uppercase tracking-wide opacity-90">kejas</span>
+                      </span>
+                    </button>
+                    <span
+                      className={cn(
+                        "pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-full bg-surface/90 px-2 py-0.5 text-[8.5px] font-extrabold text-body shadow-sm",
+                        open && "bg-ink text-white"
+                      )}
+                    >
+                      {c.subCounty}
+                    </span>
+                  </div>
+                );
+              })}
+
+              {/* cluster panel — listings inside the open cluster */}
+              {openCluster && clusterItems.length > 0 && (
+                <div
+                  className="slide-up absolute inset-x-3 bottom-10 z-20 overflow-hidden rounded-2xl border border-kline bg-surface shadow-2xl"
+                  role="dialog"
+                  aria-label={`${openCluster} cluster listings`}
+                >
+                  <div className="flex items-center justify-between border-b border-kline bg-kbg/60 px-3.5 py-2.5">
+                    <p className="flex items-center gap-1.5 font-display text-[12.5px] font-extrabold text-body">
+                      <Layers className="h-3.5 w-3.5 text-trust" /> {openCluster} • {clusterItems.length} kejas
+                    </p>
+                    <button
+                      onClick={() => setOpenCluster(null)}
+                      aria-label="Close cluster"
+                      className="touch-target grid place-items-center rounded-full p-1 hover:bg-kline"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <ul className="keja-scroll max-h-[190px] overflow-y-auto">
+                    {clusterItems.map((l) => (
+                      <li key={l.id}>
+                        <button
+                          onClick={() => {
+                            setOpenCluster(null);
+                            navigate("listing", { listingId: l.id });
+                          }}
+                          className="flex w-full items-center gap-3 border-b border-kline/60 px-3.5 py-2.5 text-left transition-colors last:border-0 hover:bg-kbg"
+                        >
+                          <span className={cn("h-2 w-2 shrink-0 rounded-full", l.freshH <= 24 ? "bg-verified" : "bg-trust")} aria-hidden />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[11.5px] font-extrabold text-body">
+                              {kes(l.price)} • {l.estate} • {l.beds}
+                            </span>
+                            <span className="block truncate text-[9.5px] font-semibold text-kmuted">
+                              {l.title} • {l.freshH <= 24 ? "fresh" : `${l.freshH}h`}
+                            </span>
+                          </span>
+                          {l.poster.verificationStatus === "verified" && (
+                            <span className="shrink-0 rounded-full bg-verified-soft px-1.5 py-0.5 text-[8.5px] font-extrabold text-ok-strong">✓</span>
+                          )}
+                          <MapPin className="h-3 w-3 shrink-0 text-kmuted" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* selected mini card */}
               {selected && (() => {
@@ -238,17 +382,21 @@ export default function MapView() {
               {/* legend */}
               <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center gap-x-3 gap-y-1 bg-surface/85 px-3.5 py-2 text-[10px] font-semibold text-body/80 backdrop-blur-sm">
                 <span className="flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-trust" aria-hidden /> Blue = search clusters
+                  <span className="grid h-4 w-4 place-items-center rounded-full bg-trust text-[7px] font-extrabold text-white" aria-hidden>3</span>
+                  Cluster = 3+ kejas in a sub-county
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-verified" aria-hidden /> Green = fresh/available-heavy
+                  <span className="h-2.5 w-2.5 rounded-full bg-trust" aria-hidden /> Blue = available
                 </span>
-                <span className="text-kmuted">Map geometry is illustrative until live GIS is connected</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-verified" aria-hidden /> Green = fresh-heavy
+                </span>
+                <span className="hidden text-kmuted sm:inline">Map geometry is illustrative until live GIS is connected</span>
               </div>
             </div>
           )}
           <p className="mt-2 flex items-center gap-1.5 text-[10.5px] text-kmuted">
-            <Play className="h-3 w-3" /> Tap a pin to preview — price, walk time and live weather chip.
+            <Play className="h-3 w-3" /> Tap a cluster to open its keja list • tap a single pin to preview price, walk time and weather.
           </p>
         </div>
       )}

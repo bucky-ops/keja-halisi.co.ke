@@ -25,6 +25,7 @@ const EN = {
   navMore: "More",
   navAgents: "Agent leaderboard",
   navQuiz: "Scam safety quiz",
+  navAfford: "Rent reality check",
   dataSaver: "Data Saver",
   dataSaverOn: "Data Saver ON",
   notifications: "Notifications",
@@ -167,6 +168,10 @@ const EN = {
   moveExtras: "One-off extras",
   moveTotal: "Move-in total",
   moveWarn: "Anyone demanding more than this BEFORE the viewing = red flag. Viewing is free — hakuna kulipa. Deposits are refundable per your tenancy agreement.",
+  // affordability
+  affordTileTitle: "Can you afford it?",
+  affordTileSub: "The 30% rule, Nairobi-calibrated — get your honest rent band in 30 seconds",
+  affordTileCta: "Check my band",
 } as const;
 
 export type DictKey = keyof typeof EN;
@@ -311,6 +316,10 @@ const SW: Partial<Record<DictKey, string>> = {
   moveExtras: "Ziada za mara moja",
   moveTotal: "Jumla ya kuhamia",
   moveWarn: "Yeyote anayetaka zaidi ya hii KABLA ya kuona = alama ya scam. Kuona ni bure — hakuna kulipa. Amanah inarejeshwa kwa makubaliano yako.",
+  navAfford: "Kadirio la makocha",
+  affordTileTitle: "Unaweza kulipa?",
+  affordTileSub: "Kanuni ya 30% kwa Nairobi — pata bei yako ya kweli kwa sekunde 30",
+  affordTileCta: "Kagua bei yangu",
 };
 
 const DICTS: Record<Lang, Partial<Record<DictKey, string>>> = { en: EN, sw: SW };

@@ -20,6 +20,7 @@ import MapView from "@/components/keja/views/map";
 import CompareView from "@/components/keja/views/compare";
 import AgentsView from "@/components/keja/views/agents";
 import QuizView from "@/components/keja/views/quiz";
+import AffordView from "@/components/keja/views/afford";
 
 function ActiveView() {
   const view = useKeja((s) => s.view);
@@ -50,6 +51,8 @@ function ActiveView() {
       return <AgentsView />;
     case "quiz":
       return <QuizView />;
+    case "afford":
+      return <AffordView />;
     case "home":
     default:
       return <HomeView />;
@@ -84,6 +87,7 @@ export default function Page() {
       compare: "Compare kejas — Keja Halisi",
       agents: "Trust leaderboard — Keja Halisi",
       quiz: "Scam safety quiz — Keja Halisi",
+      afford: "Rent reality check — Keja Halisi",
     };
     document.title = titles[view] ?? titles.home;
   }, [view]);

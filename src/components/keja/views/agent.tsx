@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
-import { fetchAgentProfile } from "../api";
+import { fetchAgentProfile, type TenantReview, type RatingSummary } from "../api";
 import { VerificationBadge } from "../badges";
 import { ListingCard, ListingCardSkeleton } from "../listing-card";
 import { RatingSheet } from "../rating";
@@ -26,17 +26,23 @@ interface ProfileData {
   agent: AgentDTO;
   listings: ListingDTO[];
   verifications: { docType: string; status: string }[];
+  reviews: TenantReview[];
+  ratingSummary: RatingSummary;
 }
-
-const DEMO_REVIEWS = [
-  { text: "Keja ilikuwa real", stars: "5★", handle: "@mary" },
-  { text: "No viewing fee, legit", stars: "5★", handle: "@john" },
-  { text: "Alinipatia keja same day", stars: "4.8★", handle: "@wanjiku" },
-];
 
 function fmtDate(iso: string | null): string {
   if (!iso) return "";
   return new Date(iso).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function Stars({ n, className }: { n: number; className?: string }) {
+  return (
+    <span className={cn("flex shrink-0 items-center gap-0.5", className)} aria-label={`${n} star rating`}>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Star key={i} className={cn("h-3 w-3", i < n ? "fill-gold text-gold" : "text-kline")} />
+      ))}
+    </span>
+  );
 }
 
 export default function AgentView() {
@@ -135,7 +141,7 @@ export default function AgentView() {
   }
 
   /* ---------- data ---------- */
-  const { agent, listings, verifications } = data;
+  const { agent, listings, verifications, reviews, ratingSummary } = data;
   const initials = agent.tiktokHandle.replace("@", "").slice(0, 2).toUpperCase();
 
   // trust feedback loop — community "legit" upvotes (demo base + local vote)
@@ -324,41 +330,90 @@ export default function AgentView() {
             </div>
           )}
 
-          {/* reviews */}
+          {/* tenants say — DB-backed post-viewing reviews */}
           <div className="rounded-2xl border border-kline bg-card p-4">
-            <p className="text-[10.5px] font-extrabold uppercase tracking-[0.14em] text-kmuted">Reviews</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[10.5px] font-extrabold uppercase tracking-[0.14em] text-kmuted">
+                Tenants say • {ratingSummary.count} reviews
+              </p>
+              {ratingSummary.count > 0 && (
+                <span className="rounded-full bg-verified-soft px-2 py-0.5 text-[10px] font-extrabold text-ok-strong">
+                  {Math.round((reviews.filter((r) => r.verifiedStay).length / reviews.length) * 100)}% verified stays
+                </span>
+              )}
+            </div>
+
+            {/* rating summary — big avg + distribution bars */}
+            {ratingSummary.count > 0 && (
+              <div className="mt-3 flex items-center gap-4 rounded-2xl bg-kbg p-3.5">
+                <div className="shrink-0 text-center">
+                  <p className="font-display text-3xl font-extrabold leading-none text-body">{ratingSummary.avg}</p>
+                  <Stars n={Math.round(ratingSummary.avg)} className="mt-1.5 justify-center" />
+                  <p className="mt-1 text-[9.5px] font-bold text-kmuted">{ratingSummary.count} ratings</p>
+                </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  {[5, 4, 3, 2, 1].map((s) => {
+                    const c = ratingSummary.dist[s - 1] ?? 0;
+                    const pct = ratingSummary.count ? Math.round((c / ratingSummary.count) * 100) : 0;
+                    return (
+                      <div key={s} className="flex items-center gap-2">
+                        <span className="w-5 shrink-0 text-right text-[9.5px] font-extrabold text-kmuted">{s}★</span>
+                        <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-kline">
+                          <div
+                            className={cn("h-full rounded-full", s >= 4 ? "bg-verified" : s === 3 ? "bg-gold" : "bg-scam")}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="w-6 shrink-0 text-right text-[9.5px] font-bold tabular-nums text-kmuted">{c}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {myRating && (
               <div className="mt-3 flex items-center gap-3 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2.5">
-                <span className="flex shrink-0 items-center gap-0.5">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className={cn("h-3 w-3", i < myRating.stars ? "fill-gold text-gold" : "text-kline")} />
-                  ))}
-                </span>
+                <Stars n={myRating.stars} />
                 <p className="min-w-0 flex-1 truncate text-[12px] font-bold text-body">
                   {myRating.comment || "Asante — rated after viewing"}
                 </p>
                 <span className="shrink-0 text-[10px] font-extrabold text-warn">YOUR RATING</span>
               </div>
             )}
-            <ul className="mt-3 divide-y divide-kline">
-              {DEMO_REVIEWS.map((r) => (
-                <li key={r.handle} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
-                  <span className="flex shrink-0 items-center gap-0.5" aria-label={`${r.stars} rating`}>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={cn(
-                          "h-3 w-3",
-                          i < Math.round(parseFloat(r.stars)) ? "fill-gold text-gold" : "text-kline"
-                        )}
-                      />
-                    ))}
+
+            <ul className="mt-1 divide-y divide-kline">
+              {reviews.map((r) => (
+                <li key={r.id} className="flex gap-3 py-3 first:pt-3 last:pb-0">
+                  <span
+                    className={cn(
+                      "grid h-8 w-8 shrink-0 place-items-center rounded-xl font-display text-[10.5px] font-extrabold",
+                      r.verifiedStay ? "bg-verified-soft text-ok-strong ring-1 ring-verified/30" : "bg-kbg text-kmuted"
+                    )}
+                    aria-hidden
+                  >
+                    {r.authorHandle.replace("@", "").slice(0, 2).toUpperCase()}
                   </span>
-                  <p className="min-w-0 flex-1 truncate text-[12px] font-bold text-body">{r.text}</p>
-                  <span className="shrink-0 text-[10.5px] font-extrabold text-trust">{r.stars}</span>
-                  <span className="shrink-0 text-[10.5px] font-bold text-kmuted">• {r.handle}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <Stars n={r.stars} />
+                      {r.verifiedStay && (
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-verified-soft px-1.5 py-0.5 text-[9px] font-extrabold text-ok-strong">
+                          <CircleCheck className="h-2.5 w-2.5" /> VERIFIED STAY
+                        </span>
+                      )}
+                      <span className="ml-auto text-[9.5px] font-semibold text-kmuted">{fmtDate(r.createdAt)}</span>
+                    </div>
+                    <p className="mt-1 text-[12px] font-semibold leading-relaxed text-body">{r.text}</p>
+                    <p className="mt-0.5 text-[10px] font-bold text-trust">{r.authorHandle}</p>
+                  </div>
                 </li>
               ))}
+              {reviews.length === 0 && (
+                <li className="py-3 text-center text-[11.5px] font-semibold text-kmuted">
+                  No tenant reviews yet — be the first to rate after your viewing.
+                </li>
+              )}
             </ul>
           </div>
 

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search, ArrowRight, BadgeCheck, ShieldCheck, Building2, Flag, CalendarClock,
   Play, Zap, MapPin, Smartphone, Ban, ChevronRight, History as HistoryIcon,
-  GraduationCap, Trophy, Star, CalendarCheck,
+  GraduationCap, Trophy, Star, CalendarCheck, Calculator,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
@@ -503,7 +503,28 @@ export default function HomeView() {
         </section>
       </section>
 
-      {/* =================== 5b. RECENTLY VIEWED RAIL =================== */}
+      {/* ========== 5b. RENT REALITY CHECK BAND ========== */}
+      <section
+        className="card-lift relative mt-4 flex flex-wrap items-center gap-4 overflow-hidden rounded-3xl border border-trust/25 bg-gradient-to-r from-trust-soft via-surface to-verified-soft p-5 shadow-[0_10px_30px_rgba(17,25,40,0.06)]"
+        aria-label="Rent reality check"
+      >
+        <div className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full bg-trust/10 blur-2xl" aria-hidden />
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-trust text-white shadow-lg shadow-trust/30" aria-hidden>
+          <Calculator className="h-5.5 w-5.5" />
+        </span>
+        <div className="min-w-[220px] flex-1">
+          <h3 className="font-display text-[15.5px] font-extrabold text-body">{t("affordTileTitle")}</h3>
+          <p className="mt-0.5 max-w-md text-[11.5px] font-semibold leading-relaxed text-kmuted">{t("affordTileSub")}</p>
+        </div>
+        <button
+          onClick={() => navigate("afford")}
+          className="touch-target inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 font-display text-[12.5px] font-extrabold text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
+        >
+          {t("affordTileCta")} <ArrowRight className="h-3.5 w-3.5" />
+        </button>
+      </section>
+
+      {/* =================== 5c. RECENTLY VIEWED RAIL =================== */}
       {recentItems.length > 0 && (
         <section className="mt-10" aria-label="Recently viewed kejas">
           <div className="flex items-end justify-between gap-3">
