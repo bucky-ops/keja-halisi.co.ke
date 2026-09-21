@@ -15,7 +15,7 @@ export function MarketPulse({ pulse, className }: { pulse: MarketPulse | null; c
   return (
     <section className={cn("rounded-3xl bg-card border border-kline p-4 shadow-[0_10px_30px_rgba(17,25,40,0.06)]", className)} aria-label="Market pulse">
       <header className="flex items-center justify-between">
-        <h3 className="flex items-center gap-1.5 font-display text-[13px] font-bold text-ink">
+        <h3 className="flex items-center gap-1.5 font-display text-[13px] font-bold text-body">
           <TrendingUp className="h-4 w-4 text-verified" /> Market Pulse • Nairobi Live
         </h3>
         <span className="rounded-full bg-verified/10 text-verified px-2 py-0.5 text-[9px] font-extrabold tracking-wider flex items-center gap-1">

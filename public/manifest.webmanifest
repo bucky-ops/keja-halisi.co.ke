@@ -1,0 +1,24 @@
+{
+  "name": "Keja Halisi — Real House Verified",
+  "short_name": "Keja Halisi",
+  "description": "Nairobi's verified TikTok rental marketplace. No viewing fee before viewing — Hakuna Kulipa Kabla Ya Kuona Nyumba.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F7FA",
+  "theme_color": "#1976D2",
+  "lang": "en-KE",
+  "categories": ["business", "lifestyle", "shopping"],
+  "icons": [
+    {
+      "src": "/logo/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    { "name": "Find Keja", "url": "/?view=estate" },
+    { "name": "Post a House", "url": "/?view=post" },
+    { "name": "Get Verified", "url": "/?view=verify" }
+  ]
+}

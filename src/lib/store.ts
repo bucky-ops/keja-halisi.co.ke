@@ -16,7 +16,8 @@ export type ViewName =
   | "dashboard"
   | "admin"
   | "payments"
-  | "map";
+  | "map"
+  | "compare";
 
 export interface ViewParams {
   borough?: string;
@@ -30,6 +31,25 @@ export interface ViewParams {
   q?: string;
   minPrice?: number;
   maxPrice?: number;
+}
+
+// ---- notifications (trust feedback loop) ----
+export interface KejaNotification {
+  id: number;
+  kind: "success" | "info" | "warning" | "error";
+  title: string;
+  body: string;
+  at: number;
+}
+
+// ---- renter report log (persisted proof of community policing) ----
+export interface ReportLogItem {
+  id: number;
+  listingId: string;
+  estate: string;
+  reason: string;
+  at: number;
+  autoHidden: boolean;
 }
 
 interface KejaState {
@@ -52,21 +72,42 @@ interface KejaState {
     sort: "fresh" | "price_asc" | "price_desc" | "response";
   };
   saved: string[];
+  // compare tray (max 3)
+  compare: string[];
   // demo session (OTP-verified user)
   session: { phone: string | null; verified: boolean };
   // renter activity (trust feedback loop — persisted)
-  activity: { leads: number; reports: number; ratings: number; upvotes: Record<string, true> };
+  activity: {
+    leads: number;
+    reports: number;
+    ratings: number;
+    upvotes: Record<string, true>;
+    notifications: KejaNotification[];
+    lastReadAt: number;
+    reportLog: ReportLogItem[];
+  };
   // low-data mode (disables embed autoplay / heavy effects)
   lowData: boolean;
+  // theme (light/dark)
+  theme: "light" | "dark";
+  // UI language
+  lang: "en" | "sw";
   navigate: (view: ViewName, params?: ViewParams) => void;
   back: () => void;
   setFilters: (patch: Partial<KejaState["filters"]>) => void;
   resetFilters: () => void;
   toggleSaved: (id: string) => void;
+  toggleCompare: (id: string) => void;
+  clearCompare: () => void;
   setSession: (s: Partial<KejaState["session"]>) => void;
   bumpActivity: (patch: Partial<Pick<KejaState["activity"], "leads" | "reports" | "ratings">>) => void;
   toggleUpvote: (agentId: string) => void;
+  notify: (kind: KejaNotification["kind"], title: string, body: string) => void;
+  markAllRead: () => void;
+  logReport: (item: Omit<ReportLogItem, "id" | "at">) => void;
   setLowData: (v: boolean) => void;
+  setTheme: (t: KejaState["theme"]) => void;
+  setLang: (l: KejaState["lang"]) => void;
 }
 
 const DEFAULT_FILTERS: KejaState["filters"] = {
@@ -92,9 +133,12 @@ export const useKeja = create<KejaState>()(
       history: [],
       filters: DEFAULT_FILTERS,
       saved: [],
+      compare: [],
       session: { phone: null, verified: false },
-      activity: { leads: 0, reports: 0, ratings: 0, upvotes: {} },
+      activity: { leads: 0, reports: 0, ratings: 0, upvotes: {}, notifications: [], lastReadAt: 0, reportLog: [] },
       lowData: false,
+      theme: "light",
+      lang: "en",
       navigate: (view, params = {}) => {
         const { view: v, params: p, history } = get();
         set({
@@ -117,8 +161,26 @@ export const useKeja = create<KejaState>()(
       resetFilters: () => set({ filters: { ...DEFAULT_FILTERS } }),
       toggleSaved: (id) => {
         const { saved } = get();
-        set({ saved: saved.includes(id) ? saved.filter((s) => s !== id) : [...saved, id] });
+        const isSaved = saved.includes(id);
+        set({ saved: isSaved ? saved.filter((s) => s !== id) : [...saved, id] });
+        if (!isSaved) {
+          get().notify("success", "Keja saved", "Added to your shortlist — we watch freshness for you.");
+        }
       },
+      toggleCompare: (id) => {
+        const { compare } = get();
+        if (compare.includes(id)) {
+          set({ compare: compare.filter((c) => c !== id) });
+          return;
+        }
+        if (compare.length >= 3) {
+          toast("warning", "Compare tray full — remove one first (max 3)");
+          return;
+        }
+        set({ compare: [...compare, id] });
+        if (compare.length + 1 === 2) toast("info", "1 more keja and you can compare side-by-side");
+      },
+      clearCompare: () => set({ compare: [] }),
       setSession: (s) => set({ session: { ...get().session, ...s } }),
       bumpActivity: (patch) => {
         const a = get().activity;
@@ -134,19 +196,56 @@ export const useKeja = create<KejaState>()(
       toggleUpvote: (agentId) => {
         const upvotes = { ...get().activity.upvotes };
         if (upvotes[agentId]) delete upvotes[agentId];
-        else upvotes[agentId] = true;
+        else {
+          upvotes[agentId] = true;
+          get().notify("success", "Upvote counted", "Community trust score +1 — asante sana!");
+        }
         set({ activity: { ...get().activity, upvotes } });
       },
+      notify: (kind, title, body) => {
+        const a = get().activity;
+        const n: KejaNotification = { id: Date.now() + Math.floor(Math.random() * 999), kind, title, body, at: Date.now() };
+        set({ activity: { ...a, notifications: [n, ...a.notifications].slice(0, 12) } });
+      },
+      markAllRead: () => set({ activity: { ...get().activity, lastReadAt: Date.now() } }),
+      logReport: (item) => {
+        const a = get().activity;
+        const r: ReportLogItem = { ...item, id: Date.now(), at: Date.now() };
+        set({
+          activity: {
+            ...a,
+            reportLog: [r, ...a.reportLog].slice(0, 12),
+          },
+        });
+        get().notify(
+          r.autoHidden ? "success" : "warning",
+          r.autoHidden ? "Listing hidden — 3 strikes" : "Report received",
+          r.autoHidden ? `${r.estate} listing auto-hidden pending review. Good catch!` : `${r.reason} report on ${r.estate} — audit trail created.`
+        );
+      },
       setLowData: (v) => set({ lowData: v }),
+      setTheme: (t) => set({ theme: t }),
+      setLang: (l) => set({ lang: l }),
     }),
     {
       name: "keja-halisi-state",
       partialize: (s) => ({
         filters: s.filters,
         saved: s.saved,
+        compare: s.compare,
         session: s.session,
-        activity: { leads: s.activity.leads, reports: s.activity.reports, ratings: s.activity.ratings, upvotes: s.activity.upvotes },
+        activity: {
+          leads: s.activity.leads,
+          reports: s.activity.reports,
+          ratings: s.activity.ratings,
+          upvotes: s.activity.upvotes,
+          notifications: s.activity.notifications,
+          lastReadAt: s.activity.lastReadAt,
+          reportLog: s.activity.reportLog,
+        },
         lowData: s.lowData,
+        theme: s.theme,
+        lang: s.lang,
       }),
     }
   )

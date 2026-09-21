@@ -39,7 +39,7 @@ function MapSkeleton() {
       {[18, 34, 52, 70, 84].map((t, i) => (
         <div key={t} className="absolute h-6 w-6 rounded-full shimmer" style={{ left: `${12 + i * 17}%`, top: `${t}%` }} />
       ))}
-      <div className="absolute inset-x-0 bottom-0 h-10 bg-white/70 shimmer" />
+      <div className="absolute inset-x-0 bottom-0 h-10 bg-surface/70 shimmer" />
     </div>
   );
 }
@@ -95,7 +95,7 @@ export default function MapView() {
       {/* header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-[20px] font-extrabold text-ink">Nairobi discovery map</h1>
+          <h1 className="font-display text-[20px] font-extrabold text-body">Nairobi discovery map</h1>
           <p className="mt-0.5 text-[12px] text-kmuted">Clustered by borough • illustrative until live GIS</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -111,7 +111,7 @@ export default function MapView() {
                 onClick={() => setMode(m)}
                 className={cn(
                   "touch-target rounded-full px-4 text-[12px] font-extrabold transition-colors",
-                  mode === m ? "bg-ink text-white" : "text-kmuted hover:text-ink"
+                  mode === m ? "bg-ink text-white" : "text-kmuted hover:text-body"
                 )}
               >
                 {m === "listings" ? "Listings" : "Market pulse"}
@@ -124,7 +124,7 @@ export default function MapView() {
       {/* weather strip */}
       <div className="mt-4 flex gap-2 overflow-x-auto scrollbar-hide pb-0.5" aria-label="Weather by borough">
         {weatherChips.map((w) => (
-          <span key={w.borough} className="flex shrink-0 items-center gap-1.5 rounded-full border border-kline bg-card px-3 py-1.5 text-[11px] font-bold text-ink">
+          <span key={w.borough} className="flex shrink-0 items-center gap-1.5 rounded-full border border-kline bg-card px-3 py-1.5 text-[11px] font-bold text-body">
             <CloudSun className="h-3.5 w-3.5 text-trust" /> {w.borough}: {w.temp}°C
           </span>
         ))}
@@ -132,7 +132,7 @@ export default function MapView() {
 
       {failed && (
         <div className="mt-4 rounded-3xl border border-kline bg-card p-8 text-center">
-          <p className="font-display text-[15px] font-extrabold text-ink">Map data failed to load</p>
+          <p className="font-display text-[15px] font-extrabold text-body">Map data failed to load</p>
           <button onClick={() => void load()} className="touch-target mt-3 rounded-full bg-trust px-5 font-extrabold text-[12.5px] text-white">
             Retry
           </button>
@@ -147,14 +147,14 @@ export default function MapView() {
           ) : listings.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-kline p-12 text-center">
               <MapPin className="mx-auto h-7 w-7 text-kmuted" />
-              <p className="mt-2 text-[13px] font-bold text-ink">No listings to map yet</p>
+              <p className="mt-2 text-[13px] font-bold text-body">No listings to map yet</p>
               <p className="text-[12px] text-kmuted">Approved listings with coordinates appear as pins here.</p>
             </div>
           ) : (
             <div className="relative h-[560px] overflow-hidden rounded-3xl border border-kline keja-map" aria-label="Nairobi listings map">
               {/* roads overlay — illustrative */}
               {ROADS.map((r) => (
-                <div key={r.cls} aria-hidden className={cn("pointer-events-none absolute -left-[10%] h-1.5 w-[120%] bg-white/80", r.cls)} style={{ top: r.top }} />
+                <div key={r.cls} aria-hidden className={cn("pointer-events-none absolute -left-[10%] h-1.5 w-[120%] bg-kline/80", r.cls)} style={{ top: r.top }} />
               ))}
 
               {/* pins */}
@@ -190,7 +190,7 @@ export default function MapView() {
                 const walkMin = Math.round(selected.distanceToRoadM / 70);
                 return (
                   <div
-                    className="slide-up absolute z-20 w-[232px] rounded-2xl border border-kline bg-white p-3.5 shadow-xl"
+                    className="slide-up absolute z-20 w-[232px] rounded-2xl border border-kline bg-surface p-3.5 shadow-xl"
                     style={{
                       left: `${clamp(p.left, 4, 68)}%`,
                       top: `${p.top > 52 ? clamp(p.top - 30, 4, 62) : clamp(p.top + 9, 4, 62)}%`,
@@ -199,7 +199,7 @@ export default function MapView() {
                     aria-label={`Listing in ${selected.estate}`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="font-display text-[15px] font-extrabold text-ink">
+                      <p className="font-display text-[15px] font-extrabold text-body">
                         {kes(selected.price)}
                         <span className="text-[10.5px] font-semibold text-kmuted"> /mo</span>
                       </p>
@@ -207,14 +207,14 @@ export default function MapView() {
                         <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                    <p className="mt-0.5 text-[11.5px] font-bold text-ink/85">{selected.estate} • {selected.beds}</p>
+                    <p className="mt-0.5 text-[11.5px] font-bold text-body/85">{selected.estate} • {selected.beds}</p>
                     <p className="mt-0.5 text-[10.5px] text-kmuted">
                       {selected.distanceToRoadM}m to road • {walkMin} min walk
                     </p>
                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
                       <span className="rounded-full bg-trust-soft px-2 py-0.5 text-[10px] font-extrabold text-trust">{selected.weather.temp}°C</span>
                       {selected.poster.verificationStatus === "verified" && (
-                        <span className="rounded-full bg-verified-soft px-2 py-0.5 text-[10px] font-extrabold text-[#08743A]">Verified</span>
+                        <span className="rounded-full bg-verified-soft px-2 py-0.5 text-[10px] font-extrabold text-ok">Verified</span>
                       )}
                     </div>
                     <div className="mt-2.5 grid grid-cols-2 gap-2">
@@ -226,7 +226,7 @@ export default function MapView() {
                       </button>
                       <button
                         onClick={() => setSelectedId(null)}
-                        className="touch-target rounded-full border border-kline text-[11.5px] font-extrabold text-ink hover:bg-kbg"
+                        className="touch-target rounded-full border border-kline text-[11.5px] font-extrabold text-body hover:bg-kbg"
                       >
                         Close
                       </button>
@@ -236,7 +236,7 @@ export default function MapView() {
               })()}
 
               {/* legend */}
-              <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center gap-x-3 gap-y-1 bg-white/85 px-3.5 py-2 text-[10px] font-semibold text-ink/80 backdrop-blur-sm">
+              <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center gap-x-3 gap-y-1 bg-surface/85 px-3.5 py-2 text-[10px] font-semibold text-body/80 backdrop-blur-sm">
                 <span className="flex items-center gap-1.5">
                   <span className="h-2.5 w-2.5 rounded-full bg-trust" aria-hidden /> Blue = search clusters
                 </span>
@@ -268,7 +268,7 @@ export default function MapView() {
                 return (
                   <section key={b.name} className="rounded-3xl border border-kline bg-card p-4">
                     <header className="flex items-center justify-between gap-2">
-                      <h3 className="font-display text-[14px] font-extrabold text-ink">{b.name}</h3>
+                      <h3 className="font-display text-[14px] font-extrabold text-body">{b.name}</h3>
                       <TrendingUp className={cn("h-4 w-4", rows.some(([, r]) => r.count > 1) ? "text-verified" : "text-kmuted")} />
                     </header>
                     <p className="mt-0.5 text-[10.5px] text-kmuted">{b.estates}</p>
@@ -276,7 +276,7 @@ export default function MapView() {
                       {rows.length > 0 ? (
                         rows.map(([sub, r]) => (
                           <li key={sub} className="flex items-center justify-between gap-2 rounded-xl bg-kbg px-3 py-2 text-[11px]">
-                            <span className="min-w-0 truncate font-bold text-ink">
+                            <span className="min-w-0 truncate font-bold text-body">
                               {sub} — avg {kes(Math.round(r.avg / r.n))}
                             </span>
                             <span className="flex shrink-0 items-center gap-1 font-semibold text-kmuted">
@@ -299,7 +299,7 @@ export default function MapView() {
           </p>
           {!loading && trends.length === 0 && (
             <div className="mt-3 rounded-2xl border border-dashed border-kline p-8 text-center">
-              <p className="text-[12.5px] font-bold text-ink">No trend data yet</p>
+              <p className="text-[12.5px] font-bold text-body">No trend data yet</p>
               <p className="text-[11.5px] text-kmuted">
                 Sub-county averages appear once listings are approved. <button onClick={() => toast("info", "Borough model is configurable in src/lib/nairobi.ts")} className="font-bold text-trust underline">How it works</button>
               </p>

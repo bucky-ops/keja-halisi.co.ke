@@ -19,7 +19,7 @@ import type { ListingDTO } from "@/lib/types";
 type Oembed = { thumb: string | null; author: string | null } | null;
 
 export default function ListingView() {
-  const { params, back, navigate, lowData, bumpActivity } = useKeja();
+  const { params, back, navigate, lowData, bumpActivity, notify, logReport } = useKeja();
   const [oembed, setOembed] = useState<Oembed>(null);
   const [similar, setSimilar] = useState<ListingDTO[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
@@ -138,9 +138,9 @@ export default function ListingView() {
   if (!listing) {
     return (
       <div className="mx-auto max-w-[1440px] px-4 py-6">
-        <div className="mx-auto max-w-md rounded-3xl border border-dashed border-kline bg-white p-10 text-center">
+        <div className="mx-auto max-w-md rounded-3xl border border-dashed border-kline bg-surface p-10 text-center">
           <HomeIcon className="mx-auto h-9 w-9 text-kline" aria-hidden />
-          <p className="mt-3 font-display text-[16px] font-extrabold text-ink">
+          <p className="mt-3 font-display text-[16px] font-extrabold text-body">
             {failed ? "Listing not found" : "No keja selected"}
           </p>
           <p className="mt-1.5 text-[12.5px] font-semibold leading-relaxed text-kmuted">
@@ -162,9 +162,9 @@ export default function ListingView() {
   const l = listing;
   const statusPill =
     l.status === "Available"
-      ? { cls: "bg-verified-soft text-[#08743A]", dot: "bg-verified pulse-dot", label: "Available" }
+      ? { cls: "bg-verified-soft text-ok", dot: "bg-verified pulse-dot", label: "Available" }
       : l.status === "Reserved"
-        ? { cls: "bg-pending-soft text-[#92400E]", dot: "bg-pending", label: "Reserved" }
+        ? { cls: "bg-pending-soft text-warn-strong", dot: "bg-pending", label: "Reserved" }
         : { cls: "bg-kbg text-kmuted", dot: "bg-kmuted", label: l.status };
 
   const initials = l.poster.tiktokHandle.replace("@", "").slice(0, 2).toUpperCase();
@@ -174,7 +174,7 @@ export default function ListingView() {
     <div className="mx-auto max-w-[1440px] px-4 py-6">
       <button
         onClick={back}
-        className="touch-target inline-flex items-center gap-1.5 rounded-full border border-kline bg-white px-4 py-2.5 text-[12.5px] font-extrabold text-ink hover:bg-kbg"
+        className="touch-target inline-flex items-center gap-1.5 rounded-full border border-kline bg-surface px-4 py-2.5 text-[12.5px] font-extrabold text-body hover:bg-kbg"
       >
         <ArrowLeft className="h-4 w-4" /> Back
       </button>
@@ -258,16 +258,16 @@ export default function ListingView() {
               {EVIDENCE_ITEMS.map((item) => (
                 <div
                   key={item}
-                  className="flex items-center gap-2 rounded-xl border border-verified/30 bg-white px-2.5 py-2.5"
+                  className="flex items-center gap-2 rounded-xl border border-verified/30 bg-surface px-2.5 py-2.5"
                 >
                   <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-verified">
                     <Check className="h-3 w-3 text-white" />
                   </span>
-                  <span className="truncate text-[11px] font-extrabold text-[#0a6b40]">{item}</span>
+                  <span className="truncate text-[11px] font-extrabold text-ok-strong">{item}</span>
                 </div>
               ))}
             </div>
-            <p className="mt-2.5 flex items-center gap-1.5 text-[10.5px] font-bold text-[#08743A]">
+            <p className="mt-2.5 flex items-center gap-1.5 text-[10.5px] font-bold text-ok">
               <BadgeCheck className="h-3.5 w-3.5" /> Evidence checklist • 5 required before publish
             </p>
           </section>
@@ -275,7 +275,7 @@ export default function ListingView() {
           {/* 4. Similar kejas rail */}
           {similar.length > 0 && (
             <section aria-label="Similar kejas">
-              <h2 className="font-display text-[15px] font-extrabold text-ink">
+              <h2 className="font-display text-[15px] font-extrabold text-body">
                 Similar kejas in {l.estate} • Horizontal scroll
               </h2>
               <div className="keja-scroll -mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-2">
@@ -294,9 +294,9 @@ export default function ListingView() {
         {/* ============================ RIGHT (sticky) ============================ */}
         <aside className="min-w-0 space-y-4 self-start lg:sticky lg:top-24">
           {/* 1. price panel */}
-          <section className="rounded-3xl border border-kline bg-white p-5">
+          <section className="rounded-3xl border border-kline bg-surface p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="font-display text-2xl font-extrabold text-ink">
+              <p className="font-display text-2xl font-extrabold text-body">
                 {kes(l.price)}<span className="text-[13px] font-bold text-kmuted"> /mo</span>
               </p>
               <span className={cn("inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-extrabold", statusPill.cls)}>
@@ -321,7 +321,7 @@ export default function ListingView() {
           <section>
             <button
               onClick={() => navigate("agent", { handle: l.poster.tiktokHandle })}
-              className="w-full rounded-3xl border border-kline bg-white p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
+              className="w-full rounded-3xl border border-kline bg-surface p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
               aria-label={`Open agent profile ${l.poster.tiktokHandle}`}
             >
               <div className="flex items-center gap-3">
@@ -329,7 +329,7 @@ export default function ListingView() {
                   {initials}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-1.5 truncate font-display text-[13.5px] font-extrabold text-ink">
+                  <p className="flex items-center gap-1.5 truncate font-display text-[13.5px] font-extrabold text-body">
                     {l.poster.tiktokHandle}
                     <ChevronRight className="h-3.5 w-3.5 shrink-0 text-kmuted" />
                   </p>
@@ -373,12 +373,12 @@ export default function ListingView() {
           </section>
 
           {/* 5. specs grid */}
-          <section className="rounded-3xl border border-kline bg-white p-4" aria-label="Unit specs">
+          <section className="rounded-3xl border border-kline bg-surface p-4" aria-label="Unit specs">
             <div className="grid grid-cols-3 gap-2.5">
               {specs.map((s) => (
                 <div key={s.label} className="rounded-2xl bg-kbg p-2.5 text-center">
                   <p className="text-[9px] font-extrabold uppercase tracking-wider text-kmuted">{s.label}</p>
-                  <p className="mt-0.5 truncate font-display text-[12px] font-extrabold text-ink">{s.value}</p>
+                  <p className="mt-0.5 truncate font-display text-[12px] font-extrabold text-body">{s.value}</p>
                 </div>
               ))}
             </div>
@@ -389,7 +389,7 @@ export default function ListingView() {
                 <span className="text-[11px] font-semibold text-kmuted">Amenities not declared — ask on call</span>
               ) : (
                 l.amenities.map((a) => (
-                  <span key={a} className="inline-flex items-center gap-1 rounded-full bg-verified-soft px-2.5 py-1.5 text-[10.5px] font-extrabold text-[#0a6b40]">
+                  <span key={a} className="inline-flex items-center gap-1 rounded-full bg-verified-soft px-2.5 py-1.5 text-[10.5px] font-extrabold text-ok-strong">
                     <Check className="h-3 w-3" /> {a}
                   </span>
                 ))
@@ -398,8 +398,8 @@ export default function ListingView() {
           </section>
 
           {/* 7. location */}
-          <section className="rounded-3xl border border-kline bg-white p-4" aria-label="Location">
-            <p className="flex items-start gap-1.5 text-[12px] font-bold leading-relaxed text-ink">
+          <section className="rounded-3xl border border-kline bg-surface p-4" aria-label="Location">
+            <p className="flex items-start gap-1.5 text-[12px] font-bold leading-relaxed text-body">
               <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-trust" />
               {l.estate}, near {l.road || "main road"} - {l.distanceToRoadM}m to road - {walkMin} min walk - Matatu 2 min
             </p>
@@ -409,7 +409,7 @@ export default function ListingView() {
                   <MapPin className="h-3.5 w-3.5" />
                 </span>
               </span>
-              <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[8.5px] font-extrabold tracking-wider text-ink">
+              <span className="absolute left-2 top-2 rounded-full bg-surface/90 px-2 py-0.5 text-[8.5px] font-extrabold tracking-wider text-body">
                 {l.subCounty.toUpperCase()} • DEMO LAYER
               </span>
             </div>
@@ -421,15 +421,15 @@ export default function ListingView() {
           {/* 8. rate-after-call trust loop */}
           {leadLogged && (
             <section className="pop rounded-3xl border border-gold/40 bg-gold/10 p-4" aria-label="Rate after viewing">
-              <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-[#8c6700]">
+              <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-warn">
                 <Star className="h-4 w-4 fill-gold text-gold" /> Rate after viewing?
               </p>
-              <p className="mt-1 text-[11.5px] font-semibold text-[#8c6700]/90">
+              <p className="mt-1 text-[11.5px] font-semibold text-warn/90">
                 Was this keja real? Rate {l.poster.tiktokHandle} — shows on their agent card.
               </p>
               <button
                 onClick={() => setRateOpen(true)}
-                className="touch-target mt-2.5 w-full rounded-full bg-gold py-2.5 text-[12px] font-extrabold text-ink transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                className="touch-target mt-2.5 w-full rounded-full bg-gold py-2.5 text-[12px] font-extrabold text-body transition-transform hover:scale-[1.02] active:scale-[0.98]"
               >
                 ⭐ Rate {l.poster.tiktokHandle}
               </button>
@@ -449,7 +449,7 @@ export default function ListingView() {
       {/* mobile sticky call bar — above bottom nav (wireframe File C) */}
       {l.status === "Available" && (
         <div
-          className="fixed inset-x-0 bottom-[68px] z-40 flex gap-2 border-t border-kline bg-white/95 p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] backdrop-blur-md md:hidden"
+          className="fixed inset-x-0 bottom-[68px] z-40 flex gap-2 border-t border-kline bg-surface/95 p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] backdrop-blur-md md:hidden"
           role="navigation"
           aria-label="Quick contact"
         >
@@ -469,14 +469,27 @@ export default function ListingView() {
       )}
 
       {/* modals + rating sheet */}
-      <ReportModal listing={l} open={reportOpen} onClose={closeReport} />
+      <ReportModal
+        listing={l}
+        open={reportOpen}
+        onClose={closeReport}
+        onReported={(r) => {
+          bumpActivity({ reports: 1 });
+          logReport({ listingId: l.id, estate: l.estate, reason: r.reason, autoHidden: r.autoHidden });
+        }}
+      />
       <ContactModal
         listing={l}
         open={contactOpen}
         onClose={() => setContactOpen(false)}
-        onLeadLogged={() => {
+        onLeadLogged={(action) => {
           setLeadLogged(true);
           bumpActivity({ leads: 1 });
+          notify(
+            "success",
+            action === "call" ? "Lead logged — call connected" : "Lead logged — WhatsApp",
+            `${l.estate} • ${l.beds} • agent ${l.poster.tiktokHandle} contacted. Rate after viewing!`
+          );
         }}
       />
       <RatingSheet

@@ -25,14 +25,14 @@ export function Toaster() {
             role="status"
             className={`toast-in pointer-events-auto flex items-center gap-2.5 ${bg} text-white rounded-full pl-3 pr-2 py-2.5 shadow-lg max-w-[92vw] sm:max-w-[420px]`}
           >
-            <span className="h-6 w-6 shrink-0 rounded-full bg-white/15 grid place-items-center">
+            <span className="h-6 w-6 shrink-0 rounded-full bg-surface/15 grid place-items-center">
               <Icon className="h-3.5 w-3.5" />
             </span>
             <p className="text-[12.5px] font-semibold leading-snug">{t.message}</p>
             <button
               onClick={() => dismiss(t.id)}
               aria-label="Dismiss"
-              className="touch-target grid place-items-center rounded-full hover:bg-white/10"
+              className="touch-target grid place-items-center rounded-full hover:bg-surface/10"
             >
               <X className="h-3.5 w-3.5" />
             </button>

@@ -7,7 +7,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { kes, maskPhone, timeAgo } from "@/lib/nairobi";
-import { toast } from "@/lib/store";
+import { toast, useKeja } from "@/lib/store";
+import { Download } from "lucide-react";
 import { fetchAdminQueue, reviewAgent, reviewListing, runCron } from "@/components/keja/api";
 import type { AgentDTO, AiFlag } from "@/lib/types";
 
@@ -21,8 +22,8 @@ const LISTING_REJECT_REASONS = ["Bait price", "Fake location", "Reposted video"]
 const hoursSince = (iso: string) => (Date.now() - new Date(iso).getTime()) / 3_600_000;
 
 function flagPillCls(sev: string) {
-  if (sev === "red") return "bg-scam-soft text-[#9F2020]";
-  if (sev === "amber") return "bg-pending-soft text-[#92400E]";
+  if (sev === "red") return "bg-scam-soft text-danger-strong";
+  if (sev === "amber") return "bg-pending-soft text-warn-strong";
   return "bg-trust-soft text-trust";
 }
 
@@ -36,7 +37,7 @@ function DocChip({ docType, status }: { docType: string; status: string }) {
     <span
       className={cn(
         "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-extrabold",
-        ok ? "bg-verified-soft text-[#08743A]" : status === "rejected" ? "bg-scam-soft text-[#9F2020]" : "bg-pending-soft text-[#92400E]"
+        ok ? "bg-verified-soft text-ok" : status === "rejected" ? "bg-scam-soft text-danger-strong" : "bg-pending-soft text-warn-strong"
       )}
     >
       {ok ? <BadgeCheck className="h-2.5 w-2.5" /> : <Clock className="h-2.5 w-2.5" />}
@@ -72,7 +73,7 @@ function RejectSelect({
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         aria-label="Reject reason"
-        className="touch-target rounded-full border border-scam/30 bg-white px-3 text-[11.5px] font-bold text-[#9F2020] outline-none"
+        className="touch-target rounded-full border border-scam/30 bg-surface px-3 text-[11.5px] font-bold text-danger-strong outline-none"
       >
         {reasons.map((r) => (
           <option key={r} value={r}>{r}</option>
@@ -86,7 +87,7 @@ function RejectSelect({
         Confirm reject
       </button>
       <button onClick={onCancel} aria-label="Cancel reject" className="touch-target grid place-items-center rounded-full hover:bg-scam/10">
-        <X className="h-3.5 w-3.5 text-[#9F2020]" />
+        <X className="h-3.5 w-3.5 text-danger-strong" />
       </button>
     </div>
   );
@@ -109,7 +110,7 @@ function EmptyState({ icon: Icon, title, sub }: { icon: typeof ShieldCheck; titl
   return (
     <div className="rounded-2xl border border-dashed border-kline p-8 text-center">
       <Icon className="mx-auto h-6 w-6 text-kmuted" />
-      <p className="mt-2 text-[12.5px] font-bold text-ink">{title}</p>
+      <p className="mt-2 text-[12.5px] font-bold text-body">{title}</p>
       <p className="text-[11.5px] text-kmuted">{sub}</p>
     </div>
   );
@@ -122,6 +123,53 @@ export default function AdminView() {
   const [rejecting, setRejecting] = useState<{ kind: "agent" | "listing"; id: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [cronBusy, setCronBusy] = useState<string | null>(null);
+  const { notify } = useKeja();
+
+  // CSV export — moderation data leaves the browser as a local download (privacy: masked fields only)
+  const exportCsv = () => {
+    if (!queue) return;
+    let rows: string[][] = [];
+    let name = "keja-export";
+    if (tab === "agents") {
+      name = "keja-agents";
+      rows = [
+        ["handle", "role", "status", "phone_masked", "rating", "listings", "reports"],
+        ...queue.pendingAgents.map((a) => [
+          a.tiktokHandle, a.role, a.verificationStatus, maskPhone(a.phone),
+          String(a.rating), String(a.listingsCount ?? 0), String(a.reportsCount ?? 0),
+        ]),
+      ];
+    } else if (tab === "listings") {
+      name = "keja-listings";
+      const listings = [...queue.flaggedListings, ...queue.pendingListings];
+      rows = [
+        ["id", "estate", "sub_county", "beds", "price_kes", "status", "publish_state", "fee", "reports"],
+        ...listings.map((l) => [
+          l.id, l.estate, l.subCounty, l.beds, String(l.price), l.status, l.publishState,
+          l.fee ? "fee" : "none", String(l.reportsCount ?? 0),
+        ]),
+      ];
+    } else if (tab === "reports") {
+      name = "keja-reports";
+      rows = [
+        ["id", "estate", "reason", "created_at"],
+        ...queue.reports.map((r) => [r.id, r.listing?.estate ?? "", r.reason, r.createdAt]),
+      ];
+    } else {
+      toast("info", "CSV export available for Agents / Listings / Reports tabs");
+      return;
+    }
+    const esc = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+    const csv = rows.map((r) => r.map(esc).join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${name}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast("success", `Exported ${rows.length - 1} rows • ${name}.csv`);
+    notify("success", "Moderation CSV exported", `${rows.length - 1} rows from the ${tab} queue downloaded — masked fields only.`);
+  };
 
   const load = useCallback(async () => {
     try {
@@ -224,10 +272,10 @@ export default function AdminView() {
       {/* header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-[20px] font-extrabold text-ink">Admin trust console</h1>
+          <h1 className="font-display text-[20px] font-extrabold text-body">Admin trust console</h1>
           <p className="mt-0.5 text-[12px] text-kmuted">Verification queue • reports • AI flags • append-only audit</p>
         </div>
-        <span className="flex items-center gap-1.5 rounded-full bg-verified-soft px-3 py-1 text-[10.5px] font-extrabold text-[#08743A]">
+        <span className="flex items-center gap-1.5 rounded-full bg-verified-soft px-3 py-1 text-[10.5px] font-extrabold text-ok">
           <ShieldCheck className="h-3.5 w-3.5" /> No viewing fee before viewing — enforced
         </span>
       </div>
@@ -235,7 +283,7 @@ export default function AdminView() {
       {/* cron panel */}
       <section className="mt-4 flex flex-wrap items-center gap-3 rounded-3xl border border-kline bg-card p-4">
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-2 font-display text-[13px] font-extrabold text-ink">
+          <p className="flex items-center gap-2 font-display text-[13px] font-extrabold text-body">
             <Terminal className="h-4 w-4 text-verified" /> Cron panel
           </p>
           <p className="mt-0.5 text-[11.5px] text-kmuted">Daily expiry sweep + 72h availability nudges — Africa&apos;s Talking SMS (mock)</p>
@@ -257,29 +305,39 @@ export default function AdminView() {
       </section>
 
       {/* tabs with counts */}
-      <div className="mt-4 flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5" role="tablist" aria-label="Admin queues">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            role="tab"
-            aria-selected={tab === t.id}
-            onClick={() => setTab(t.id)}
-            className={cn(
-              "touch-target flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[12px] font-extrabold transition-colors",
-              tab === t.id ? "border-ink bg-ink text-white" : "border-kline bg-card text-kmuted hover:text-ink"
-            )}
-          >
-            {t.label}
-            <span className={cn("rounded-full px-1.5 text-[10px]", tab === t.id ? "bg-white/20" : "bg-kbg")}>{t.n}</span>
-          </button>
-        ))}
+      <div className="mt-4 flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-1 gap-1.5 overflow-x-auto scrollbar-hide pb-0.5" role="tablist" aria-label="Admin queues">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "touch-target flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[12px] font-extrabold transition-colors",
+                tab === t.id ? "border-ink bg-ink text-white" : "border-kline bg-card text-kmuted hover:text-body"
+              )}
+            >
+              {t.label}
+              <span className={cn("rounded-full px-1.5 text-[10px]", tab === t.id ? "bg-white/20" : "bg-kbg")}>{t.n}</span>
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={exportCsv}
+          disabled={!queue}
+          title="Download current queue as CSV (masked fields only)"
+          className="touch-target inline-flex shrink-0 items-center gap-1.5 rounded-full border border-trust/40 bg-trust/10 px-3.5 text-[12px] font-extrabold text-trust hover:bg-trust/20 disabled:opacity-40"
+        >
+          <Download className="h-3.5 w-3.5" /> CSV
+        </button>
       </div>
 
       <div className="mt-4">
         {/* failed state */}
         {failed && (
           <div className="rounded-3xl border border-kline bg-card p-8 text-center">
-            <p className="font-display text-[15px] font-extrabold text-ink">Queue failed to load</p>
+            <p className="font-display text-[15px] font-extrabold text-body">Queue failed to load</p>
             <button onClick={() => void load()} className="touch-target mt-3 rounded-full bg-trust px-5 font-extrabold text-[12.5px] text-white">
               Retry
             </button>
@@ -316,7 +374,7 @@ export default function AdminView() {
                           <div className="flex items-center gap-2.5">
                             <Avatar handle={a.tiktokHandle} />
                             <div>
-                              <p className="font-extrabold text-ink">{a.tiktokHandle}</p>
+                              <p className="font-extrabold text-body">{a.tiktokHandle}</p>
                               <p className="text-[10.5px] text-kmuted">{a.role} • {maskPhone(a.phone)}</p>
                             </div>
                           </div>
@@ -382,7 +440,7 @@ export default function AdminView() {
                     <div className="flex items-center gap-2.5">
                       <Avatar handle={a.tiktokHandle} />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[12.5px] font-extrabold text-ink">{a.tiktokHandle}</p>
+                        <p className="truncate text-[12.5px] font-extrabold text-body">{a.tiktokHandle}</p>
                         <p className="text-[10.5px] text-kmuted">{a.role} • {maskPhone(a.phone)}</p>
                       </div>
                     </div>
@@ -441,10 +499,10 @@ export default function AdminView() {
                   <Play className="h-4 w-4 text-white fill-white" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-extrabold text-ink">
+                  <p className="text-[13px] font-extrabold text-body">
                     {kes(l.price)} <span className="text-[11px] font-semibold text-kmuted">/mo • {l.beds}</span>
                   </p>
-                  <p className="truncate text-[11.5px] text-ink/80">{l.title}</p>
+                  <p className="truncate text-[11.5px] text-body/80">{l.title}</p>
                   <p className="mt-0.5 truncate text-[10.5px] text-kmuted">
                     {l.estate} • {l.subCounty} • {l.poster.tiktokHandle}
                   </p>
@@ -489,7 +547,7 @@ export default function AdminView() {
         {/* ================= REPORTS ================= */}
         {queue && tab === "reports" && (
           <div className="space-y-2.5">
-            <div className="rounded-2xl bg-scam-soft border border-scam/25 px-4 py-3 text-[12px] font-bold text-[#9F2020]">
+            <div className="rounded-2xl bg-scam-soft border border-scam/25 px-4 py-3 text-[12px] font-bold text-danger-strong">
               3 reports auto-hide listing + agent review.
             </div>
             {queue.reports.map((r) => (
@@ -498,7 +556,7 @@ export default function AdminView() {
                   <Flag className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[12.5px] font-extrabold text-ink">
+                  <p className="text-[12.5px] font-extrabold text-body">
                     {r.reason} • {r.listing.estate || "—"} • {timeAgo(hoursSince(r.createdAt))}
                   </p>
                   {r.details && <p className="truncate text-[11px] text-kmuted">{r.details}</p>}
@@ -528,10 +586,10 @@ export default function AdminView() {
                   <p className="mt-1 hidden text-center text-[8.5px] font-semibold text-kmuted sm:block">Hover play • TikTok video</p>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-extrabold text-ink">
+                  <p className="text-[13px] font-extrabold text-body">
                     {kes(l.price)} <span className="text-[11px] font-semibold text-kmuted">/mo • {l.beds}</span>
                   </p>
-                  <p className="truncate text-[11.5px] text-ink/80">{l.title}</p>
+                  <p className="truncate text-[11.5px] text-body/80">{l.title}</p>
                   <p className="mt-0.5 text-[10.5px] text-kmuted">
                     {l.estate} • {l.subCounty} • {l.reportsCount} report{l.reportsCount === 1 ? "" : "s"}
                   </p>
@@ -576,12 +634,12 @@ export default function AdminView() {
         {/* ================= AUDIT LOG ================= */}
         {queue && tab === "audit" && (
           <div className="rounded-2xl border border-kline bg-card p-4">
-            <p className="flex items-center gap-2 font-display text-[13px] font-extrabold text-ink">
+            <p className="flex items-center gap-2 font-display text-[13px] font-extrabold text-body">
               <ScrollText className="h-4 w-4 text-trust" /> audit_events — append-only • no update/delete
             </p>
             <ul className="mt-3 max-h-96 space-y-1 overflow-y-auto keja-scroll">
               {queue.audits.map((e) => (
-                <li key={e.id} className="rounded-lg bg-kbg px-3 py-2 font-mono text-[11px] text-ink/85">
+                <li key={e.id} className="rounded-lg bg-kbg px-3 py-2 font-mono text-[11px] text-body/85">
                   [{new Date(e.timestamp).toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" })}] {e.action} • {e.object}{" "}
                   {e.objectId ? e.objectId.slice(0, 8) : "—"}
                 </li>

@@ -36,7 +36,7 @@ function expiryChip(u: UnitDTO, now: number | null) {
     <span
       className={cn(
         "mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-bold",
-        h <= 0 ? "bg-pending-soft text-[#92400E]" : "bg-trust-soft text-trust"
+        h <= 0 ? "bg-pending-soft text-warn-strong" : "bg-trust-soft text-trust"
       )}
     >
       <RefreshCw className="h-2.5 w-2.5" />
@@ -51,7 +51,7 @@ function statusPill(status: string) {
     <span
       className={cn(
         "inline-flex rounded-full px-2 py-0.5 text-[10px] font-extrabold",
-        taken ? "bg-black/10 text-kmuted" : "bg-verified-soft text-[#08743A]"
+        taken ? "bg-black/10 text-kmuted" : "bg-verified-soft text-ok"
       )}
     >
       {status}
@@ -142,7 +142,7 @@ export default function DashboardView() {
     return (
       <div className="mx-auto max-w-[1440px] px-4 py-6">
         <div className="rounded-3xl border border-kline bg-card p-8 text-center">
-          <p className="font-display text-[15px] font-extrabold text-ink">Dashboard failed to load</p>
+          <p className="font-display text-[15px] font-extrabold text-body">Dashboard failed to load</p>
           <p className="mt-1 text-[12px] text-kmuted">Check the API and retry — developer @syokimau_developer not found.</p>
           <button onClick={() => void load()} className="touch-target mt-4 rounded-full bg-trust px-5 font-extrabold text-[12.5px] text-white">
             Retry
@@ -175,7 +175,7 @@ export default function DashboardView() {
       {/* header + role switcher */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-[20px] font-extrabold text-ink">Owner &amp; Developer dashboard</h1>
+          <h1 className="font-display text-[20px] font-extrabold text-body">Owner &amp; Developer dashboard</h1>
           <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[12px] text-kmuted">
             @syokimau_developer <GoldBadge label="Gold" /> {dev?.companyName ?? "Syokimau Heights Ltd"}
           </p>
@@ -189,7 +189,7 @@ export default function DashboardView() {
               onClick={() => setRole(r)}
               className={cn(
                 "touch-target rounded-full px-4 text-[12px] font-extrabold transition-colors",
-                role === r ? "bg-ink text-white" : "text-kmuted hover:text-ink"
+                role === r ? "bg-ink text-white" : "text-kmuted hover:text-body"
               )}
             >
               {r}
@@ -202,7 +202,7 @@ export default function DashboardView() {
       {role === "Owner" && (
         <section className="mt-5 grid gap-4 lg:grid-cols-[1fr_20rem]">
           <div className="rounded-3xl border border-kline bg-card p-6">
-            <h2 className="font-display text-[16px] font-extrabold text-ink">Owner: Single unit flow</h2>
+            <h2 className="font-display text-[16px] font-extrabold text-body">Owner: Single unit flow</h2>
             <p className="mt-1 text-[12.5px] text-kmuted">
               Post your own keja without commission. Phone stays masked until a lead is logged.
             </p>
@@ -214,7 +214,7 @@ export default function DashboardView() {
                 </span>
               ))}
             </div>
-            <ul className="mt-4 space-y-1.5 text-[12px] text-ink/80">
+            <ul className="mt-4 space-y-1.5 text-[12px] text-body/80">
               <li>• Shoot the 5-point evidence video: outside, gate, inside, water running, window view.</li>
               <li>• Price + deposit must match your caption — AI bait-price checks run on submit.</li>
               <li>• Listing re-checks every 72h — reply YES/NO SMS to keep it live.</li>
@@ -233,7 +233,7 @@ export default function DashboardView() {
             </p>
             <button
               onClick={() => navigate("payments")}
-              className="touch-target mt-4 w-full rounded-full bg-white font-extrabold text-[12px] text-ink"
+              className="touch-target mt-4 w-full rounded-full bg-surface font-extrabold text-[12px] text-body"
             >
               Manage wallet &amp; payouts
             </button>
@@ -245,7 +245,7 @@ export default function DashboardView() {
       {role === "Caretaker" && (
         <section className="mt-5 space-y-4">
           <div className="rounded-3xl border border-kline bg-card p-6">
-            <h2 className="font-display text-[16px] font-extrabold text-ink">Estate-limited dashboard</h2>
+            <h2 className="font-display text-[16px] font-extrabold text-body">Estate-limited dashboard</h2>
             <p className="mt-1 text-[12.5px] text-kmuted">You can only manage units inside your owner mandate — nothing else.</p>
 
             {/* desktop table */}
@@ -261,14 +261,14 @@ export default function DashboardView() {
                 </thead>
                 <tbody>
                   <tr className="border-t border-kline">
-                    <td className="px-4 py-3 font-bold text-ink">James Mwangi</td>
-                    <td className="px-4 py-3 text-ink/80">Kileleshwa, Lavington</td>
+                    <td className="px-4 py-3 font-bold text-body">James Mwangi</td>
+                    <td className="px-4 py-3 text-body/80">Kileleshwa, Lavington</td>
                     <td className="px-4 py-3"><VerifiedBadge /></td>
                     <td className="px-4 py-3 font-mono text-[11.5px]">2026-03-01</td>
                   </tr>
                   <tr className="border-t border-kline">
-                    <td className="px-4 py-3 font-bold text-ink">Faith A.</td>
-                    <td className="px-4 py-3 text-ink/80">Syokimau only</td>
+                    <td className="px-4 py-3 font-bold text-body">Faith A.</td>
+                    <td className="px-4 py-3 text-body/80">Syokimau only</td>
                     <td className="px-4 py-3"><PendingBadge /></td>
                     <td className="px-4 py-3 font-mono text-[11.5px]">2025-12-12</td>
                   </tr>
@@ -284,7 +284,7 @@ export default function DashboardView() {
               ].map((c) => (
                 <div key={c.name} className="rounded-2xl border border-kline p-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-[13px] font-extrabold text-ink">{c.name}</p>
+                    <p className="text-[13px] font-extrabold text-body">{c.name}</p>
                     {c.ok ? <VerifiedBadge /> : <PendingBadge />}
                   </div>
                   <p className="mt-1 text-[11.5px] text-kmuted">Estates: {c.estates} • Mandate expires {c.expiry}</p>
@@ -312,7 +312,7 @@ export default function DashboardView() {
                   aria-current={tab === t.id}
                   className={cn(
                     "touch-target flex shrink-0 items-center gap-2.5 rounded-2xl px-3.5 text-[12.5px] font-extrabold transition-colors",
-                    tab === t.id ? "bg-ink text-white" : "bg-card text-kmuted hover:bg-kbg hover:text-ink border border-kline"
+                    tab === t.id ? "bg-ink text-white" : "bg-card text-kmuted hover:bg-kbg hover:text-body border border-kline"
                   )}
                 >
                   <t.icon className="h-4 w-4 shrink-0" />
@@ -326,7 +326,7 @@ export default function DashboardView() {
               <p className="flex items-center gap-1.5 text-[10.5px] font-extrabold uppercase tracking-wide text-kmuted">
                 <CreditCard className="h-3.5 w-3.5" /> Subscription
               </p>
-              <p className="mt-2 text-[12.5px] font-bold leading-relaxed text-ink">
+              <p className="mt-2 text-[12.5px] font-bold leading-relaxed text-body">
                 Pro — KES 999/mo • 20 listings • Gold badge • Top search
               </p>
               <button
@@ -344,7 +344,7 @@ export default function DashboardView() {
             {tab === "projects" && (
               <section>
                 <div className="flex items-center justify-between gap-3">
-                  <h2 className="font-display text-[16px] font-extrabold text-ink">My Projects</h2>
+                  <h2 className="font-display text-[16px] font-extrabold text-body">My Projects</h2>
                   <button
                     onClick={() => setAddOpen((v) => !v)}
                     className="touch-target flex items-center gap-1.5 rounded-full bg-ink px-4 font-extrabold text-[12px] text-white"
@@ -395,7 +395,7 @@ export default function DashboardView() {
                         <Building2 className="h-5 w-5" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[13.5px] font-extrabold text-ink">
+                        <p className="text-[13.5px] font-extrabold text-body">
                           {p.name} • {p.location} • {p.totalUnits} units
                         </p>
                         <p className="mt-0.5 text-[11px] text-kmuted">{dev?.companyName} • units managed below in Units tab</p>
@@ -406,11 +406,11 @@ export default function DashboardView() {
                   ))}
                   {extraProjects.map((p) => (
                     <div key={p.name} className="flex flex-wrap items-center gap-3 rounded-2xl border border-dashed border-kline bg-card p-4">
-                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-kbg text-ink">
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-kbg text-body">
                         <Building2 className="h-5 w-5" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[13.5px] font-extrabold text-ink">
+                        <p className="text-[13.5px] font-extrabold text-body">
                           {p.name} • {p.location} • {p.totalUnits} units
                         </p>
                         <p className="mt-0.5 text-[11px] text-kmuted">Added (demo) • pending title / lease proof upload</p>
@@ -426,7 +426,7 @@ export default function DashboardView() {
             {tab === "units" && (
               <section>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h2 className="font-display text-[16px] font-extrabold text-ink">Units • {projectName}</h2>
+                  <h2 className="font-display text-[16px] font-extrabold text-body">Units • {projectName}</h2>
                   <span className="flex items-center gap-1.5 rounded-full bg-trust-soft px-3 py-1 text-[10.5px] font-extrabold text-trust md:hidden">
                     <Smartphone className="h-3 w-3" /> Swipe to mark taken on mobile
                   </span>
@@ -449,16 +449,16 @@ export default function DashboardView() {
                         {(dev?.units ?? []).map((u) => (
                           <tr key={u.id} className="border-t border-kline">
                             <td className="px-4 py-3">
-                              <p className="font-display font-extrabold text-ink">{u.code}</p>
+                              <p className="font-display font-extrabold text-body">{u.code}</p>
                               {expiryChip(u, now)}
                             </td>
-                            <td className="px-4 py-3 text-ink/80">{u.beds}</td>
-                            <td className="px-4 py-3 font-bold text-ink">{kes(u.price)}</td>
+                            <td className="px-4 py-3 text-body/80">{u.beds}</td>
+                            <td className="px-4 py-3 font-bold text-body">{kes(u.price)}</td>
                             <td className="px-4 py-3">{statusPill(u.status)}</td>
                             <td className="px-4 py-3 text-right">
                               <button
                                 onClick={() => setConfirmUnit({ unit: u, next: u.status === "Available" ? "Taken" : "Available" })}
-                                className="touch-target rounded-full border border-kline px-4 text-[11.5px] font-extrabold text-ink hover:bg-kbg"
+                                className="touch-target rounded-full border border-kline px-4 text-[11.5px] font-extrabold text-body hover:bg-kbg"
                               >
                                 Toggle
                               </button>
@@ -474,16 +474,16 @@ export default function DashboardView() {
                     {(dev?.units ?? []).map((u) => (
                       <div key={u.id} className="rounded-2xl border border-kline bg-card p-3.5">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="font-display text-[14px] font-extrabold text-ink">
+                          <p className="font-display text-[14px] font-extrabold text-body">
                             {u.code} <span className="text-[11px] font-semibold text-kmuted">• {u.beds}</span>
                           </p>
                           {statusPill(u.status)}
                         </div>
-                        <p className="mt-1 text-[12px] font-bold text-ink">{kes(u.price)}<span className="font-medium text-kmuted"> /mo</span></p>
+                        <p className="mt-1 text-[12px] font-bold text-body">{kes(u.price)}<span className="font-medium text-kmuted"> /mo</span></p>
                         {expiryChip(u, now) && <div className="mt-1">{expiryChip(u, now)}</div>}
                         <button
                           onClick={() => setConfirmUnit({ unit: u, next: u.status === "Available" ? "Taken" : "Available" })}
-                          className="touch-target mt-2 w-full rounded-full border border-kline text-[12px] font-extrabold text-ink hover:bg-kbg"
+                          className="touch-target mt-2 w-full rounded-full border border-kline text-[12px] font-extrabold text-body hover:bg-kbg"
                         >
                           Toggle availability
                         </button>
@@ -494,7 +494,7 @@ export default function DashboardView() {
                   {(dev?.units ?? []).length === 0 && (
                     <div className="rounded-2xl border border-dashed border-kline p-8 text-center">
                       <KeyRound className="mx-auto h-6 w-6 text-kmuted" />
-                      <p className="mt-2 text-[12.5px] font-bold text-ink">No units yet</p>
+                      <p className="mt-2 text-[12.5px] font-bold text-body">No units yet</p>
                       <p className="text-[11.5px] text-kmuted">Add a project, then units appear here for availability toggling.</p>
                     </div>
                   )}
@@ -505,7 +505,7 @@ export default function DashboardView() {
             {/* ---------- LEADS ---------- */}
             {tab === "leads" && (
               <section>
-                <h2 className="font-display text-[16px] font-extrabold text-ink">Leads • Who called • Phone masked</h2>
+                <h2 className="font-display text-[16px] font-extrabold text-body">Leads • Who called • Phone masked</h2>
                 <div className="mt-3 space-y-2">
                   {(data.leads ?? []).map((l) => (
                     <div key={l.id} className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-kline bg-card px-4 py-3">
@@ -513,7 +513,7 @@ export default function DashboardView() {
                         <Phone className="h-4 w-4" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[12.5px] font-extrabold text-ink">
+                        <p className="text-[12.5px] font-extrabold text-body">
                           {l.phoneMasked} <span className="font-semibold text-kmuted">• {timeAgo(hoursSince(l.createdAt))}</span>
                         </p>
                         <p className="truncate text-[11px] text-kmuted">{l.listing?.estate ?? "—"} • {l.listing?.title ?? "lead"}</p>
@@ -529,7 +529,7 @@ export default function DashboardView() {
                   {(data.leads ?? []).length === 0 && (
                     <div className="rounded-2xl border border-dashed border-kline p-8 text-center">
                       <Users className="mx-auto h-6 w-6 text-kmuted" />
-                      <p className="mt-2 text-[12.5px] font-bold text-ink">No leads yet</p>
+                      <p className="mt-2 text-[12.5px] font-bold text-body">No leads yet</p>
                       <p className="text-[11.5px] text-kmuted">Leads appear when buyers tap Call on your listings — phone stays masked.</p>
                     </div>
                   )}
@@ -540,7 +540,7 @@ export default function DashboardView() {
             {/* ---------- PAYMENTS ---------- */}
             {tab === "payments" && (
               <section>
-                <h2 className="font-display text-[16px] font-extrabold text-ink">Payments</h2>
+                <h2 className="font-display text-[16px] font-extrabold text-body">Payments</h2>
                 <div className="mt-3 rounded-3xl bg-tiktok p-5 text-white sm:p-6">
                   <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-white/55">M-Pesa Wallet • Till 123456</p>
                   <p className="mt-2 font-display text-[28px] font-extrabold">KES 12,400</p>
@@ -548,7 +548,7 @@ export default function DashboardView() {
                   <div className="mt-4 flex flex-wrap gap-2">
                     <button
                       onClick={() => toast("success", "Payout requested • KES 12,400 to 07** *** 003")}
-                      className="touch-target rounded-full bg-white px-5 font-extrabold text-[12px] text-ink transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                      className="touch-target rounded-full bg-surface px-5 font-extrabold text-[12px] text-body transition-transform hover:scale-[1.02] active:scale-[0.98]"
                     >
                       Payout Request
                     </button>
@@ -585,13 +585,13 @@ export default function DashboardView() {
             {/* ---------- SUBSCRIPTION ---------- */}
             {tab === "subscription" && (
               <section>
-                <h2 className="font-display text-[16px] font-extrabold text-ink">Subscription plans</h2>
+                <h2 className="font-display text-[16px] font-extrabold text-body">Subscription plans</h2>
                 <div className="mt-3 grid gap-4 md:grid-cols-3">
                   {/* Free */}
                   <div className="rounded-3xl border border-kline bg-card p-5">
-                    <p className="font-display text-[14px] font-extrabold text-ink">Free</p>
-                    <p className="mt-1 font-display text-[24px] font-extrabold text-ink">KES 0</p>
-                    <ul className="mt-3 space-y-1.5 text-[12px] text-ink/80">
+                    <p className="font-display text-[14px] font-extrabold text-body">Free</p>
+                    <p className="mt-1 font-display text-[24px] font-extrabold text-body">KES 0</p>
+                    <ul className="mt-3 space-y-1.5 text-[12px] text-body/80">
                       <li>• 3 listings</li>
                       <li>• Basic badge</li>
                       <li>• Community support</li>
@@ -603,16 +603,16 @@ export default function DashboardView() {
 
                   {/* Pro */}
                   <div className="relative rounded-3xl border border-kline bg-card p-5 ring-2 ring-trust">
-                    <span className="absolute -top-2.5 right-4 rounded-full bg-gold px-2.5 py-0.5 text-[9.5px] font-extrabold text-ink shadow">
+                    <span className="absolute -top-2.5 right-4 rounded-full bg-gold px-2.5 py-0.5 text-[9.5px] font-extrabold text-body shadow">
                       MOST POPULAR
                     </span>
-                    <p className="flex items-center gap-1.5 font-display text-[14px] font-extrabold text-ink">
+                    <p className="flex items-center gap-1.5 font-display text-[14px] font-extrabold text-body">
                       Pro <Crown className="h-4 w-4 text-gold" aria-hidden />
                     </p>
-                    <p className="mt-1 font-display text-[24px] font-extrabold text-ink">
+                    <p className="mt-1 font-display text-[24px] font-extrabold text-body">
                       KES 999 <span className="text-[12px] font-semibold text-kmuted">/month</span>
                     </p>
-                    <ul className="mt-3 space-y-1.5 text-[12px] text-ink/80">
+                    <ul className="mt-3 space-y-1.5 text-[12px] text-body/80">
                       <li>• 20 listings</li>
                       <li>• Gold badge 👑</li>
                       <li>• Top search placement</li>
@@ -629,11 +629,11 @@ export default function DashboardView() {
 
                   {/* Enterprise */}
                   <div className="rounded-3xl border border-kline bg-card p-5">
-                    <p className="font-display text-[14px] font-extrabold text-ink">Enterprise</p>
-                    <p className="mt-1 font-display text-[24px] font-extrabold text-ink">
+                    <p className="font-display text-[14px] font-extrabold text-body">Enterprise</p>
+                    <p className="mt-1 font-display text-[24px] font-extrabold text-body">
                       KES 4,999 <span className="text-[12px] font-semibold text-kmuted">/month</span>
                     </p>
-                    <ul className="mt-3 space-y-1.5 text-[12px] text-ink/80">
+                    <ul className="mt-3 space-y-1.5 text-[12px] text-body/80">
                       <li>• 100 listings</li>
                       <li>• Developer project</li>
                       <li>• API access</li>
@@ -661,16 +661,16 @@ export default function DashboardView() {
           aria-modal="true"
           aria-label="Confirm availability"
         >
-          <div className="slide-up w-full max-w-[360px] rounded-3xl bg-white p-5 shadow-2xl">
+          <div className="slide-up w-full max-w-[360px] rounded-3xl bg-surface p-5 shadow-2xl">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="font-display text-[15px] font-extrabold text-ink">Confirm Availability?</h3>
+              <h3 className="font-display text-[15px] font-extrabold text-body">Confirm Availability?</h3>
               <button onClick={() => setConfirmUnit(null)} aria-label="Close" className="touch-target grid place-items-center rounded-full hover:bg-kbg">
                 <X className="h-4 w-4" />
               </button>
             </div>
             <p className="mt-1.5 text-[12.5px] leading-relaxed text-kmuted">
-              Is this keja still available? Leads notified. Unit <span className="font-extrabold text-ink">{confirmUnit.unit.code}</span> will be
-              marked <span className="font-extrabold text-ink">{confirmUnit.next}</span>.
+              Is this keja still available? Leads notified. Unit <span className="font-extrabold text-body">{confirmUnit.unit.code}</span> will be
+              marked <span className="font-extrabold text-body">{confirmUnit.next}</span>.
             </p>
             <div className="mt-4 flex gap-2">
               <button onClick={() => setConfirmUnit(null)} className="touch-target flex-1 rounded-full border border-kline font-bold text-[12.5px] hover:bg-kbg">

@@ -5,7 +5,7 @@ import {
   ArrowRight, BadgeCheck, Crown, FileText, Landmark, Receipt, ShieldCheck, Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "@/lib/store";
+import { toast, useKeja } from "@/lib/store";
 import { StkModal } from "@/components/keja/modals";
 
 const ESCROW_STEPS = ["User pays", "Held escrow", "Released after viewing confirmed", "Refunded if fake report upheld"];
@@ -25,6 +25,7 @@ const KRA_LINES = [
 ];
 
 export default function PaymentsView() {
+  const { notify } = useKeja();
   const [stk, setStk] = useState<{ open: boolean; amount: number; plan: string }>({ open: false, amount: 999, plan: "Pro Subscription" });
   const [showInvoices, setShowInvoices] = useState(false);
 
@@ -34,16 +35,21 @@ export default function PaymentsView() {
     const obs = new MutationObserver(() => {
       if (document.body.innerText.includes("Payment Success (simulated)")) {
         toast("success", "STK Push simulated • no real payment was made");
+        notify(
+          "success",
+          `Payment simulated — ${stk.plan}`,
+          `KES ${stk.amount} STK push to Till 123456 completed (demo). KRA receipt generated — no real money moved.`
+        );
         obs.disconnect();
       }
     });
     obs.observe(document.body, { childList: true, subtree: true });
     return () => obs.disconnect();
-  }, [stk.open]);
+  }, [stk.open, stk.amount, stk.plan, notify]);
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-6">
-      <h1 className="font-display text-[20px] font-extrabold text-ink">Payments &amp; subscriptions</h1>
+      <h1 className="font-display text-[20px] font-extrabold text-body">Payments &amp; subscriptions</h1>
       <p className="mt-0.5 text-[12px] text-kmuted">M-Pesa Till 123456 • escrow viewing fee • KRA-compliant receipts</p>
 
       {/* 1 — policy bar */}
@@ -54,7 +60,7 @@ export default function PaymentsView() {
         <p className="text-[12.5px] font-bold leading-relaxed">
           Policy: No viewing fee before viewing — agent cannot ask fee before physical viewing, if does = ban + policy banner on listing.
         </p>
-        <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-extrabold text-[#08743A]">ENFORCED</span>
+        <span className="rounded-full bg-surface px-2.5 py-1 text-[10px] font-extrabold text-ok">ENFORCED</span>
       </section>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
@@ -70,7 +76,7 @@ export default function PaymentsView() {
                 <span
                   className={cn(
                     "rounded-full px-2.5 py-1 text-[10px] font-extrabold",
-                    i === 0 ? "bg-mpesa/10 text-[#0a7a33]" : i === ESCROW_STEPS.length - 1 ? "bg-pending-soft text-[#92400E]" : "bg-kbg text-ink"
+                    i === 0 ? "bg-mpesa/10 text-ok" : i === ESCROW_STEPS.length - 1 ? "bg-pending-soft text-warn-strong" : "bg-kbg text-body"
                   )}
                 >
                   {s}
@@ -100,7 +106,7 @@ export default function PaymentsView() {
           <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-kmuted">Wallet • balance • pending • paid</p>
           <div className="mt-3 flex items-start justify-between gap-3">
             <div>
-              <p className="font-display text-[32px] font-extrabold leading-none text-ink">KES 12,400</p>
+              <p className="font-display text-[32px] font-extrabold leading-none text-body">KES 12,400</p>
               <p className="mt-1.5 text-[11.5px] text-kmuted">Till 123456 • Pending 2,100 • Paid 48,900</p>
             </div>
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-mpesa/10">
@@ -116,7 +122,7 @@ export default function PaymentsView() {
             </button>
             <button
               onClick={() => setShowInvoices((v) => !v)}
-              className="touch-target rounded-full border border-kline font-extrabold text-[12px] text-ink hover:bg-kbg"
+              className="touch-target rounded-full border border-kline font-extrabold text-[12px] text-body hover:bg-kbg"
             >
               Invoices
             </button>
@@ -125,7 +131,7 @@ export default function PaymentsView() {
           {showInvoices && (
             <ul className="mt-3 space-y-1.5">
               {INVOICES.map((inv) => (
-                <li key={inv.receipt} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-kbg px-3.5 py-2.5 font-mono text-[11px] text-ink/85">
+                <li key={inv.receipt} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-kbg px-3.5 py-2.5 font-mono text-[11px] text-body/85">
                   <span>{inv.receipt} • {inv.date}</span>
                   <span className="font-sans font-bold">
                     {inv.plan} KES {inv.amount.toLocaleString("en-KE")} <BadgeCheck className="inline h-3.5 w-3.5 text-verified" />
@@ -143,9 +149,9 @@ export default function PaymentsView() {
         <div className="mt-3 grid gap-4 md:grid-cols-3">
           {/* Free */}
           <div className="rounded-3xl border border-kline bg-card p-5">
-            <p className="font-display text-[14px] font-extrabold text-ink">Free</p>
-            <p className="mt-1 font-display text-[24px] font-extrabold text-ink">KES 0</p>
-            <ul className="mt-3 space-y-1.5 text-[12px] text-ink/80">
+            <p className="font-display text-[14px] font-extrabold text-body">Free</p>
+            <p className="mt-1 font-display text-[24px] font-extrabold text-body">KES 0</p>
+            <ul className="mt-3 space-y-1.5 text-[12px] text-body/80">
               <li>• 3 listings</li>
               <li>• Basic badge</li>
               <li>• Community support</li>
@@ -157,16 +163,16 @@ export default function PaymentsView() {
 
           {/* Pro */}
           <div className="relative rounded-3xl border border-kline bg-card p-5 ring-2 ring-trust">
-            <span className="absolute -top-2.5 right-4 rounded-full bg-gold px-2.5 py-0.5 text-[9.5px] font-extrabold text-ink shadow">
+            <span className="absolute -top-2.5 right-4 rounded-full bg-gold px-2.5 py-0.5 text-[9.5px] font-extrabold text-body shadow">
               MOST POPULAR
             </span>
-            <p className="flex items-center gap-1.5 font-display text-[14px] font-extrabold text-ink">
+            <p className="flex items-center gap-1.5 font-display text-[14px] font-extrabold text-body">
               Pro <Crown className="h-4 w-4 text-gold" aria-hidden />
             </p>
-            <p className="mt-1 font-display text-[24px] font-extrabold text-ink">
+            <p className="mt-1 font-display text-[24px] font-extrabold text-body">
               KES 999 <span className="text-[12px] font-semibold text-kmuted">/month</span>
             </p>
-            <ul className="mt-3 space-y-1.5 text-[12px] text-ink/80">
+            <ul className="mt-3 space-y-1.5 text-[12px] text-body/80">
               <li>• 20 listings</li>
               <li>• Gold badge 👑</li>
               <li>• Top search placement</li>
@@ -183,13 +189,13 @@ export default function PaymentsView() {
 
           {/* Enterprise */}
           <div className="rounded-3xl border border-kline bg-card p-5">
-            <p className="flex items-center gap-1.5 font-display text-[14px] font-extrabold text-ink">
+            <p className="flex items-center gap-1.5 font-display text-[14px] font-extrabold text-body">
               Enterprise <Landmark className="h-4 w-4 text-trust" aria-hidden />
             </p>
-            <p className="mt-1 font-display text-[24px] font-extrabold text-ink">
+            <p className="mt-1 font-display text-[24px] font-extrabold text-body">
               KES 4,999 <span className="text-[12px] font-semibold text-kmuted">/month</span>
             </p>
-            <ul className="mt-3 space-y-1.5 text-[12px] text-ink/80">
+            <ul className="mt-3 space-y-1.5 text-[12px] text-body/80">
               <li>• 100 listings</li>
               <li>• Developer project</li>
               <li>• API access</li>
@@ -210,7 +216,7 @@ export default function PaymentsView() {
         <p className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.14em] text-kmuted">
           <Receipt className="h-3.5 w-3.5" /> KRA receipt • auto PDF
         </p>
-        <pre className="mt-3 overflow-x-auto rounded-2xl bg-kbg px-4 py-3.5 font-mono text-[11.5px] leading-relaxed text-ink/90 keja-scroll">
+        <pre className="mt-3 overflow-x-auto rounded-2xl bg-kbg px-4 py-3.5 font-mono text-[11.5px] leading-relaxed text-body/90 keja-scroll">
 {KRA_LINES.join("\n")}
         </pre>
         <p className="mt-2 flex items-center gap-1.5 text-[10.5px] font-semibold text-kmuted">

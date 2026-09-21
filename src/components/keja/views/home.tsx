@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
+import { useT, type DictKey } from "@/lib/i18n";
 import { BOROUGHS, BOROUGH_INFO, BEDS_OPTIONS } from "@/lib/nairobi";
 import { fetchListings, fetchMarketPulse, fetchHomeStats } from "../api";
 import { MiniListingCard } from "../listing-card";
@@ -36,6 +37,7 @@ const AGENTS_ONLINE = 1247;
 
 export default function HomeView() {
   const { navigate, setFilters, filters } = useKeja();
+  const t = useT();
   const [stats, setStats] = useState<HomeStats | null>(null);
   const [pulse, setPulse] = useState<MarketPulseData | null>(null);
   const [catalog, setCatalog] = useState<ListingDTO[]>([]);
@@ -104,7 +106,7 @@ export default function HomeView() {
           {/* eyebrow pills */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-tiktok-cyan/15 px-3 py-1.5 text-[10.5px] font-extrabold tracking-[0.14em] text-tiktok-cyan">
-              NAIROBI • 17 SUB-COUNTIES
+              {t("heroEyebrow")}
             </span>
             <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10.5px] font-extrabold tracking-[0.14em] text-white/80">
               NEXT.JS + SUPABASE READY
@@ -115,13 +117,13 @@ export default function HomeView() {
             {/* left: headline */}
             <div>
               <h1 className="font-display text-4xl font-extrabold leading-[0.95] sm:text-5xl lg:text-6xl">
-                Stop Scrolling
+                {t("heroTitle1")}
                 <br />
-                <span className="text-tiktok-pink">Fake Kejas.</span>
+                <span className="text-tiktok-pink">{t("heroTitle2")}</span>
               </h1>
               <p className="mt-5 max-w-xl text-[14.5px] leading-relaxed text-white/75">
-                Only verified TikTok houses in Nairobi. No viewing fee before viewing.{" "}
-                <strong className="font-extrabold text-tiktok-cyan">Hakuna Kulipa Kabla Ya Kuona Nyumba.</strong>
+                {t("heroSub1")}{" "}
+                <strong className="font-extrabold text-tiktok-cyan">{t("heroSub2")}</strong>
               </p>
 
               {/* color system pills */}
@@ -132,7 +134,7 @@ export default function HomeView() {
                 <span className="inline-flex items-center gap-2 rounded-full bg-safaricom px-3.5 py-2 text-[11px] font-extrabold text-white shadow-lg">
                   <span className="h-2 w-2 rounded-full bg-white/80" /> Safaricom Green #00B140
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-2 text-[11px] font-extrabold text-ink shadow-lg">
+                <span className="inline-flex items-center gap-2 rounded-full bg-surface px-3.5 py-2 text-[11px] font-extrabold text-body shadow-lg">
                   <BadgeCheck className="h-3.5 w-3.5 text-verified" /> TikTok Verified
                 </span>
               </div>
@@ -141,27 +143,27 @@ export default function HomeView() {
             {/* right: trust snapshot */}
             <aside className="rounded-3xl border border-white/10 bg-white/[0.06] p-5 backdrop-blur-md">
               <p className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.16em] text-white/60">
-                <ShieldCheck className="h-4 w-4 text-verified" /> Trust snapshot
+                <ShieldCheck className="h-4 w-4 text-verified" /> {t("trustSnapshot")}
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2.5" role="list">
                 {[
-                  { icon: BadgeCheck, value: agents.toLocaleString(), label: "Verified agents", tone: "text-verified" },
-                  { icon: Building2, value: units.toLocaleString(), label: "Units in catalog", tone: "text-tiktok-cyan" },
-                  { icon: Flag, value: scams.toLocaleString(), label: "Scams blocked", tone: "text-tiktok-pink" },
-                  { icon: CalendarClock, value: "7", label: "days Re-check window", tone: "text-gold" },
-                ].map((t) => (
-                  <div key={t.label} role="listitem" className="rounded-2xl bg-black/25 p-3.5">
-                    <t.icon className={cn("h-4 w-4", t.tone)} />
-                    <p className={cn("mt-1.5 font-display text-2xl font-extrabold", t.tone)}>{t.value}</p>
-                    <p className="text-[10px] font-semibold leading-tight text-white/60">{t.label}</p>
+                  { icon: BadgeCheck, value: agents.toLocaleString(), label: t("verifiedAgents"), tone: "text-verified" },
+                  { icon: Building2, value: units.toLocaleString(), label: t("unitsCatalog"), tone: "text-tiktok-cyan" },
+                  { icon: Flag, value: scams.toLocaleString(), label: t("scamsBlocked"), tone: "text-tiktok-pink" },
+                  { icon: CalendarClock, value: "7", label: t("recheckWindow"), tone: "text-gold" },
+                ].map((s) => (
+                  <div key={s.label} role="listitem" className="rounded-2xl bg-black/25 p-3.5">
+                    <s.icon className={cn("h-4 w-4", s.tone)} />
+                    <p className={cn("mt-1.5 font-display text-2xl font-extrabold", s.tone)}>{s.value}</p>
+                    <p className="text-[10px] font-semibold leading-tight text-white/60">{s.label}</p>
                   </div>
                 ))}
               </div>
               <button
                 onClick={() => navigate("payments")}
-                className="touch-target mt-4 w-full rounded-full bg-gold px-4 py-3 font-display text-[13px] font-extrabold text-ink transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                className="touch-target mt-4 w-full rounded-full bg-gold px-4 py-3 font-display text-[13px] font-extrabold text-body transition-transform hover:scale-[1.02] active:scale-[0.98]"
               >
-                Unlock Pro Agent Demo • KES 999
+                {t("unlockPro")}
               </button>
             </aside>
           </div>
@@ -170,9 +172,9 @@ export default function HomeView() {
 
       {/* ====================== 2. FIND KEJA SEARCH CARD ====================== */}
       <div className="relative z-10 mx-auto -mt-16 max-w-[880px]">
-        <section className="rounded-3xl bg-white p-5 shadow-2xl sm:p-6" aria-label="Find Keja search">
+        <section className="rounded-3xl bg-surface p-5 shadow-2xl sm:p-6" aria-label="Find Keja search">
           <header className="flex items-center justify-between">
-            <h2 className="font-display text-lg font-extrabold text-ink">Find Keja</h2>
+            <h2 className="font-display text-lg font-extrabold text-body">{t("findKeja")}</h2>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-verified-soft px-2.5 py-1 text-[10px] font-extrabold text-verified">
               <span className="h-1.5 w-1.5 rounded-full bg-verified pulse-dot" aria-hidden /> LIVE
             </span>
@@ -188,13 +190,13 @@ export default function HomeView() {
               onChange={(e) => { setEstateInput(e.target.value); setSuggestOpen(true); }}
               onFocus={() => setSuggestOpen(true)}
               onBlur={() => window.setTimeout(() => setSuggestOpen(false), 150)}
-              placeholder="Kileleshwa, Kasarani..."
+              placeholder={t("findPlaceholder")}
               autoComplete="off"
-              className="w-full rounded-2xl border border-kline bg-kbg py-3 pl-10 pr-4 text-[13.5px] font-semibold text-ink outline-none placeholder:font-medium placeholder:text-kmuted focus:border-trust focus:bg-white focus:ring-4 focus:ring-trust/10"
+              className="w-full rounded-2xl border border-kline bg-kbg py-3 pl-10 pr-4 text-[13.5px] font-semibold text-body outline-none placeholder:font-medium placeholder:text-kmuted focus:border-trust focus:bg-surface focus:ring-4 focus:ring-trust/10"
             />
             {suggestOpen && suggestions.length > 0 && (
               <ul
-                className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-60 overflow-y-auto keja-scroll rounded-2xl border border-kline bg-white p-1.5 shadow-xl"
+                className="absolute inset-x-0 top-full z-30 mt-1.5 max-h-60 overflow-y-auto keja-scroll rounded-2xl border border-kline bg-surface p-1.5 shadow-xl"
                 role="listbox"
                 aria-label="Estate suggestions"
               >
@@ -204,7 +206,7 @@ export default function HomeView() {
                       type="button"
                       onMouseDown={(ev) => ev.preventDefault()}
                       onClick={() => { setEstateInput(e); setSuggestOpen(false); setFilters({ estate: e }); navigate("estate"); }}
-                      className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 py-2 text-left text-[13px] font-bold text-ink hover:bg-kbg"
+                      className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 py-2 text-left text-[13px] font-bold text-body hover:bg-kbg"
                       role="option"
                       aria-selected={estateInput === e}
                     >
@@ -229,7 +231,7 @@ export default function HomeView() {
                 aria-pressed={beds === b}
                 className={cn(
                   "min-h-11 rounded-full px-4 py-2.5 text-[12px] font-extrabold transition-colors",
-                  beds === b ? "bg-ink text-white" : "bg-kbg text-ink/70 hover:bg-ink/10"
+                  beds === b ? "bg-ink text-white" : "bg-kbg text-body/70 hover:bg-ink/10"
                 )}
               >
                 {b}
@@ -239,12 +241,12 @@ export default function HomeView() {
 
           {/* budget dual range */}
           <div className="mt-5 rounded-2xl bg-kbg p-4">
-            <div className="flex items-center justify-between text-[12px] font-extrabold text-ink">
-              <span>Budget / month</span>
+            <div className="flex items-center justify-between text-[12px] font-extrabold text-body">
+              <span>{t("budgetMonth")}</span>
               <span className="flex items-center gap-2">
-                <span className="rounded-full bg-white px-2.5 py-1 text-trust shadow-sm">KES {budget.min.toLocaleString()}</span>
+                <span className="rounded-full bg-surface px-2.5 py-1 text-trust shadow-sm">KES {budget.min.toLocaleString()}</span>
                 <span className="text-kmuted">–</span>
-                <span className="rounded-full bg-white px-2.5 py-1 text-trust shadow-sm">KES {budget.max.toLocaleString()}</span>
+                <span className="rounded-full bg-surface px-2.5 py-1 text-trust shadow-sm">KES {budget.max.toLocaleString()}</span>
               </span>
             </div>
             <div className="relative mt-3 h-6">
@@ -261,13 +263,13 @@ export default function HomeView() {
                 type="range" min={3000} max={100000} step={1000} value={budget.min}
                 onChange={(e) => setBudget((b) => ({ ...b, min: Math.min(Number(e.target.value), b.max) }))}
                 aria-label="Minimum budget"
-                className="pointer-events-none absolute inset-x-0 top-0 h-6 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-trust [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md"
+                className="pointer-events-none absolute inset-x-0 top-0 h-6 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-trust [&::-webkit-slider-thumb]:bg-surface [&::-webkit-slider-thumb]:shadow-md"
               />
               <input
                 type="range" min={3000} max={100000} step={1000} value={budget.max}
                 onChange={(e) => setBudget((b) => ({ ...b, max: Math.max(Number(e.target.value), b.min) }))}
                 aria-label="Maximum budget"
-                className="pointer-events-none absolute inset-x-0 top-0 h-6 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-trust [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md"
+                className="pointer-events-none absolute inset-x-0 top-0 h-6 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-trust [&::-webkit-slider-thumb]:bg-surface [&::-webkit-slider-thumb]:shadow-md"
               />
             </div>
           </div>
@@ -276,12 +278,12 @@ export default function HomeView() {
             onClick={runSearch}
             className="touch-target mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-trust py-3.5 font-display text-[15px] font-extrabold text-white shadow-[0_10px_24px_rgba(25,118,210,0.35)] transition-transform hover:scale-[1.01] active:scale-[0.99]"
           >
-            Find Keja <ArrowRight className="h-4.5 w-4.5" />
+            {t("findCta")} <ArrowRight className="h-4.5 w-4.5" />
           </button>
 
           <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-kmuted">
             <span className="h-1.5 w-1.5 rounded-full bg-verified pulse-dot" aria-hidden />
-            {AGENTS_ONLINE.toLocaleString()} agents online • M-Pesa protected
+            {AGENTS_ONLINE.toLocaleString()} {t("findFootnote")}
           </p>
         </section>
       </div>
@@ -293,7 +295,7 @@ export default function HomeView() {
 
       {/* ==================== 4. BOROUGH + SUB-COUNTY CHIPS ==================== */}
       <section className="mt-10" aria-label="Explore Nairobi by borough">
-        <h2 className="font-display text-xl font-extrabold text-ink">Explore Nairobi by borough</h2>
+        <h2 className="font-display text-xl font-extrabold text-body">{t("exploreBoroughs")}</h2>
         <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Boroughs">
           {Object.keys(BOROUGHS).map((b) => (
             <button
@@ -302,7 +304,7 @@ export default function HomeView() {
               aria-pressed={borough === b}
               className={cn(
                 "min-h-11 rounded-full px-4 py-2.5 text-[12px] font-extrabold transition-colors",
-                borough === b ? "bg-ink text-white shadow-md" : "bg-white text-ink/70 ring-1 ring-kline hover:bg-kbg"
+                borough === b ? "bg-ink text-white shadow-md" : "bg-surface text-body/70 ring-1 ring-kline hover:bg-kbg"
               )}
             >
               {b}
@@ -329,10 +331,10 @@ export default function HomeView() {
               onClick={() => pickSubCounty(b.name, (BOROUGHS[b.name] ?? [])[0] ?? "")}
               className={cn(
                 "rounded-2xl border p-3.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-md",
-                borough === b.name ? "border-ink bg-ink text-white" : "border-kline bg-white"
+                borough === b.name ? "border-ink bg-ink text-white" : "border-kline bg-surface"
               )}
             >
-              <p className={cn("font-display text-[13px] font-extrabold", borough === b.name ? "text-white" : "text-ink")}>{b.name}</p>
+              <p className={cn("font-display text-[13px] font-extrabold", borough === b.name ? "text-white" : "text-body")}>{b.name}</p>
               <p className={cn("mt-1.5 line-clamp-2 text-[10px] font-semibold leading-snug", borough === b.name ? "text-white/60" : "text-kmuted")}>{b.estates}</p>
               <p className={cn("mt-2 inline-block rounded-full px-2 py-0.5 text-[9.5px] font-extrabold", borough === b.name ? "bg-white/15 text-tiktok-cyan" : "bg-trust-soft text-trust")}>{b.price}</p>
             </button>
@@ -350,14 +352,14 @@ export default function HomeView() {
       <section className="mt-10" aria-label="Featured verified listings">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <h2 className="font-display text-xl font-extrabold text-ink">Featured Verified • TikTok Style</h2>
-            <p className="mt-1 text-[12px] font-semibold text-kmuted">Auto-play muted • swipe</p>
+            <h2 className="font-display text-xl font-extrabold text-body">{t("featuredTitle")}</h2>
+            <p className="mt-1 text-[12px] font-semibold text-kmuted">{t("featuredSub")}</p>
           </div>
           <button
             onClick={() => navigate("estate")}
             className="touch-target hidden items-center gap-1.5 rounded-full bg-ink px-4 py-2.5 text-[12px] font-extrabold text-white sm:inline-flex"
           >
-            Browse all <ArrowRight className="h-3.5 w-3.5" />
+            {t("browseAll")} <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>
 
@@ -372,7 +374,7 @@ export default function HomeView() {
             ))}
           </div>
         ) : railItems.length === 0 ? (
-          <p className="mt-4 rounded-2xl border border-kline bg-white p-5 text-[13px] font-semibold text-kmuted">
+          <p className="mt-4 rounded-2xl border border-kline bg-surface p-5 text-[13px] font-semibold text-kmuted">
             No verified listings yet — check the estates view for fresh demo data.
           </p>
         ) : (
@@ -391,15 +393,15 @@ export default function HomeView() {
       </section>
 
       {/* ========================== 7. HOW IT WORKS ========================== */}
-      <section className="mt-10 rounded-3xl border border-kline bg-white p-5 sm:p-6" aria-label="How Keja Halisi works">
-        <h2 className="font-display text-xl font-extrabold text-ink">How it works</h2>
+      <section className="mt-10 rounded-3xl border border-kline bg-surface p-5 sm:p-6" aria-label="How Keja Halisi works">
+        <h2 className="font-display text-xl font-extrabold text-body">{t("howItWorks")}</h2>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { n: 1, icon: Play, title: "Submit TikTok link", sub: "Agent posts the walkthrough video" },
-            { n: 2, icon: ShieldCheck, title: "We Verify ID", sub: "Phone + ID + evidence clips" },
-            { n: 3, icon: BadgeCheck, title: "Green Tick ✓", sub: "Verified badge + trust checks" },
-            { n: 4, icon: Smartphone, title: "You Call Direct", sub: "Masked phone, no middlemen" },
-          ].map((s, i) => (
+          {([
+            { n: 1, icon: Play, title: t("how1t"), sub: t("how1d") },
+            { n: 2, icon: ShieldCheck, title: t("how2t"), sub: t("how2d") },
+            { n: 3, icon: BadgeCheck, title: t("how3t"), sub: t("how3d") },
+            { n: 4, icon: Smartphone, title: t("how4t"), sub: t("how4d") },
+          ] as { n: number; icon: typeof Play; title: string; sub: string }[]).map((s, i) => (
             <div key={s.n} className="relative rounded-2xl bg-kbg p-4">
               <div className="flex items-center gap-2.5">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-ink font-display text-[14px] font-extrabold text-white">
@@ -407,7 +409,7 @@ export default function HomeView() {
                 </span>
                 <s.icon className="h-4.5 w-4.5 text-trust" />
               </div>
-              <p className="mt-3 font-display text-[13.5px] font-extrabold text-ink">{s.title}</p>
+              <p className="mt-3 font-display text-[13.5px] font-extrabold text-body">{s.title}</p>
               <p className="mt-1 text-[11px] font-semibold leading-snug text-kmuted">{s.sub}</p>
               {i < 3 && (
                 <ArrowRight className="absolute -right-2.5 top-1/2 hidden h-4 w-4 -translate-y-1/2 text-kline lg:block" aria-hidden />
@@ -416,22 +418,22 @@ export default function HomeView() {
           ))}
         </div>
         <p className="mt-5 rounded-2xl bg-verified py-3 text-center font-display text-[14px] font-extrabold text-white" role="note">
-          Hakuna Kulipa Kabla Ya Kuona Nyumba
+          {t("banner")}
         </p>
       </section>
 
       {/* ======================== 8. TRUST STRIP PILLS ======================== */}
       <section className="mt-6 flex flex-wrap justify-center gap-2" aria-label="Trust rules">
-        {[
-          { icon: BadgeCheck, label: "✓ Green verified" },
-          { icon: Zap, label: "⚡ Auto-expiry" },
-          { icon: MapPin, label: "📍 Estate + road only" },
-          { icon: Smartphone, label: "📱 Call / WhatsApp" },
-          { icon: Ban, label: "🚫 3 reports = hidden" },
-        ].map((p) => (
+        {([
+          { icon: BadgeCheck, label: `✓ ${t("pillVerified")}`, key: "v" as DictKey },
+          { icon: Zap, label: `⚡ ${t("pillExpiry")}`, key: "e" as DictKey },
+          { icon: MapPin, label: `📍 ${t("pillLocation")}`, key: "l" as DictKey },
+          { icon: Smartphone, label: `📱 ${t("pillCall")}`, key: "c" as DictKey },
+          { icon: Ban, label: `🚫 ${t("pillReports")}`, key: "r" as DictKey },
+        ]).map((p) => (
           <span
-            key={p.label}
-            className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-[12px] font-extrabold text-ink shadow-sm ring-1 ring-kline"
+            key={p.key}
+            className="inline-flex items-center gap-1.5 rounded-full bg-surface px-4 py-2.5 text-[12px] font-extrabold text-body shadow-sm ring-1 ring-kline"
           >
             <p.icon className="h-3.5 w-3.5 text-verified" /> {p.label}
           </span>

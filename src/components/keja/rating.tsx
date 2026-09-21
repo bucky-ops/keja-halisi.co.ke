@@ -65,11 +65,11 @@ export function RatingSheet({
       aria-modal="true"
       aria-label="Rate agent"
     >
-      <div className="slide-up w-full rounded-t-3xl sm:rounded-3xl bg-white p-5 shadow-2xl sm:max-w-[420px]">
+      <div className="slide-up w-full rounded-t-3xl sm:rounded-3xl bg-surface p-5 shadow-2xl sm:max-w-[420px]">
         <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-kline sm:hidden" aria-hidden />
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="font-display text-[16px] font-extrabold text-ink">Was this keja real?</h3>
+            <h3 className="font-display text-[16px] font-extrabold text-body">Was this keja real?</h3>
             <p className="mt-0.5 text-[11.5px] font-semibold text-kmuted">
               Rate {agentHandle}
               {estateHint ? ` • ${estateHint}` : ""} — shows on their agent card
@@ -83,10 +83,10 @@ export function RatingSheet({
         {done ? (
           <div className="pop mt-6 rounded-2xl border border-verified/30 bg-verified-soft p-5 text-center">
             <p className="font-display text-2xl">{stars >= 4 ? "🎉" : "🙏"}</p>
-            <p className="mt-1.5 text-[13px] font-extrabold text-[#08743A]">
+            <p className="mt-1.5 text-[13px] font-extrabold text-ok">
               Asante! {stars}★ recorded — {STAR_LABELS[stars]}
             </p>
-            <p className="mt-1 text-[11px] font-semibold text-[#0a6b40]">
+            <p className="mt-1 text-[11px] font-semibold text-ok-strong">
               Trust feedback loop: ratings update the agent card + response-rate badge.
             </p>
           </div>
@@ -111,7 +111,7 @@ export function RatingSheet({
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-center text-[12px] font-extrabold text-ink">
+            <p className="mt-2 text-center text-[12px] font-extrabold text-body">
               {STAR_LABELS[hover || stars] || "Tap to rate"}
             </p>
 
@@ -125,7 +125,7 @@ export function RatingSheet({
                 onChange={(e) => setComment(e.target.value)}
                 rows={2}
                 placeholder="Keja ilikuwa real, msee ni straight..."
-                className="mt-1.5 w-full rounded-xl border border-kline bg-white px-3.5 py-2.5 text-[12.5px] outline-none focus:border-trust focus:ring-4 focus:ring-trust/10"
+                className="mt-1.5 w-full rounded-xl border border-kline bg-surface px-3.5 py-2.5 text-[12.5px] outline-none focus:border-trust focus:ring-4 focus:ring-trust/10"
               />
             </div>
 

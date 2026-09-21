@@ -2,7 +2,8 @@
 // KEJA HALISI — SavedView: renter's shortlist + personal dashboard
 // Blueprint "Renter dashboard": Saved / Fresh matches / Leads / Reports + rate-after-viewing loop.
 import { useEffect, useMemo, useState } from "react";
-import { Heart, Zap, Phone, Flag, SearchX, ArrowRight, Star, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Heart, Zap, Phone, Flag, SearchX, ArrowRight, Star, ShieldCheck, ArrowLeft, Bell } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
 import { fetchListings } from "../api";
 import { ListingCard, ListingCardSkeleton, MiniListingCard } from "../listing-card";
@@ -69,7 +70,7 @@ export default function SavedView() {
     <div className="mx-auto max-w-[1440px] px-4 py-6">
       <header className="flex flex-wrap items-center gap-3">
         <div>
-          <h2 className="font-display text-xl font-extrabold text-ink">Your keja shortlist</h2>
+          <h2 className="font-display text-xl font-extrabold text-body">Your keja shortlist</h2>
           <p className="mt-0.5 text-[12px] font-semibold text-kmuted">
             Renter dashboard • saved houses, fresh matches and your trust activity — private to this device
           </p>
@@ -100,11 +101,11 @@ export default function SavedView() {
       {/* rate-after-viewing loop */}
       {pendingRatings.length > 0 && (
         <section className="mt-5 rounded-3xl border border-gold/40 bg-gold/10 p-4" aria-label="Rate after viewing">
-          <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-[#8c6700]">
+          <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-warn">
             <Star className="h-4 w-4 fill-gold text-gold" />
             Rate after viewing?
           </p>
-          <p className="mt-1 text-[11.5px] font-semibold text-[#8c6700]/90">
+          <p className="mt-1 text-[11.5px] font-semibold text-warn/90">
             You contacted {activity.leads} agent{activity.leads === 1 ? "" : "s"} this session — ratings help other renters avoid scams.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -112,12 +113,76 @@ export default function SavedView() {
               <button
                 key={r.agentId}
                 onClick={() => setRateTarget(r)}
-                className="touch-target rounded-full border border-gold/50 bg-white px-3.5 py-2 text-[11.5px] font-extrabold text-ink hover:bg-gold/15"
+                className="touch-target rounded-full border border-gold/50 bg-surface px-3.5 py-2 text-[11.5px] font-extrabold text-body hover:bg-gold/15"
               >
                 ⭐ Rate {r.agentHandle} • {r.estate}
               </button>
             ))}
           </div>
+        </section>
+      )}
+
+      {/* trust activity: your scam reports + notifications feed */}
+      {(activity.reportLog.length > 0 || activity.notifications.length > 0) && (
+        <section className="mt-5 grid gap-4 lg:grid-cols-2" aria-label="Trust activity">
+          {activity.reportLog.length > 0 && (
+            <div className="rounded-3xl border border-kline bg-card p-4">
+              <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-body">
+                <Flag className="h-4 w-4 text-scam" /> Your scam reports • {activity.reportLog.length}
+              </p>
+              <p className="mt-0.5 text-[11px] font-semibold text-kmuted">
+                Community policing — 3 reports on the same keja auto-hide it pending review.
+              </p>
+              <ul className="keja-scroll mt-3 max-h-56 space-y-2 overflow-y-auto">
+                {activity.reportLog.map((r) => (
+                  <li
+                    key={r.id}
+                    className="flex items-center justify-between gap-2 rounded-xl border border-kline/70 bg-kbg/50 px-3 py-2.5"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-[11.5px] font-extrabold text-body">
+                        {r.estate} • {r.reason.replace(/([A-Z])/g, " $1").trim()}
+                      </p>
+                      <p className="text-[10px] font-semibold text-kmuted">{new Date(r.at).toLocaleString()}</p>
+                    </div>
+                    {r.autoHidden ? (
+                      <span className="shrink-0 rounded-full bg-scam-soft px-2.5 py-1 text-[9.5px] font-extrabold text-scam">
+                        Hidden • 3 strikes
+                      </span>
+                    ) : (
+                      <span className="shrink-0 rounded-full bg-pending-soft px-2.5 py-1 text-[9.5px] font-extrabold text-warn">
+                        Under review
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {activity.notifications.length > 0 && (
+            <div className="rounded-3xl border border-kline bg-card p-4">
+              <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-body">
+                <Bell className="h-4 w-4 text-trust" /> Recent activity
+              </p>
+              <ul className="keja-scroll mt-3 max-h-56 space-y-2 overflow-y-auto">
+                {activity.notifications.slice(0, 6).map((n) => (
+                  <li key={n.id} className="flex gap-2.5 rounded-xl border border-kline/70 bg-kbg/50 px-3 py-2.5">
+                    <span
+                      className={cn(
+                        "mt-1 h-2 w-2 shrink-0 rounded-full",
+                        n.kind === "success" ? "bg-verified" : n.kind === "error" ? "bg-scam" : n.kind === "warning" ? "bg-pending" : "bg-trust"
+                      )}
+                      aria-hidden
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate text-[11.5px] font-extrabold text-body">{n.title}</p>
+                      <p className="text-[10.5px] leading-snug text-kmuted">{n.body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
       )}
 
@@ -127,7 +192,7 @@ export default function SavedView() {
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-tiktok-pink/10 text-tiktok-pink">
             <SearchX className="h-6 w-6" />
           </span>
-          <h3 className="mt-4 font-display text-lg font-extrabold text-ink">
+          <h3 className="mt-4 font-display text-lg font-extrabold text-body">
             {all === null ? "Loading your shortlist..." : "No saved kejas yet"}
           </h3>
           <p className="mx-auto mt-1.5 max-w-sm text-[12px] font-semibold leading-relaxed text-kmuted">
@@ -142,7 +207,7 @@ export default function SavedView() {
             </button>
             <button
               onClick={back}
-              className="touch-target inline-flex items-center gap-2 rounded-full border border-kline bg-white px-5 py-2.5 text-[12px] font-extrabold text-ink hover:bg-kbg"
+              className="touch-target inline-flex items-center gap-2 rounded-full border border-kline bg-surface px-5 py-2.5 text-[12px] font-extrabold text-body hover:bg-kbg"
             >
               <ArrowLeft className="h-4 w-4" /> Go back
             </button>
@@ -151,7 +216,7 @@ export default function SavedView() {
       ) : (
         <>
           <div className="mt-6 flex items-center justify-between">
-            <h3 className="font-display text-[15px] font-extrabold text-ink">
+            <h3 className="font-display text-[15px] font-extrabold text-body">
               Saved kejas • {savedListings.length}
             </h3>
             <p className="text-[11px] font-semibold text-kmuted">
@@ -174,7 +239,7 @@ export default function SavedView() {
           {/* similar-to-saved rail */}
           {all && availableSaved.length > 0 && (
             <section className="mt-8">
-              <h3 className="font-display text-[15px] font-extrabold text-ink">More like your shortlist</h3>
+              <h3 className="font-display text-[15px] font-extrabold text-body">More like your shortlist</h3>
               <p className="text-[11px] font-semibold text-kmuted">Fresh verified kejas in the same boroughs</p>
               <div className="keja-scroll mt-3 flex gap-3 overflow-x-auto pb-2">
                 {all

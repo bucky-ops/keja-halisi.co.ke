@@ -78,12 +78,12 @@ function UploadZone({
         <span
           className={cn(
             "grid h-9 w-9 shrink-0 place-items-center rounded-xl border",
-            done ? "border-verified bg-verified text-white" : "border-kline bg-white text-trust"
+            done ? "border-verified bg-verified text-white" : "border-kline bg-surface text-trust"
           )}
         >
           {done ? <Check className="h-4 w-4" /> : <Upload className="h-4 w-4" />}
         </span>
-        <p className="text-[12px] font-bold leading-snug text-ink">{label}</p>
+        <p className="text-[12px] font-bold leading-snug text-body">{label}</p>
         {done && (
           <span className="ml-auto shrink-0 rounded-full bg-verified px-2 py-0.5 text-[10px] font-extrabold text-white">
             Captured
@@ -110,10 +110,10 @@ function Field({
 }
 
 const inputCls =
-  "touch-target w-full rounded-xl border border-kline bg-white px-3.5 py-2.5 text-[13px] font-semibold text-ink outline-none placeholder:font-medium placeholder:text-kmuted/60 focus:border-trust focus:ring-4 focus:ring-trust/10";
+  "touch-target w-full rounded-xl border border-kline bg-surface px-3.5 py-2.5 text-[13px] font-semibold text-body outline-none placeholder:font-medium placeholder:text-kmuted/60 focus:border-trust focus:ring-4 focus:ring-trust/10";
 
 export default function VerifyView() {
-  const { navigate, setSession } = useKeja();
+  const { navigate, setSession, notify } = useKeja();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [role, setRole] = useState<Role | null>(null);
@@ -187,6 +187,7 @@ export default function VerifyView() {
         setOtpOk({ age: res.phoneAgeMonths });
         setSession({ phone, verified: true });
         toast("success", "Phone verified ✓");
+        notify("success", "Phone verified ✓", `${phone} passed the Africa's Talking OTP check — you can now post and lead-log.`);
         setTimeout(() => setStep(3), 800);
       } else {
         setOtpError(true);
@@ -277,9 +278,9 @@ export default function VerifyView() {
             aria-current={active ? "step" : undefined}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11.5px] font-extrabold",
-              done && "border-verified/30 bg-verified-soft text-[#08743A]",
+              done && "border-verified/30 bg-verified-soft text-ok",
               active && "border-ink bg-ink text-white",
-              !done && !active && "border-kline bg-white text-kmuted"
+              !done && !active && "border-kline bg-surface text-kmuted"
             )}
           >
             {done ? (
@@ -310,11 +311,11 @@ export default function VerifyView() {
     if (role === "Caretaker") {
       return (
         <div className="rounded-2xl border border-pending/30 bg-pending-soft p-4" role="note">
-          <p className="flex items-center gap-2 text-[12px] font-extrabold text-[#92400E]">
+          <p className="flex items-center gap-2 text-[12px] font-extrabold text-warn-strong">
             <Store className="h-4 w-4 shrink-0" />
             Caretaker permissions
           </p>
-          <p className="mt-1 text-[11.5px] leading-relaxed text-[#92400E]/90">
+          <p className="mt-1 text-[11.5px] leading-relaxed text-warn-strong/90">
             Caretaker can only post for estates in mandate • Owner mandate letter required • Permissions table in
             developer dashboard • Private vault stores letter.
           </p>
@@ -327,7 +328,7 @@ export default function VerifyView() {
           <ShieldCheck className="h-4 w-4 shrink-0" />
           {role} permissions
         </p>
-        <p className="mt-1 text-[11.5px] leading-relaxed text-[#145ca8]">
+        <p className="mt-1 text-[11.5px] leading-relaxed text-trust">
           {role} can post Nairobi wide • Trust checks required • No viewing fee enforcement • Evidence checklist
           required.
         </p>
@@ -341,9 +342,9 @@ export default function VerifyView() {
 
       {/* header */}
       <div className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-extrabold text-ink sm:text-2xl">Verify Agent • 3 Steps</h2>
+        <h2 className="font-display text-xl font-extrabold text-body sm:text-2xl">Verify Agent • 3 Steps</h2>
         <div className="rounded-2xl border border-trust/25 bg-trust-soft p-4" role="note">
-          <p className="flex items-start gap-2 text-[12px] font-semibold leading-relaxed text-[#145ca8]">
+          <p className="flex items-start gap-2 text-[12px] font-semibold leading-relaxed text-trust">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
             Verification flow combines phone OTP, ID/selfie, TikTok evidence and referral signals. Never display the
             raw ID in the public profile.
@@ -370,7 +371,7 @@ export default function VerifyView() {
                     "touch-target rounded-3xl border p-5 text-left transition-all",
                     active
                       ? "border-ink bg-ink text-white shadow-lg"
-                      : "border-kline bg-card text-ink hover:-translate-y-0.5 hover:border-trust/40 hover:shadow-md"
+                      : "border-kline bg-card text-body hover:-translate-y-0.5 hover:border-trust/40 hover:shadow-md"
                   )}
                 >
                   <span
@@ -422,7 +423,7 @@ export default function VerifyView() {
       {step === 2 && (
         <section className="mt-6 max-w-xl" aria-label="Phone OTP">
           <div className="rounded-3xl border border-kline bg-card p-5 sm:p-6">
-            <p className="flex items-center gap-2 font-display text-[14px] font-extrabold text-ink">
+            <p className="flex items-center gap-2 font-display text-[14px] font-extrabold text-body">
               <Phone className="h-4 w-4 text-trust" />
               Phone OTP — Safaricom number
             </p>
@@ -449,7 +450,7 @@ export default function VerifyView() {
 
             {demoCode && (
               <div className="mt-3 rounded-xl border border-pending/30 bg-pending-soft px-3.5 py-3" role="note">
-                <p className="text-[11.5px] font-bold text-[#92400E]">
+                <p className="text-[11.5px] font-bold text-warn-strong">
                   Demo: SMS mock — code {demoCode} (Africa&apos;s Talking in production)
                 </p>
               </div>
@@ -462,7 +463,7 @@ export default function VerifyView() {
                 </p>
                 <OtpInput value={otp} onChange={(v) => { setOtp(v); setOtpError(false); }} />
                 {otpError && (
-                  <p role="alert" className="mt-2 text-[11.5px] font-extrabold text-[#9F2020]">
+                  <p role="alert" className="mt-2 text-[11.5px] font-extrabold text-danger-strong">
                     Invalid or expired code
                   </p>
                 )}
@@ -487,11 +488,11 @@ export default function VerifyView() {
                 )}
               >
                 {otpOk.age >= 6 ? (
-                  <p className="text-[12px] font-extrabold text-[#08743A]">
+                  <p className="text-[12px] font-extrabold text-ok">
                     ✓ Phone verified • Truecaller: number age {otpOk.age} months → trusted
                   </p>
                 ) : (
-                  <p className="text-[12px] font-extrabold text-[#92400E]">
+                  <p className="text-[12px] font-extrabold text-warn-strong">
                     ✓ Phone verified • Truecaller: number age {otpOk.age} months &lt;6 months — extra review
                   </p>
                 )}
@@ -503,7 +504,7 @@ export default function VerifyView() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="touch-target inline-flex items-center gap-1.5 rounded-full border border-kline bg-white px-4 py-2.5 text-[12px] font-bold text-ink hover:bg-kbg"
+              className="touch-target inline-flex items-center gap-1.5 rounded-full border border-kline bg-surface px-4 py-2.5 text-[12px] font-bold text-body hover:bg-kbg"
             >
               <ArrowRight className="h-3.5 w-3.5 rotate-180" /> Role
             </button>
@@ -526,7 +527,7 @@ export default function VerifyView() {
             {/* role-specific evidence */}
             {role === "Agent" && (
               <div className="rounded-3xl border border-kline bg-card p-5">
-                <p className="flex items-center gap-2 font-display text-[13.5px] font-extrabold text-ink">
+                <p className="flex items-center gap-2 font-display text-[13.5px] font-extrabold text-body">
                   <Video className="h-4 w-4 text-trust" /> 2 old TikTok video links
                 </p>
                 <div className="mt-3 space-y-2.5">
@@ -547,7 +548,7 @@ export default function VerifyView() {
                     className={inputCls}
                   />
                 </div>
-                <p className="mt-3 flex items-center gap-2 font-display text-[13.5px] font-extrabold text-ink">
+                <p className="mt-3 flex items-center gap-2 font-display text-[13.5px] font-extrabold text-body">
                   <PhoneCall className="h-4 w-4 text-trust" /> 2 referral phone numbers
                 </p>
                 <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
@@ -597,7 +598,7 @@ export default function VerifyView() {
 
             {role === "Caretaker" && (
               <div className="rounded-3xl border border-pending/30 bg-pending-soft p-5">
-                <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-[#92400E]">
+                <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-warn-strong">
                   <Store className="h-4 w-4 shrink-0" />
                   Caretaker mandate upload • Owner mandate letter • Permissions for specific estates
                 </p>
@@ -613,7 +614,7 @@ export default function VerifyView() {
                   />
                 </div>
                 <fieldset className="mt-4">
-                  <legend className="mb-2 text-[11px] font-extrabold uppercase tracking-wide text-[#92400E]">
+                  <legend className="mb-2 text-[11px] font-extrabold uppercase tracking-wide text-warn-strong">
                     Mandate estates — pick estates you may post
                   </legend>
                   <div className="flex flex-wrap gap-2">
@@ -624,7 +625,7 @@ export default function VerifyView() {
                           key={estate}
                           className={cn(
                             "touch-target flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-2 text-[11.5px] font-bold transition-colors",
-                            on ? "border-ink bg-ink text-white" : "border-kline bg-white text-ink hover:border-trust/40"
+                            on ? "border-ink bg-ink text-white" : "border-kline bg-surface text-body hover:border-trust/40"
                           )}
                         >
                           <input
@@ -651,11 +652,11 @@ export default function VerifyView() {
                 aria-expanded={goldOpen}
                 className="touch-target flex w-full items-center gap-2 rounded-3xl p-4 text-left"
               >
-                <Crown className="h-4 w-4 text-[#8c6700]" />
-                <span className="text-[12.5px] font-extrabold text-[#8c6700]">
+                <Crown className="h-4 w-4 text-warn" />
+                <span className="text-[12.5px] font-extrabold text-warn">
                   KRA PIN / Business Reg (optional Gold badge 👑)
                 </span>
-                <ChevronDown className={cn("ml-auto h-4 w-4 text-[#8c6700] transition-transform", goldOpen && "rotate-180")} />
+                <ChevronDown className={cn("ml-auto h-4 w-4 text-warn transition-transform", goldOpen && "rotate-180")} />
               </button>
               {goldOpen && (
                 <div className="px-4 pb-4">
@@ -674,7 +675,7 @@ export default function VerifyView() {
 
             {/* evidence checklist note */}
             <div className="rounded-2xl border border-verified/25 bg-verified-soft p-4" role="note">
-              <p className="flex items-start gap-2 text-[12px] font-bold leading-relaxed text-[#08743A]">
+              <p className="flex items-start gap-2 text-[12px] font-bold leading-relaxed text-ok">
                 <FileCheck2 className="mt-0.5 h-4 w-4 shrink-0" />
                 Listing evidence checklist applies at posting time: {EVIDENCE_ITEMS.join(" • ")}
               </p>
@@ -695,7 +696,7 @@ export default function VerifyView() {
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="touch-target inline-flex items-center gap-1.5 rounded-full border border-kline bg-white px-4 py-2.5 text-[12px] font-bold text-ink hover:bg-kbg"
+                className="touch-target inline-flex items-center gap-1.5 rounded-full border border-kline bg-surface px-4 py-2.5 text-[12px] font-bold text-body hover:bg-kbg"
               >
                 <ArrowRight className="h-3.5 w-3.5 rotate-180" /> Phone OTP
               </button>
@@ -733,7 +734,7 @@ export default function VerifyView() {
                   <Check className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-[13px] font-extrabold text-ink">Phone OTP</p>
+                  <p className="text-[13px] font-extrabold text-body">Phone OTP</p>
                   <p className="text-[11.5px] font-semibold text-kmuted">
                     {phone.replace(/\D/g, "").slice(-3).padStart(11, "*")} • verified ✓
                   </p>
@@ -744,7 +745,7 @@ export default function VerifyView() {
                   <Check className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-[13px] font-extrabold text-ink">ID + selfie</p>
+                  <p className="text-[13px] font-extrabold text-body">ID + selfie</p>
                   <p className="text-[11.5px] font-semibold text-kmuted">Encrypted in private vault • never public</p>
                 </div>
               </li>
@@ -753,7 +754,7 @@ export default function VerifyView() {
                   <Clock className="h-4 w-4 pulse-dot" />
                 </span>
                 <div>
-                  <p className="text-[13px] font-extrabold text-ink">Role evidence — {role}</p>
+                  <p className="text-[13px] font-extrabold text-body">Role evidence — {role}</p>
                   <p className="text-[11.5px] font-semibold text-kmuted">
                     Under review ~2h • SMS confirmation on decision
                   </p>
@@ -765,7 +766,7 @@ export default function VerifyView() {
               <button
                 type="button"
                 onClick={() => navigate("home")}
-                className="touch-target inline-flex items-center gap-2 rounded-full border border-kline bg-white px-5 py-3 text-[12.5px] font-extrabold text-ink hover:bg-kbg"
+                className="touch-target inline-flex items-center gap-2 rounded-full border border-kline bg-surface px-5 py-3 text-[12.5px] font-extrabold text-body hover:bg-kbg"
               >
                 <HomeIcon className="h-4 w-4" /> Back to discover
               </button>

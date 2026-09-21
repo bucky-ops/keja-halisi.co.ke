@@ -27,7 +27,7 @@ export function EvidenceChecklist({
     >
       <header className="flex items-center gap-2">
         <CircleCheck className={cn("h-4.5 w-4.5", allDone ? "text-verified" : "text-verified/50")} />
-        <p className="text-[12.5px] font-extrabold text-[#08743A]">
+        <p className="text-[12.5px] font-extrabold text-ok">
           Evidence checklist: {EVIDENCE_ITEMS.join(" • ")}
         </p>
       </header>
@@ -40,7 +40,7 @@ export function EvidenceChecklist({
               key={item}
               className={cn(
                 "flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 text-[12px] font-bold transition-colors touch-target",
-                on ? "border-verified/40 bg-white text-[#0a6b40]" : "border-transparent bg-white/70 text-kmuted",
+                on ? "border-verified/40 bg-surface text-ok-strong" : "border-transparent bg-surface/70 text-kmuted",
                 readOnly && "cursor-default"
               )}
             >
@@ -64,7 +64,7 @@ export function EvidenceChecklist({
           );
         })}
       </div>
-      <p className="mt-2.5 flex items-center gap-1.5 text-[10.5px] font-semibold text-[#0a6b40]">
+      <p className="mt-2.5 flex items-center gap-1.5 text-[10.5px] font-semibold text-ok-strong">
         <Video className="h-3.5 w-3.5 text-trust" />
         Required before publish • AI checks presence • TikTok vertical evidence • 5 clips
       </p>
@@ -124,7 +124,7 @@ export function OtpInput({
           maxLength={2}
           placeholder="•"
           aria-label={`Digit ${i + 1}`}
-          className="h-12 w-12 rounded-xl border-2 border-kline bg-white text-center font-display text-lg font-extrabold outline-none placeholder:text-kmuted/50 focus:border-trust focus:ring-4 focus:ring-trust/10"
+          className="h-12 w-12 rounded-xl border-2 border-kline bg-surface text-center font-display text-lg font-extrabold outline-none placeholder:text-kmuted/50 focus:border-trust focus:ring-4 focus:ring-trust/10"
         />
       ))}
     </div>

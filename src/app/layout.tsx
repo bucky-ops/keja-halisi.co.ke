@@ -25,7 +25,8 @@ export const metadata: Metadata = {
     "Nairobi rentals", "keja", "verified houses", "TikTok rentals Kenya",
     "Kileleshwa", "Kasarani", "no viewing fee", "Hakuna Kulipa Kabla Ya Kuona Nyumba",
   ],
-  icons: { icon: "/logo/icon.svg" },
+  icons: { icon: "/logo/icon.svg", apple: "/logo/icon.svg" },
+  manifest: "/manifest.webmanifest",
   openGraph: {
     title: "Keja Halisi — Real House Verified",
     description: "Verified TikTok rentals across Nairobi's 6 boroughs. No viewing fee before viewing.",
@@ -35,7 +36,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1976D2",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#1976D2" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d1117" },
+  ],
   width: "device-width",
   initialScale: 1,
 };

@@ -8,7 +8,7 @@ export function VerifiedBadge({ className, label = "Verified" }: { className?: s
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full bg-verified-soft border border-verified/25 text-[#08743A] px-2 py-0.5 text-[10.5px] font-extrabold",
+        "inline-flex items-center gap-1 rounded-full bg-verified-soft border border-verified/25 text-ok px-2 py-0.5 text-[10.5px] font-extrabold",
         className
       )}
     >
@@ -21,7 +21,7 @@ export function GoldBadge({ className, label = "Gold Developer" }: { className?:
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full bg-gold/25 border border-gold/50 text-[#8c6700] px-2 py-0.5 text-[10.5px] font-extrabold",
+        "inline-flex items-center gap-1 rounded-full bg-gold/25 border border-gold/50 text-warn px-2 py-0.5 text-[10.5px] font-extrabold",
         className
       )}
     >
@@ -47,7 +47,7 @@ export function PendingBadge({ className, label = "Pending review" }: { classNam
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full bg-pending-soft border border-pending/25 text-[#92400E] px-2 py-0.5 text-[10.5px] font-extrabold",
+        "inline-flex items-center gap-1 rounded-full bg-pending-soft border border-pending/25 text-warn-strong px-2 py-0.5 text-[10.5px] font-extrabold",
         className
       )}
     >
@@ -60,7 +60,7 @@ export function ScamBadge({ className, label = "Reported" }: { className?: strin
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full bg-scam-soft border border-scam/25 text-[#9F2020] px-2 py-0.5 text-[10.5px] font-extrabold",
+        "inline-flex items-center gap-1 rounded-full bg-scam-soft border border-scam/25 text-danger-strong px-2 py-0.5 text-[10.5px] font-extrabold",
         className
       )}
     >
@@ -121,11 +121,11 @@ export function VerificationBadge({ status, role }: { status: VerificationStatus
 export function TrustChecksNotice({ className }: { className?: string }) {
   return (
     <div className={cn("rounded-xl bg-verified-soft border border-verified/20 px-3.5 py-3", className)}>
-      <p className="flex items-center gap-2 text-[12px] font-bold text-[#08743A]">
+      <p className="flex items-center gap-2 text-[12px] font-bold text-ok">
         <ShieldCheck className="h-4 w-4 shrink-0" />
         Trust checks
       </p>
-      <p className="mt-1 text-[11.5px] leading-relaxed text-[#0a6b40]">
+      <p className="mt-1 text-[11.5px] leading-relaxed text-ok-strong">
         phone verified • evidence video • no viewing fee rule • re-check enabled
       </p>
     </div>
@@ -151,11 +151,11 @@ export function PrivacyNotice({ className }: { className?: string }) {
 export function FeeWarning({ className }: { className?: string }) {
   return (
     <div className={cn("rounded-xl bg-scam-soft border border-scam/30 px-3.5 py-3", className)} role="alert">
-      <p className="flex items-center gap-2 text-[12px] font-extrabold text-[#9F2020]">
+      <p className="flex items-center gap-2 text-[12px] font-extrabold text-danger-strong">
         <Flag className="h-4 w-4 shrink-0" />
         Viewing-fee signal exists
       </p>
-      <p className="mt-1 text-[11.5px] leading-relaxed text-[#9F2020]/90">
+      <p className="mt-1 text-[11.5px] leading-relaxed text-danger-strong/90">
         Treat as a warning and report if the agent asks you to pay before viewing. Filter “No Viewing Fee” to hide.
       </p>
     </div>

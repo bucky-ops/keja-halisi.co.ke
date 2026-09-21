@@ -49,7 +49,7 @@ const PUBLISH_RULES = [
 const STEP_LABELS = ["TikTok link", "Location & rent", "Evidence", "Review"];
 
 const inputCls =
-  "touch-target w-full rounded-xl border border-kline bg-white px-3.5 py-2.5 text-[13px] font-semibold text-ink outline-none placeholder:font-medium placeholder:text-kmuted/60 focus:border-trust focus:ring-4 focus:ring-trust/10";
+  "touch-target w-full rounded-xl border border-kline bg-surface px-3.5 py-2.5 text-[13px] font-semibold text-body outline-none placeholder:font-medium placeholder:text-kmuted/60 focus:border-trust focus:ring-4 focus:ring-trust/10";
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -64,7 +64,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 }
 
 export default function PostView() {
-  const { session, navigate } = useKeja();
+  const { session, navigate, notify } = useKeja();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
@@ -196,6 +196,11 @@ export default function PostView() {
       setParty(true);
       setTimeout(() => setParty(false), 3200);
       toast("success", "Listing submitted • verification review started • not publicly live yet");
+      notify(
+        "info",
+        "Listing submitted for review",
+        `${estate} • ${parsed.beds} • KES ${rent.toLocaleString("en-KE")} — AI moderation + evidence check in progress.`
+      );
     } catch {
       toast("error", "Submit failed — check the form and retry");
     } finally {
@@ -240,9 +245,9 @@ export default function PostView() {
                   aria-current={active ? "step" : undefined}
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11.5px] font-extrabold",
-                    done && "border-verified/30 bg-verified-soft text-[#08743A]",
+                    done && "border-verified/30 bg-verified-soft text-ok",
                     active && "border-ink bg-ink text-white",
-                    !done && !active && "border-kline bg-white text-kmuted"
+                    !done && !active && "border-kline bg-surface text-kmuted"
                   )}
                 >
                   <span
@@ -268,9 +273,9 @@ export default function PostView() {
       {party && <Confetti />}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-display text-xl font-extrabold text-ink sm:text-2xl">Post a Keja</h2>
+        <h2 className="font-display text-xl font-extrabold text-body sm:text-2xl">Post a Keja</h2>
         {!session.verified && (
-          <p className="inline-flex items-center gap-2 rounded-full border border-pending/30 bg-pending-soft px-3.5 py-2 text-[11px] font-extrabold text-[#92400E]" role="note">
+          <p className="inline-flex items-center gap-2 rounded-full border border-pending/30 bg-pending-soft px-3.5 py-2 text-[11px] font-extrabold text-warn-strong" role="note">
             <TriangleAlert className="h-3.5 w-3.5 shrink-0" />
             Posting as demo poster (unverified) — out of green catalog until verified
             <button
@@ -290,7 +295,7 @@ export default function PostView() {
       {step === 1 && (
         <section className="mt-6 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]" aria-label="TikTok link">
           <div className="rounded-3xl border border-kline bg-card p-5 sm:p-6">
-            <p className="flex items-center gap-2 font-display text-[14px] font-extrabold text-ink">
+            <p className="flex items-center gap-2 font-display text-[14px] font-extrabold text-body">
               <Link2 className="h-4 w-4 text-trust" />
               TikTok video link
             </p>
@@ -308,7 +313,7 @@ export default function PostView() {
                 )}
               />
               {parseState === "invalid" && (
-                <p role="alert" className="mt-2 flex items-center gap-1.5 text-[11.5px] font-extrabold text-[#9F2020]">
+                <p role="alert" className="mt-2 flex items-center gap-1.5 text-[11.5px] font-extrabold text-danger-strong">
                   <TriangleAlert className="h-3.5 w-3.5" />
                   Invalid TikTok link — must be tiktok.com/@handle/video/...
                 </p>
@@ -328,7 +333,7 @@ export default function PostView() {
 
             {parseState === "valid" && (
               <div className="mt-4 rounded-2xl border border-verified/25 bg-verified-soft p-4" role="status">
-                <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-[#08743A]">
+                <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-ok">
                   <Check className="h-4 w-4" /> Link verified ✓ • AI extracted:
                 </p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -371,7 +376,7 @@ export default function PostView() {
                     />
                   </Field>
                 </div>
-                <p className="mt-3 text-[10.5px] font-semibold text-[#0a6b40]">
+                <p className="mt-3 text-[10.5px] font-semibold text-ok-strong">
                   Gemini Vision mock — extract Price Beds Location hashtag
                 </p>
               </div>
@@ -434,7 +439,7 @@ export default function PostView() {
       {step === 2 && (
         <section className="mt-6 max-w-3xl" aria-label="Location and rent">
           <div className="rounded-3xl border border-kline bg-card p-5 sm:p-6">
-            <p className="flex items-center gap-2 font-display text-[14px] font-extrabold text-ink">
+            <p className="flex items-center gap-2 font-display text-[14px] font-extrabold text-body">
               <MapPin className="h-4 w-4 text-trust" />
               Estate, rent & road
             </p>
@@ -532,7 +537,7 @@ export default function PostView() {
                       key={a}
                       className={cn(
                         "touch-target flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-[11.5px] font-bold transition-colors",
-                        on ? "border-trust/40 bg-trust-soft text-trust" : "border-kline bg-white text-ink hover:border-trust/30"
+                        on ? "border-trust/40 bg-trust-soft text-trust" : "border-kline bg-surface text-body hover:border-trust/30"
                       )}
                     >
                       <input type="checkbox" checked={on} onChange={() => toggleAmenity(a)} className="accent-[#1976d2]" />
@@ -552,13 +557,13 @@ export default function PostView() {
               )}
             >
               <input type="checkbox" checked={fee} onChange={(e) => setFee(e.target.checked)} className="mt-0.5 accent-[#e02424]" />
-              <span className="text-[12px] font-bold text-ink">
+              <span className="text-[12px] font-bold text-body">
                 Listing has viewing-fee signal (captions like &ldquo;registration fee&rdquo;)
               </span>
             </label>
             {fee && (
               <div className="mt-2.5 rounded-xl border border-scam/30 bg-scam-soft px-3.5 py-3" role="alert">
-                <p className="flex items-center gap-2 text-[12px] font-extrabold text-[#9F2020]">
+                <p className="flex items-center gap-2 text-[12px] font-extrabold text-danger-strong">
                   <Flag className="h-4 w-4 shrink-0" />
                   Viewing-fee signal will trigger red warning + No-Fee filter hides this listing
                 </p>
@@ -578,7 +583,7 @@ export default function PostView() {
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="touch-target inline-flex items-center gap-1.5 rounded-full border border-kline bg-white px-4 py-2.5 text-[12px] font-bold text-ink hover:bg-kbg"
+                className="touch-target inline-flex items-center gap-1.5 rounded-full border border-kline bg-surface px-4 py-2.5 text-[12px] font-bold text-body hover:bg-kbg"
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> Link
               </button>
@@ -617,7 +622,7 @@ export default function PostView() {
                       key={r}
                       className={cn(
                         "touch-target flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-[11.5px] font-bold transition-colors",
-                        on ? "border-ink bg-ink text-white" : "border-kline bg-white text-ink hover:border-trust/40"
+                        on ? "border-ink bg-ink text-white" : "border-kline bg-surface text-body hover:border-trust/40"
                       )}
                     >
                       <input type="radio" name="post-role" checked={on} onChange={() => setRole(r as Role)} className="sr-only" />
@@ -640,7 +645,7 @@ export default function PostView() {
             <EvidenceChecklist checked={evidence} onChange={setEvidence} />
 
             {evidenceCount < 5 && (
-              <p role="alert" className="flex items-center gap-1.5 text-[11.5px] font-extrabold text-[#9F2020]">
+              <p role="alert" className="flex items-center gap-1.5 text-[11.5px] font-extrabold text-danger-strong">
                 <TriangleAlert className="h-3.5 w-3.5" />
                 All 5 evidence clips required before publish — {evidenceCount}/5 captured
               </p>
@@ -648,8 +653,8 @@ export default function PostView() {
 
             {/* verification summary */}
             <div className="rounded-2xl border border-verified/25 bg-verified-soft p-4" role="status">
-              <p className="text-[12px] font-extrabold text-[#08743A]">Verification summary</p>
-              <ul className="mt-2 space-y-1.5 text-[11.5px] font-bold text-[#0a6b40]">
+              <p className="text-[12px] font-extrabold text-ok">Verification summary</p>
+              <ul className="mt-2 space-y-1.5 text-[11.5px] font-bold text-ok-strong">
                 <li className="flex items-center gap-2">
                   {session.verified ? (
                     <Check className="h-3.5 w-3.5 shrink-0 text-verified" />
@@ -670,11 +675,11 @@ export default function PostView() {
             {/* caretaker mandate */}
             {role === "Caretaker" && (
               <div className="rounded-2xl border border-pending/30 bg-pending-soft p-4" role="note">
-                <p className="flex items-center gap-2 text-[12px] font-extrabold text-[#92400E]">
+                <p className="flex items-center gap-2 text-[12px] font-extrabold text-warn-strong">
                   <Store className="h-4 w-4 shrink-0" />
                   Caretaker mandate active
                 </p>
-                <p className="mt-1 text-[11.5px] leading-relaxed text-[#92400E]/90">
+                <p className="mt-1 text-[11.5px] leading-relaxed text-warn-strong/90">
                   You can only post for estates in your owner mandate • Mandate letter checked against the permissions
                   table • Posting outside mandate auto-rejects the listing.
                 </p>
@@ -685,7 +690,7 @@ export default function PostView() {
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="touch-target inline-flex items-center gap-1.5 rounded-full border border-kline bg-white px-4 py-2.5 text-[12px] font-bold text-ink hover:bg-kbg"
+                className="touch-target inline-flex items-center gap-1.5 rounded-full border border-kline bg-surface px-4 py-2.5 text-[12px] font-bold text-body hover:bg-kbg"
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> Location
               </button>
@@ -707,11 +712,11 @@ export default function PostView() {
           <div className="space-y-4">
             {/* publishing rules */}
             <div className="rounded-2xl bg-kbg p-4" role="note" aria-label="Publishing rules">
-              <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-ink">
+              <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-body">
                 <ShieldCheck className="h-4 w-4 text-verified" />
                 Publishing rules panel
               </p>
-              <ul className="mt-2.5 space-y-1.5 text-[11.5px] font-semibold leading-relaxed text-ink/75">
+              <ul className="mt-2.5 space-y-1.5 text-[11.5px] font-semibold leading-relaxed text-body/75">
                 {PUBLISH_RULES.map((rule) => (
                   <li key={rule}>• {rule}</li>
                 ))}
@@ -720,7 +725,7 @@ export default function PostView() {
 
             {/* review summary */}
             <div className="rounded-3xl border border-kline bg-card p-5">
-              <p className="font-display text-[13.5px] font-extrabold text-ink">Review summary</p>
+              <p className="font-display text-[13.5px] font-extrabold text-body">Review summary</p>
               <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5 text-[12px]">
                 {[
                   ["Role", role],
@@ -735,7 +740,7 @@ export default function PostView() {
                 ].map(([k, v]) => (
                   <div key={k} className="min-w-0">
                     <dt className="text-[10px] font-extrabold uppercase tracking-wide text-kmuted">{k}</dt>
-                    <dd className="truncate font-bold text-ink">{v}</dd>
+                    <dd className="truncate font-bold text-body">{v}</dd>
                   </div>
                 ))}
               </dl>
@@ -745,11 +750,11 @@ export default function PostView() {
           <div className="space-y-4">
             {result ? (
               <div className="rounded-3xl border border-verified/25 bg-verified-soft p-5" role="status">
-                <p className="flex items-center gap-2 text-[13px] font-extrabold text-[#08743A]">
+                <p className="flex items-center gap-2 text-[13px] font-extrabold text-ok">
                   <Check className="h-4.5 w-4.5" />
                   Listing submitted • Pending verification ({result.publishState}) • Evidence checklist OK
                 </p>
-                <p className="mt-2 text-[11.5px] font-semibold leading-relaxed text-[#0a6b40]">
+                <p className="mt-2 text-[11.5px] font-semibold leading-relaxed text-ok-strong">
                   AI flags: {result.flagLabels.length > 0 ? result.flagLabels.join(" • ") : "none"}
                 </p>
                 <p className="mt-1 text-[10.5px] font-semibold text-kmuted">Reference: {result.id}</p>
@@ -764,7 +769,7 @@ export default function PostView() {
                   <button
                     type="button"
                     onClick={resetWizard}
-                    className="touch-target inline-flex items-center gap-2 rounded-full border border-kline bg-white px-5 py-2.5 text-[12px] font-extrabold text-ink hover:bg-kbg"
+                    className="touch-target inline-flex items-center gap-2 rounded-full border border-kline bg-surface px-5 py-2.5 text-[12px] font-extrabold text-body hover:bg-kbg"
                   >
                     <RotateCcw className="h-4 w-4" /> Post another
                   </button>
@@ -773,9 +778,9 @@ export default function PostView() {
             ) : (
               <>
                 <div className="rounded-3xl border border-kline bg-card p-5">
-                  <p className="font-display text-[13.5px] font-extrabold text-ink">Ready to submit</p>
+                  <p className="font-display text-[13.5px] font-extrabold text-body">Ready to submit</p>
                   <p className="mt-1.5 text-[11.5px] font-semibold leading-relaxed text-kmuted">
-                    Poster: <span className="font-bold text-ink">{posterHandle}</span> • goes to pending_review queue —
+                    Poster: <span className="font-bold text-body">{posterHandle}</span> • goes to pending_review queue —
                     not publicly live until an admin approves.
                   </p>
                   <button
@@ -791,7 +796,7 @@ export default function PostView() {
                     Submit • Publish rules enforced
                   </button>
                   {evidenceCount < 5 && (
-                    <p role="alert" className="mt-2.5 flex items-center gap-1.5 text-[11px] font-extrabold text-[#9F2020]">
+                    <p role="alert" className="mt-2.5 flex items-center gap-1.5 text-[11px] font-extrabold text-danger-strong">
                       <TriangleAlert className="h-3.5 w-3.5" />
                       All 5 evidence clips required before publish
                     </p>

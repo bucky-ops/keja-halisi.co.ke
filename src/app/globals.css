@@ -43,26 +43,33 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* KEJA HALISI brand tokens */
+  /* KEJA HALISI brand tokens — surface/body/kbg/kline/kmuted + softs are CSS vars that flip with .dark */
   --color-trust: #1976d2;
-  --color-trust-soft: #eaf3ff;
+  --color-trust-soft: var(--k-trust-soft);
   --color-safaricom: #00b140;
   --color-mpesa: #12b44a;
   --color-tiktok: #161616;
   --color-tiktok-pink: #ff0050;
   --color-tiktok-cyan: #00f2ea;
   --color-verified: #0e9f6e;
-  --color-verified-soft: #e9f8ef;
+  --color-verified-soft: var(--k-verified-soft);
   --color-pending: #c27803;
-  --color-pending-soft: #fff7ea;
+  --color-pending-soft: var(--k-pending-soft);
   --color-scam: #e02424;
-  --color-scam-soft: #fff3f3;
+  --color-scam-soft: var(--k-scam-soft);
   --color-ink: #111928;
-  --color-kmuted: #667085;
-  --color-kbg: #f5f7fa;
-  --color-kline: #e7ebf0;
+  --color-body: var(--k-body);
+  --color-surface: var(--k-surface);
+  --color-kmuted: var(--k-muted);
+  --color-kbg: var(--k-bg);
+  --color-kline: var(--k-line);
   --color-gold: #facc15;
   --color-wa: #25d366;
+  --color-ok: var(--k-ok);
+  --color-ok-strong: var(--k-ok-strong);
+  --color-warn: var(--k-warn);
+  --color-warn-strong: var(--k-warn-strong);
+  --color-danger-strong: var(--k-danger-strong);
 }
 
 :root {
@@ -121,6 +128,54 @@
   --ring: #1976d2;
 }
 
+/* ---- Keja brand var flips (light) ---- */
+:root {
+  --k-body: #111928;
+  --k-surface: #ffffff;
+  --k-bg: #f5f7fa;
+  --k-line: #e7ebf0;
+  --k-muted: #667085;
+  --k-trust-soft: #eaf3ff;
+  --k-verified-soft: #e9f8ef;
+  --k-pending-soft: #fff7ea;
+  --k-scam-soft: #fff3f3;
+  --k-shadow: rgba(17, 25, 40, 0.05);
+  --k-shadow-lg: rgba(17, 25, 40, 0.12);
+  --k-map-grid: #dfe7ee;
+  --k-map-bg: #eef3f6;
+  --k-shimmer-a: #e9edf2;
+  --k-shimmer-b: #f6f8fa;
+  --k-ok: #08743a;
+  --k-ok-strong: #0a6b40;
+  --k-warn: #8c6700;
+  --k-warn-strong: #92400e;
+  --k-danger-strong: #9f2020;
+}
+
+/* ---- Keja brand var flips (dark) ---- */
+.dark {
+  --k-body: #eef2f7;
+  --k-surface: #151b23;
+  --k-bg: #0d1117;
+  --k-line: #232b36;
+  --k-muted: #93a0b4;
+  --k-trust-soft: rgba(25, 118, 210, 0.16);
+  --k-verified-soft: rgba(14, 159, 110, 0.15);
+  --k-pending-soft: rgba(194, 120, 3, 0.16);
+  --k-scam-soft: rgba(224, 36, 36, 0.14);
+  --k-shadow: rgba(0, 0, 0, 0.35);
+  --k-shadow-lg: rgba(0, 0, 0, 0.5);
+  --k-map-grid: #1c242e;
+  --k-map-bg: #10151b;
+  --k-shimmer-a: #1a212b;
+  --k-shimmer-b: #232c38;
+  --k-ok: #34d399;
+  --k-ok-strong: #6ee7b7;
+  --k-warn: #fbbf24;
+  --k-warn-strong: #fcd34d;
+  --k-danger-strong: #f87171;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -135,6 +190,29 @@
   h1, h2, h3, .font-display {
     font-family: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
   }
+  button, [role="button"], a, input, select, textarea {
+    outline-color: var(--color-trust);
+  }
+  button:focus-visible, [role="button"]:focus-visible, a:focus-visible {
+    outline: 2px solid var(--color-trust);
+    outline-offset: 2px;
+    border-radius: 10px;
+  }
+  ::selection {
+    background: rgba(25, 118, 210, 0.22);
+  }
+}
+
+/* view switch transition */
+@keyframes viewIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.view-in {
+  animation: viewIn 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .view-in { animation: none; }
 }
 
 /* ---- Keja custom scrollbar ---- */
@@ -166,7 +244,7 @@
   100% { background-position: -400% 0; }
 }
 .shimmer {
-  background: linear-gradient(100deg, #e9edf2 35%, #f6f8fa 50%, #e9edf2 65%);
+  background: linear-gradient(100deg, var(--k-shimmer-a) 35%, var(--k-shimmer-b) 50%, var(--k-shimmer-a) 65%);
   background-size: 400% 100%;
   animation: shimmer 1.4s ease infinite;
 }
@@ -257,11 +335,11 @@
 /* map canvas */
 .keja-map {
   background:
-    radial-gradient(420px at 18% 22%, rgba(25, 118, 210, 0.1), transparent),
-    radial-gradient(420px at 82% 78%, rgba(14, 159, 110, 0.1), transparent),
-    repeating-linear-gradient(0deg, transparent 0 33px, #dfe7ee 33px 34px),
-    repeating-linear-gradient(90deg, transparent 0 33px, #dfe7ee 33px 34px),
-    #eef3f6;
+    radial-gradient(420px at 18% 22%, rgba(25, 118, 210, 0.12), transparent),
+    radial-gradient(420px at 82% 78%, rgba(14, 159, 110, 0.12), transparent),
+    repeating-linear-gradient(0deg, transparent 0 33px, var(--k-map-grid) 33px 34px),
+    repeating-linear-gradient(90deg, transparent 0 33px, var(--k-map-grid) 33px 34px),
+    var(--k-map-bg);
 }
 
 /* 44px min touch target */

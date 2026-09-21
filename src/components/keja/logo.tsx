@@ -7,7 +7,7 @@ export function LogoMark({ className, dark = false }: { className?: string; dark
     <span
       className={cn(
         "grid place-items-center rounded-xl shadow-[0_8px_20px_rgba(25,118,210,0.25)]",
-        dark ? "bg-white" : "bg-white",
+        dark ? "bg-surface" : "bg-surface",
         className ?? "h-9 w-9"
       )}
       aria-hidden
@@ -37,7 +37,7 @@ export function LogoLockup({ dark = false, onNavigate }: { dark?: boolean; onNav
     <button onClick={onNavigate} className="flex items-center gap-2.5 text-left group" aria-label="Keja Halisi home">
       <LogoMark dark={dark} />
       <span className="leading-none">
-        <span className={cn("block font-display font-extrabold tracking-tight text-[15px]", dark ? "text-white" : "text-ink")}>
+        <span className={cn("block font-display font-extrabold tracking-tight text-[15px]", dark ? "text-white" : "text-body")}>
           KEJA HALISI
         </span>
         <span className={cn("block text-[8.5px] font-bold tracking-[0.14em] mt-1", dark ? "text-white/60" : "text-kmuted")}>

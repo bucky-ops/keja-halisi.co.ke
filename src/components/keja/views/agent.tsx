@@ -105,16 +105,16 @@ export default function AgentView() {
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-scam-soft text-scam">
             <SearchX className="h-6 w-6" />
           </span>
-          <h2 className="mt-4 font-display text-lg font-extrabold text-ink">Agent profile not found</h2>
+          <h2 className="mt-4 font-display text-lg font-extrabold text-body">Agent profile not found</h2>
           <p className="mt-1.5 text-[12px] font-semibold leading-relaxed text-kmuted">
-            No agent registered as <span className="font-extrabold text-ink">{handle}</span>. The handle may have
+            No agent registered as <span className="font-extrabold text-body">{handle}</span>. The handle may have
             changed or the agent is still pending verification.
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-2.5">
             <button
               type="button"
               onClick={back}
-              className="touch-target inline-flex items-center gap-2 rounded-full border border-kline bg-white px-5 py-2.5 text-[12px] font-extrabold text-ink hover:bg-kbg"
+              className="touch-target inline-flex items-center gap-2 rounded-full border border-kline bg-surface px-5 py-2.5 text-[12px] font-extrabold text-body hover:bg-kbg"
             >
               <ArrowLeft className="h-4 w-4" /> Go back
             </button>
@@ -180,7 +180,7 @@ export default function AgentView() {
             </span>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="truncate font-display text-xl font-extrabold text-ink">{agent.tiktokHandle}</h2>
+                <h2 className="truncate font-display text-xl font-extrabold text-body">{agent.tiktokHandle}</h2>
                 <VerificationBadge status={agent.verificationStatus} role={agent.role} />
               </div>
               <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[11.5px] font-semibold text-kmuted">
@@ -200,7 +200,7 @@ export default function AgentView() {
                   toast("success", before ? "Upvote removed" : "This agent is legit • Upvoted • Trust score +1");
                 }}
                 className={`touch-target inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[11.5px] font-extrabold transition-colors ${
-                  upvoted ? "border-verified bg-verified-soft text-[#0a6b40]" : "border-kline bg-white text-ink hover:bg-kbg"
+                  upvoted ? "border-verified bg-verified-soft text-ok-strong" : "border-kline bg-surface text-body hover:bg-kbg"
                 }`}
               >
                 <ArrowBigUp className={`h-4 w-4 ${upvoted ? "fill-verified text-verified" : "text-kmuted"}`} />
@@ -208,7 +208,7 @@ export default function AgentView() {
               </button>
               <button
                 onClick={() => setRateOpen(true)}
-                className="touch-target inline-flex items-center gap-1.5 rounded-full bg-gold px-3.5 py-2 text-[11.5px] font-extrabold text-ink transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                className="touch-target inline-flex items-center gap-1.5 rounded-full bg-gold px-3.5 py-2 text-[11.5px] font-extrabold text-body transition-transform hover:scale-[1.02] active:scale-[0.98]"
               >
                 <Star className="h-3.5 w-3.5 fill-ink" /> Rate agent
               </button>
@@ -229,7 +229,7 @@ export default function AgentView() {
               { label: "Rating", value: `${agent.rating}★` },
             ].map((s) => (
               <div key={s.label} className="rounded-2xl border border-kline bg-card p-3.5 text-center">
-                <p className="font-display text-lg font-extrabold text-ink">{s.value}</p>
+                <p className="font-display text-lg font-extrabold text-body">{s.value}</p>
                 <p className="mt-0.5 text-[10px] font-extrabold uppercase tracking-wide text-kmuted">{s.label}</p>
               </div>
             ))}
@@ -238,7 +238,7 @@ export default function AgentView() {
           {/* bio */}
           <div className="rounded-2xl border border-kline bg-card p-4">
             <p className="text-[10.5px] font-extrabold uppercase tracking-[0.14em] text-kmuted">Bio Sheng</p>
-            <p className="mt-1.5 text-[12.5px] font-semibold italic leading-relaxed text-ink">
+            <p className="mt-1.5 text-[12.5px] font-semibold italic leading-relaxed text-body">
               &ldquo;{agent.bio || "Napenda kuweka wazi keja halisi — hakuna kulipa kabla ya kuona nyumba."}&rdquo;
             </p>
           </div>
@@ -273,7 +273,7 @@ export default function AgentView() {
                       )}
                     </span>
                     <div className="min-w-0">
-                      <p className={cn("text-[12px] font-extrabold", verified ? "text-ink" : "text-ink/70")}>
+                      <p className={cn("text-[12px] font-extrabold", verified ? "text-body" : "text-body/70")}>
                         {t.label}
                         {verified && <span className="ml-1.5 text-[10px] font-extrabold text-verified">✓</span>}
                         {pending && <span className="ml-1.5 text-[10px] font-extrabold text-pending">pending</span>}
@@ -296,7 +296,7 @@ export default function AgentView() {
                 <Store className="h-4 w-4 shrink-0" />
                 Caretaker badge • Mandate letter verified
               </p>
-              <p className="mt-1.5 text-[11.5px] font-semibold leading-relaxed text-[#145ca8]">
+              <p className="mt-1.5 text-[11.5px] font-semibold leading-relaxed text-trust">
                 Owner: (vault) • Estates: {agent.mandateEstates?.length ? agent.mandateEstates.join(", ") : "—"} •
                 Expiry {agent.mandateExpiry ? fmtDate(agent.mandateExpiry) : "—"} • Private vault ID {vaultId}
               </p>
@@ -306,14 +306,14 @@ export default function AgentView() {
 
         {/* ---------- RIGHT ---------- */}
         <div className="space-y-4">
-          <h3 className="font-display text-[15px] font-extrabold text-ink">
+          <h3 className="font-display text-[15px] font-extrabold text-body">
             All listings • {listings.length} verified kejas
           </h3>
 
           {listings.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-kline bg-kbg/50 p-6 text-center">
               <MapPin className="mx-auto h-5 w-5 text-kmuted" />
-              <p className="mt-2 text-[12px] font-bold text-ink">Hakuna listing kwa sasa</p>
+              <p className="mt-2 text-[12px] font-bold text-body">Hakuna listing kwa sasa</p>
               <p className="text-[11px] font-semibold text-kmuted">This agent has no live listings yet.</p>
             </div>
           ) : (
@@ -334,10 +334,10 @@ export default function AgentView() {
                     <Star key={i} className={cn("h-3 w-3", i < myRating.stars ? "fill-gold text-gold" : "text-kline")} />
                   ))}
                 </span>
-                <p className="min-w-0 flex-1 truncate text-[12px] font-bold text-ink">
+                <p className="min-w-0 flex-1 truncate text-[12px] font-bold text-body">
                   {myRating.comment || "Asante — rated after viewing"}
                 </p>
-                <span className="shrink-0 text-[10px] font-extrabold text-[#8c6700]">YOUR RATING</span>
+                <span className="shrink-0 text-[10px] font-extrabold text-warn">YOUR RATING</span>
               </div>
             )}
             <ul className="mt-3 divide-y divide-kline">
@@ -354,7 +354,7 @@ export default function AgentView() {
                       />
                     ))}
                   </span>
-                  <p className="min-w-0 flex-1 truncate text-[12px] font-bold text-ink">{r.text}</p>
+                  <p className="min-w-0 flex-1 truncate text-[12px] font-bold text-body">{r.text}</p>
                   <span className="shrink-0 text-[10.5px] font-extrabold text-trust">{r.stars}</span>
                   <span className="shrink-0 text-[10.5px] font-bold text-kmuted">• {r.handle}</span>
                 </li>

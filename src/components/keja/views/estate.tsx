@@ -149,7 +149,7 @@ export default function EstateView() {
                 {c.label}
               </button>
             ) : (
-              <span className="px-1.5 text-ink" aria-current="page">{c.label}</span>
+              <span className="px-1.5 text-body" aria-current="page">{c.label}</span>
             )}
           </span>
         ))}
@@ -159,8 +159,8 @@ export default function EstateView() {
       <div className="mt-4 grid gap-6 lg:grid-cols-[280px_1fr]">
         {/* ======================= 3. SIDEBAR: SMART FILTERS ======================= */}
         <aside className="hidden self-start lg:sticky lg:top-24 lg:block" aria-label="Smart filters">
-          <div className="rounded-3xl border border-kline bg-white p-4">
-            <h2 className="flex items-center gap-2 font-display text-[14px] font-extrabold text-ink">
+          <div className="rounded-3xl border border-kline bg-surface p-4">
+            <h2 className="flex items-center gap-2 font-display text-[14px] font-extrabold text-body">
               <SlidersHorizontal className="h-4 w-4 text-trust" /> Smart filters
             </h2>
 
@@ -173,7 +173,7 @@ export default function EstateView() {
                 value={filters.q}
                 onChange={(e) => setFilters({ q: e.target.value })}
                 placeholder="Search estate / landmark..."
-                className="w-full rounded-xl border border-kline bg-kbg py-2.5 pl-9 pr-8 text-[12.5px] font-semibold outline-none focus:border-trust focus:bg-white focus:ring-4 focus:ring-trust/10"
+                className="w-full rounded-xl border border-kline bg-kbg py-2.5 pl-9 pr-8 text-[12.5px] font-semibold outline-none focus:border-trust focus:bg-surface focus:ring-4 focus:ring-trust/10"
               />
               {filters.q && (
                 <button
@@ -194,7 +194,7 @@ export default function EstateView() {
               id="sc-select"
               value={filters.subCounty}
               onChange={(e) => setFilters({ subCounty: e.target.value, estate: "" })}
-              className="mt-1 w-full rounded-xl border border-kline bg-white px-3 py-2.5 text-[12.5px] font-bold text-ink outline-none focus:border-trust"
+              className="mt-1 w-full rounded-xl border border-kline bg-surface px-3 py-2.5 text-[12.5px] font-bold text-body outline-none focus:border-trust"
             >
               <option value="">All Nairobi</option>
               {subCountyOptions.map((sc) => (
@@ -210,7 +210,7 @@ export default function EstateView() {
               id="sort-select"
               value={filters.sort}
               onChange={(e) => setFilters({ sort: e.target.value as typeof filters.sort })}
-              className="mt-1 w-full rounded-xl border border-kline bg-white px-3 py-2.5 text-[12.5px] font-bold text-ink outline-none focus:border-trust"
+              className="mt-1 w-full rounded-xl border border-kline bg-surface px-3 py-2.5 text-[12.5px] font-bold text-body outline-none focus:border-trust"
             >
               <option value="fresh">Newest first</option>
               <option value="price_asc">Lowest rent</option>
@@ -237,13 +237,13 @@ export default function EstateView() {
                 type="range" min={PRICE_MIN} max={PRICE_MAX} step={1000} value={filters.minPrice}
                 onChange={(e) => setFilters({ minPrice: Math.min(Number(e.target.value), filters.maxPrice) })}
                 aria-label="Minimum price"
-                className="pointer-events-none absolute inset-x-0 top-0 h-6 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-4.5 [&::-webkit-slider-thumb]:w-4.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-trust [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow"
+                className="pointer-events-none absolute inset-x-0 top-0 h-6 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-4.5 [&::-webkit-slider-thumb]:w-4.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-trust [&::-webkit-slider-thumb]:bg-surface [&::-webkit-slider-thumb]:shadow"
               />
               <input
                 type="range" min={PRICE_MIN} max={PRICE_MAX} step={1000} value={filters.maxPrice}
                 onChange={(e) => setFilters({ maxPrice: Math.max(Number(e.target.value), filters.minPrice) })}
                 aria-label="Maximum price"
-                className="pointer-events-none absolute inset-x-0 top-0 h-6 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-4.5 [&::-webkit-slider-thumb]:w-4.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-trust [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow"
+                className="pointer-events-none absolute inset-x-0 top-0 h-6 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-4.5 [&::-webkit-slider-thumb]:w-4.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-trust [&::-webkit-slider-thumb]:bg-surface [&::-webkit-slider-thumb]:shadow"
               />
             </div>
 
@@ -257,7 +257,7 @@ export default function EstateView() {
                   aria-pressed={filters.beds === b}
                   className={cn(
                     "min-h-11 rounded-full px-3.5 py-2 text-[11.5px] font-extrabold transition-colors",
-                    filters.beds === b ? "bg-ink text-white" : "bg-kbg text-ink/70 hover:bg-ink/10"
+                    filters.beds === b ? "bg-ink text-white" : "bg-kbg text-body/70 hover:bg-ink/10"
                   )}
                 >
                   {b}
@@ -269,7 +269,7 @@ export default function EstateView() {
             <p className="mt-4 text-[10px] font-extrabold uppercase tracking-wider text-kmuted">Amenities</p>
             <div className="mt-1.5 grid grid-cols-2 gap-x-2 gap-y-1" role="group" aria-label="Amenities filter">
               {AMENITY_OPTIONS.map((a) => (
-                <label key={a} className="flex min-h-11 cursor-pointer items-center gap-1.5 text-[11.5px] font-bold text-ink/80">
+                <label key={a} className="flex min-h-11 cursor-pointer items-center gap-1.5 text-[11.5px] font-bold text-body/80">
                   <input
                     type="checkbox"
                     checked={amenities.includes(a)}
@@ -290,7 +290,7 @@ export default function EstateView() {
                 ["noFee", "No viewing fee signal"],
                 ["verified", "Verified profile signal"],
               ] as const).map(([key, label]) => (
-                <label key={key} className="flex min-h-11 cursor-pointer items-center gap-2 text-[12px] font-bold text-ink/80">
+                <label key={key} className="flex min-h-11 cursor-pointer items-center gap-2 text-[12px] font-bold text-body/80">
                   <input
                     type="checkbox"
                     checked={filters[key]}
@@ -304,7 +304,7 @@ export default function EstateView() {
 
             <button
               onClick={clearAll}
-              className="touch-target mt-4 flex w-full items-center justify-center gap-1.5 rounded-full border border-kline text-[12.5px] font-extrabold text-ink hover:bg-kbg"
+              className="touch-target mt-4 flex w-full items-center justify-center gap-1.5 rounded-full border border-kline text-[12.5px] font-extrabold text-body hover:bg-kbg"
             >
               <RotateCcw className="h-3.5 w-3.5" /> Clear filters
             </button>
@@ -315,11 +315,11 @@ export default function EstateView() {
           </div>
 
           {/* ==================== 7. WEATHER WIDGET ==================== */}
-          <div className="mt-4 rounded-3xl border border-kline bg-white p-4">
-            <h3 className="flex items-center gap-2 font-display text-[13px] font-extrabold text-ink">
+          <div className="mt-4 rounded-3xl border border-kline bg-surface p-4">
+            <h3 className="flex items-center gap-2 font-display text-[13px] font-extrabold text-body">
               <CloudSun className="h-4 w-4 text-gold" /> Weather • {filters.estate || "Nairobi"}
             </h3>
-            <p className="mt-2 font-display text-2xl font-extrabold text-ink">
+            <p className="mt-2 font-display text-2xl font-extrabold text-body">
               {weather.temp}°C <span className="text-[12px] font-bold text-kmuted">{weather.note}</span>
             </p>
             <p className="mt-1.5 text-[11px] font-semibold text-kmuted">
@@ -333,7 +333,7 @@ export default function EstateView() {
           {/* header row */}
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h1 className="font-display text-xl font-extrabold text-ink sm:text-2xl">
+              <h1 className="font-display text-xl font-extrabold text-body sm:text-2xl">
                 Fresh houses for {titleScope}
                 {filters.beds ? ` • ${filters.beds}` : ""}
               </h1>
@@ -341,7 +341,7 @@ export default function EstateView() {
                 {loading ? "Scanning catalog…" : `${visible.length} listings match your Nairobi filters`}
               </p>
             </div>
-            <div className="flex items-center gap-1 rounded-full bg-white p-1 ring-1 ring-kline" role="group" aria-label="View mode">
+            <div className="flex items-center gap-1 rounded-full bg-surface p-1 ring-1 ring-kline" role="group" aria-label="View mode">
               <button
                 onClick={() => setMapMode(false)}
                 aria-pressed={!mapMode}
@@ -374,7 +374,7 @@ export default function EstateView() {
                 aria-pressed={c.active}
                 className={cn(
                   "min-h-11 shrink-0 rounded-full px-4 py-2.5 text-[11.5px] font-extrabold transition-colors",
-                  c.active ? c.activeCls + " shadow-md" : "bg-white text-ink/65 ring-1 ring-kline hover:bg-kbg"
+                  c.active ? c.activeCls + " shadow-md" : "bg-surface text-body/65 ring-1 ring-kline hover:bg-kbg"
                 )}
               >
                 {c.label}
@@ -420,9 +420,9 @@ export default function EstateView() {
 
                         {/* mini card overlay near pin */}
                         {isActive && (
-                          <div className="slide-up absolute left-1/2 top-full z-30 mt-2 w-48 -translate-x-1/2 rounded-2xl border border-kline bg-white p-3 shadow-xl pop">
-                            <p className="font-display text-[14px] font-extrabold text-ink">{kes(l.price)}<span className="text-[10px] font-bold text-kmuted"> /mo</span></p>
-                            <p className="mt-0.5 text-[11px] font-bold text-ink/80">{l.estate} • {l.beds}</p>
+                          <div className="slide-up absolute left-1/2 top-full z-30 mt-2 w-48 -translate-x-1/2 rounded-2xl border border-kline bg-surface p-3 shadow-xl pop">
+                            <p className="font-display text-[14px] font-extrabold text-body">{kes(l.price)}<span className="text-[10px] font-bold text-kmuted"> /mo</span></p>
+                            <p className="mt-0.5 text-[11px] font-bold text-body/80">{l.estate} • {l.beds}</p>
                             <p className="text-[10px] font-semibold text-kmuted">{l.road ?? l.subCounty} • {l.distanceToRoadM}m to road</p>
                             <button
                               onClick={() => navigate("listing", { listingId: l.id })}
@@ -452,9 +452,9 @@ export default function EstateView() {
             </div>
           ) : visible.length === 0 ? (
             /* ---------- empty state ---------- */
-            <div className="mt-5 rounded-3xl border border-dashed border-kline bg-white p-10 text-center">
+            <div className="mt-5 rounded-3xl border border-dashed border-kline bg-surface p-10 text-center">
               <MapPin className="mx-auto h-8 w-8 text-kline" aria-hidden />
-              <p className="mt-3 font-display text-[15px] font-extrabold text-ink">No matching demo listings</p>
+              <p className="mt-3 font-display text-[15px] font-extrabold text-body">No matching demo listings</p>
               <p className="mx-auto mt-1.5 max-w-md text-[12.5px] font-semibold leading-relaxed text-kmuted">
                 Try a wider budget, another sub-county, or clear the freshness filters.
               </p>

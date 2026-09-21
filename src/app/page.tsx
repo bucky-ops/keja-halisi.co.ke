@@ -4,6 +4,7 @@
 import { useEffect } from "react";
 import { useKeja } from "@/lib/store";
 import { TopBar, Header, Footer, BottomNav } from "@/components/keja/nav";
+import { CompareBar } from "@/components/keja/compare-bar";
 import HomeView from "@/components/keja/views/home";
 import EstateView from "@/components/keja/views/estate";
 import SavedView from "@/components/keja/views/saved";
@@ -15,6 +16,7 @@ import DashboardView from "@/components/keja/views/dashboard";
 import AdminView from "@/components/keja/views/admin";
 import PaymentsView from "@/components/keja/views/payments";
 import MapView from "@/components/keja/views/map";
+import CompareView from "@/components/keja/views/compare";
 
 function ActiveView() {
   const view = useKeja((s) => s.view);
@@ -39,6 +41,8 @@ function ActiveView() {
       return <PaymentsView />;
     case "map":
       return <MapView />;
+    case "compare":
+      return <CompareView />;
     case "home":
     default:
       return <HomeView />;
@@ -47,6 +51,12 @@ function ActiveView() {
 
 export default function Page() {
   const view = useKeja((s) => s.view);
+  const theme = useKeja((s) => s.theme);
+
+  // apply persisted theme to <html> (dark mode token flips in globals.css)
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
 
   // keep document title in sync with the active view (SEO nicety inside SPA)
   useEffect(() => {
@@ -62,6 +72,7 @@ export default function Page() {
       admin: "Admin console — Keja Halisi",
       payments: "Payments — Keja Halisi",
       map: "Nairobi map — Keja Halisi",
+      compare: "Compare kejas — Keja Halisi",
     };
     document.title = titles[view] ?? titles.home;
   }, [view]);
@@ -77,9 +88,12 @@ export default function Page() {
       <TopBar />
       <Header />
       <main id="main-content" className="flex-1 pb-16 md:pb-0">
-        <ActiveView />
+        <div key={view} className="view-in">
+          <ActiveView />
+        </div>
       </main>
       <Footer />
+      <CompareBar />
       <BottomNav />
     </div>
   );

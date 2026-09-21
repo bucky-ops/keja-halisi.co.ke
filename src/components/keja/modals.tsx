@@ -13,10 +13,12 @@ export function ReportModal({
   listing,
   open,
   onClose,
+  onReported,
 }: {
   listing: ListingDTO | null;
   open: boolean;
   onClose: () => void;
+  onReported?: (r: { autoHidden: boolean; reason: string }) => void;
 }) {
   const [reason, setReason] = useState<string>("");
   const [details, setDetails] = useState("");
@@ -39,6 +41,7 @@ export function ReportModal({
           ? `Thanks! Review in 1h — listing hidden after 3 reports`
           : `Reported: ${reason} • Audit log created • Review queued`
       );
+      onReported?.({ autoHidden: r.autoHidden, reason });
       onClose();
     } catch {
       toast("error", "Report failed — try again");
@@ -50,7 +53,7 @@ export function ReportModal({
   return (
     <ModalShell onClose={onClose} className="max-w-[440px]">
       <ModalHeader title="Report Scam" onClose={onClose} accent="text-scam" />
-      <div className="rounded-xl bg-scam-soft border border-scam/25 px-3.5 py-2.5 text-[11.5px] font-semibold text-[#9F2020]">
+      <div className="rounded-xl bg-scam-soft border border-scam/25 px-3.5 py-2.5 text-[11.5px] font-semibold text-danger-strong">
         Report concrete problems: already rented, fake price, fake location, viewing fee, or duplicate/reposted video.
       </div>
       <div className="mt-3 space-y-1.5" role="radiogroup" aria-label="Report reason">
@@ -59,7 +62,7 @@ export function ReportModal({
             key={r.value}
             className={cn(
               "flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 text-[12.5px] font-semibold transition-colors",
-              reason === r.value ? "border-scam bg-scam-soft text-[#9F2020]" : "border-kline hover:bg-kbg"
+              reason === r.value ? "border-scam bg-scam-soft text-danger-strong" : "border-kline hover:bg-kbg"
             )}
           >
             <input
@@ -80,7 +83,7 @@ export function ReportModal({
         onChange={(e) => setDetails(e.target.value)}
         placeholder="Details... (optional) Sheng allowed"
         rows={3}
-        className="mt-3 w-full rounded-xl border border-kline bg-white px-3.5 py-2.5 text-[12.5px] outline-none focus:border-trust focus:ring-4 focus:ring-trust/10"
+        className="mt-3 w-full rounded-xl border border-kline bg-surface px-3.5 py-2.5 text-[12.5px] outline-none focus:border-trust focus:ring-4 focus:ring-trust/10"
       />
       <div className="mt-3 flex gap-2">
         <button onClick={onClose} className="touch-target flex-1 rounded-full border border-kline font-bold text-[12.5px] hover:bg-kbg">
@@ -147,7 +150,7 @@ export function ContactModal({
           {revealed ? "Revealed after lead logged • audit_events updated" : "Exact number masked • Lead logged on reveal • OTP verified"}
         </p>
       </div>
-      <div className="mt-3 rounded-xl bg-verified-soft border border-verified/20 px-3 py-2.5 text-[11px] font-semibold text-[#0a6b40]">
+      <div className="mt-3 rounded-xl bg-verified-soft border border-verified/20 px-3 py-2.5 text-[11px] font-semibold text-ok-strong">
         Trust checks: phone verified • evidence video • no fee rule • re-check enabled
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
@@ -243,7 +246,7 @@ export function StkModal({
           <Smartphone className="h-5 w-5 text-mpesa" />
         </span>
         <div>
-          <h3 className="font-display text-[15px] font-extrabold text-ink">M-Pesa STK Push</h3>
+          <h3 className="font-display text-[15px] font-extrabold text-body">M-Pesa STK Push</h3>
           <p className="text-[10.5px] font-semibold text-kmuted">Till 123456 • Safaricom Green #12B44A</p>
         </div>
         <button onClick={onClose} aria-label="Close" className="touch-target ml-auto grid place-items-center rounded-full hover:bg-kbg">
@@ -270,7 +273,7 @@ export function StkModal({
             className="mt-1.5 w-full rounded-2xl border border-kline px-4 py-3 font-display text-[15px] font-bold outline-none focus:border-mpesa focus:ring-4 focus:ring-mpesa/10"
           />
           <div className="mt-3 rounded-2xl bg-kbg p-3.5">
-            <p className="font-display text-[15px] font-extrabold text-ink">{kes(amount)}</p>
+            <p className="font-display text-[15px] font-extrabold text-body">{kes(amount)}</p>
             <p className="text-[11px] text-kmuted">{plan} • simulated — no real payment</p>
           </div>
           <button
@@ -307,17 +310,17 @@ export function StkModal({
           })}
           {receipt && (
             <div className="pop rounded-2xl border border-verified/30 bg-verified-soft p-3.5">
-              <p className="flex items-center gap-2 text-[12px] font-extrabold text-[#08743A]">
+              <p className="flex items-center gap-2 text-[12px] font-extrabold text-ok">
                 <PartyPopper className="h-4 w-4" /> Payment Success (simulated)
               </p>
-              <p className="mt-1.5 font-mono text-[10.5px] leading-relaxed text-[#0a6b40]">
+              <p className="mt-1.5 font-mono text-[10.5px] leading-relaxed text-ok-strong">
                 KEJA HALISI LTD • KRA PIN P051234567X<br />
                 Receipt # {receipt}<br />
                 M-Pesa Till 123456 • {kes(amount)} • {plan}<br />
                 ---------------------------<br />
                 Total {kes(amount)} • VAT incl • PDF ready
               </p>
-              <p className="mt-2 flex items-center gap-1.5 text-[10px] font-bold text-[#9F2020]">
+              <p className="mt-2 flex items-center gap-1.5 text-[10px] font-bold text-danger-strong">
                 <Receipt className="h-3 w-3" /> STK Push simulated • no real payment was made
               </p>
             </div>
@@ -353,14 +356,14 @@ function ModalShell({ children, onClose, className }: { children: React.ReactNod
       role="dialog"
       aria-modal="true"
     >
-      <div className={cn("slide-up max-h-[90vh] w-full overflow-y-auto keja-scroll rounded-3xl bg-white p-5 shadow-2xl", className)}>
+      <div className={cn("slide-up max-h-[90vh] w-full overflow-y-auto keja-scroll rounded-3xl bg-surface p-5 shadow-2xl", className)}>
         {children}
       </div>
     </div>
   );
 }
 
-function ModalHeader({ title, onClose, accent = "text-ink" }: { title: string; onClose: () => void; accent?: string }) {
+function ModalHeader({ title, onClose, accent = "text-body" }: { title: string; onClose: () => void; accent?: string }) {
   return (
     <div className="mb-3 flex items-center justify-between">
       <h3 className={cn("font-display text-[16px] font-extrabold", accent)}>{title}</h3>
