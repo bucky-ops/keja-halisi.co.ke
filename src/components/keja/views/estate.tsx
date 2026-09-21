@@ -157,7 +157,7 @@ export default function EstateView() {
       </nav>
 
       {/* ============================ 2. LAYOUT GRID ============================ */}
-      <div className="mt-4 grid gap-6 lg:grid-cols-[280px_1fr]">
+      <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
         {/* ======================= 3. SIDEBAR: SMART FILTERS ======================= */}
         <aside className="hidden self-start lg:sticky lg:top-24 lg:block" aria-label="Smart filters">
           <div className="rounded-3xl border border-kline bg-surface p-4">
@@ -330,7 +330,7 @@ export default function EstateView() {
         </aside>
 
         {/* ================================ MAIN ================================ */}
-        <main>
+        <main className="min-w-0">
           {/* header row */}
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>

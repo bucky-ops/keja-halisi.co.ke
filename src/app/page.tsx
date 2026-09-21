@@ -6,6 +6,7 @@ import { useKeja } from "@/lib/store";
 import { TopBar, Header, Footer, BottomNav } from "@/components/keja/nav";
 import { CompareBar } from "@/components/keja/compare-bar";
 import { CommandPalette } from "@/components/keja/command-palette";
+import { PwaInstall } from "@/components/keja/pwa-install";
 import HomeView from "@/components/keja/views/home";
 import EstateView from "@/components/keja/views/estate";
 import SavedView from "@/components/keja/views/saved";
@@ -21,6 +22,7 @@ import CompareView from "@/components/keja/views/compare";
 import AgentsView from "@/components/keja/views/agents";
 import QuizView from "@/components/keja/views/quiz";
 import AffordView from "@/components/keja/views/afford";
+import ShieldView from "@/components/keja/views/shield";
 
 function ActiveView() {
   const view = useKeja((s) => s.view);
@@ -53,6 +55,8 @@ function ActiveView() {
       return <QuizView />;
     case "afford":
       return <AffordView />;
+    case "shield":
+      return <ShieldView />;
     case "home":
     default:
       return <HomeView />;
@@ -88,6 +92,7 @@ export default function Page() {
       agents: "Trust leaderboard — Keja Halisi",
       quiz: "Scam safety quiz — Keja Halisi",
       afford: "Rent reality check — Keja Halisi",
+      shield: "Scam Shield — Keja Halisi",
     };
     document.title = titles[view] ?? titles.home;
   }, [view]);
@@ -111,6 +116,7 @@ export default function Page() {
       <CompareBar />
       <BottomNav />
       <CommandPalette />
+      <PwaInstall />
     </div>
   );
 }

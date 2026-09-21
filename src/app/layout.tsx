@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     "Nairobi rentals", "keja", "verified houses", "TikTok rentals Kenya",
     "Kileleshwa", "Kasarani", "no viewing fee", "Hakuna Kulipa Kabla Ya Kuona Nyumba",
   ],
-  icons: { icon: "/logo/icon.svg", apple: "/logo/icon.svg" },
+  icons: { icon: "/logo/icon.svg", apple: "/logo/icon-180.png" },
   manifest: "/manifest.webmanifest",
   openGraph: {
     title: "Keja Halisi — Real House Verified",

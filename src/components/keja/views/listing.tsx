@@ -19,6 +19,7 @@ import { FairPriceWidget } from "../fair-price";
 import { MoveInCost } from "../move-in-cost";
 import { TrustScoreWidget } from "../trust-score";
 import { TrustTimeline } from "../trust-timeline";
+import { ShareSheet } from "../share-sheet";
 import type { ListingDTO } from "@/lib/types";
 
 type Oembed = { thumb: string | null; author: string | null } | null;
@@ -37,6 +38,8 @@ export default function ListingView() {
   const [rateOpen, setRateOpen] = useState(false);
   // photo lightbox — index into listing.photos, null = closed
   const [lightbox, setLightbox] = useState<number | null>(null);
+  // share sheet (round 10) — channel picker with anti-scam message preview
+  const [shareOpen, setShareOpen] = useState(false);
 
   /* payload keyed by listingId — loading/failed derived, no cascading setState */
   const id = params.listingId ?? null;
@@ -156,7 +159,7 @@ export default function ListingView() {
     return (
       <div className="mx-auto max-w-[1440px] px-4 py-6">
         <div className="h-9 w-24 rounded-full shimmer" />
-        <div className="mt-5 grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
+        <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_0.8fr]">
           <div className="space-y-4">
             <div className="h-[420px] rounded-3xl shimmer" />
             <div className="h-20 rounded-2xl shimmer" />
@@ -431,42 +434,7 @@ export default function ListingView() {
             {/* share / print / save quick actions */}
             <div className="mt-3 flex items-center gap-2 print:hidden">
               <button
-                onClick={async () => {
-                  const text = `${l.beds} • ${l.estate} • KES ${l.price.toLocaleString()}/mo — verified on Keja Halisi`;
-                  const url = typeof window !== "undefined" ? window.location.href : "";
-                  // 1) native share sheet when available
-                  if (typeof navigator !== "undefined" && navigator.share && navigator.canShare?.({ text, url })) {
-                    try {
-                      await navigator.share({ title: `Keja Halisi — ${l.beds} in ${l.estate}`, text, url });
-                      return; // user completed (or cancelled) the native sheet
-                    } catch (err) {
-                      if ((err as DOMException)?.name === "AbortError") return; // cancelled
-                      // fall through to clipboard
-                    }
-                  }
-                  // 2) clipboard API
-                  try {
-                    await navigator.clipboard.writeText(`${text}\n${url}`);
-                    toast("success", "Listing copied to clipboard • share it");
-                    return;
-                  } catch {
-                    /* fall through to legacy copy */
-                  }
-                  // 3) legacy execCommand copy
-                  try {
-                    const ta = document.createElement("textarea");
-                    ta.value = `${text}\n${url}`;
-                    ta.style.position = "fixed";
-                    ta.style.opacity = "0";
-                    document.body.appendChild(ta);
-                    ta.select();
-                    document.execCommand("copy");
-                    document.body.removeChild(ta);
-                    toast("success", "Listing copied to clipboard • share it");
-                  } catch {
-                    toast("warning", "Copy blocked by browser — share manually");
-                  }
-                }}
+                onClick={() => setShareOpen(true)}
                 className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-full border border-kline py-2 text-[11px] font-extrabold text-body transition-colors hover:bg-kbg"
                 aria-label="Share listing"
               >
@@ -713,6 +681,13 @@ export default function ListingView() {
         estateHint={l.estate}
       />
       <ViewingModal listing={l} open={viewingOpen} onClose={() => setViewingOpen(false)} />
+      <ShareSheet
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        title={`${l.beds} • ${l.estate} • KES ${l.price.toLocaleString()}/mo`}
+        text={`${l.beds} • ${l.estate} • KES ${l.price.toLocaleString()}/mo — verified on Keja Halisi`}
+        url={typeof window !== "undefined" ? window.location.href : ""}
+      />
 
       {/* ================= photo lightbox ================= */}
       {lightbox !== null && l.photos.length > 0 && (

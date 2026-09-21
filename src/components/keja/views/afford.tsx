@@ -128,7 +128,7 @@ export default function AffordView() {
         </button>
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
+      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[0.95fr_1.05fr]">
         {/* ============ INPUTS ============ */}
         <section className="rounded-3xl border border-kline bg-card p-5 shadow-[0_10px_30px_rgba(17,25,40,0.06)]" aria-label="Your income details">
           <p className="text-[10.5px] font-extrabold uppercase tracking-[0.14em] text-kmuted">1 • Your money</p>

@@ -20,7 +20,8 @@ export type ViewName =
   | "compare"
   | "agents"
   | "quiz"
-  | "afford";
+  | "afford"
+  | "shield";
 
 export interface ViewParams {
   borough?: string;

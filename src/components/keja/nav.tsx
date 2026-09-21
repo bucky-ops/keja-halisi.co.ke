@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Home, Building2, PlusCircle, ShieldCheck, Menu, X, MapPin, Bell, Sun, Moon,
   Scale, LayoutDashboard, ShieldAlert, Wallet, Zap, ZapOff, Globe, ChevronDown, Heart, Search,
-  Trophy, GraduationCap, Calculator,
+  Trophy, GraduationCap, Calculator, ShieldQuestion,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast, type KejaNotification } from "@/lib/store";
@@ -20,6 +20,7 @@ const NAV_ITEMS: { key: string; labelKey: DictKey }[] = [
 ];
 
 const MORE_ITEMS: { key: string; labelKey: DictKey; icon: typeof LayoutDashboard }[] = [
+  { key: "shield", labelKey: "navShield", icon: ShieldQuestion },
   { key: "afford", labelKey: "navAfford", icon: Calculator },
   { key: "agents", labelKey: "navAgents", icon: Trophy },
   { key: "quiz", labelKey: "navQuiz", icon: GraduationCap },
@@ -339,6 +340,7 @@ export function Header() {
               { key: "agents", labelKey: "navAgents" as DictKey },
               { key: "quiz", labelKey: "navQuiz" as DictKey },
               { key: "afford", labelKey: "navAfford" as DictKey },
+              { key: "shield", labelKey: "navShield" as DictKey },
               { key: "dashboard", labelKey: "navDashboard" as DictKey },
               { key: "payments", labelKey: "navPayments" as DictKey },
               { key: "admin", labelKey: "navAdmin" as DictKey },
@@ -452,6 +454,7 @@ export function Footer() {
               { key: "agents", label: t("navAgents") },
               { key: "quiz", label: t("navQuiz") },
               { key: "afford", label: t("navAfford") },
+              { key: "shield", label: t("navShield") },
               { key: "post", label: t("footerPost") },
               { key: "verify", label: t("footerVerify") },
               { key: "payments", label: t("footerPricing") },

@@ -17,6 +17,7 @@ import {
   Reply,
   SendHorizontal,
   X,
+  ArrowDownWideNarrow,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
@@ -62,6 +63,8 @@ export default function AgentView() {
   const [voted, setVoted] = useState<Record<string, true>>({});
   const [replyFor, setReplyFor] = useState<string | null>(null); // review id with open composer
   const [replyText, setReplyText] = useState("");
+  // review sort — community asked for "most helpful first" (round-10 feature)
+  const [reviewSort, setReviewSort] = useState<"helpful" | "recent" | "high" | "low">("helpful");
   // derived loading — true until the fetch for the *current* handle resolves
   const loading = loadedHandle !== handle;
 
@@ -133,7 +136,7 @@ export default function AgentView() {
             <div className="h-3.5 w-64 rounded shimmer" />
           </div>
         </div>
-        <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="space-y-3">
             <div className="h-20 rounded-2xl shimmer" />
             <div className="h-24 rounded-2xl shimmer" />
@@ -188,7 +191,14 @@ export default function AgentView() {
   /* ---------- data ---------- */
   const { agent, listings, verifications, ratingSummary } = data;
   const reviews = liveReviews;
+  const sortedReviews = [...reviews].sort((a, b) => {
+    if (reviewSort === "helpful") return b.helpful - a.helpful;
+    if (reviewSort === "recent") return +new Date(b.createdAt) - +new Date(a.createdAt);
+    if (reviewSort === "high") return b.stars - a.stars || b.helpful - a.helpful;
+    return a.stars - b.stars || b.helpful - a.helpful;
+  });
   const initials = agent.tiktokHandle.replace("@", "").slice(0, 2).toUpperCase();
+  const isVerifiedPoster = ["verified", "gold", "caretaker"].includes(agent.verificationStatus);
 
   // trust feedback loop — community "legit" upvotes (demo base + local vote)
   const upvoted = Boolean(activity.upvotes[agent.id]);
@@ -270,7 +280,7 @@ export default function AgentView() {
       </header>
 
       {/* ============ MAIN GRID ============ */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         {/* ---------- LEFT ---------- */}
         <div className="space-y-4">
           {/* stats 3-up */}
@@ -378,7 +388,7 @@ export default function AgentView() {
 
           {/* tenants say — DB-backed post-viewing reviews */}
           <div className="rounded-2xl border border-kline bg-card p-4">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-[10.5px] font-extrabold uppercase tracking-[0.14em] text-kmuted">
                 Tenants say • {ratingSummary.count} reviews
               </p>
@@ -388,6 +398,35 @@ export default function AgentView() {
                 </span>
               )}
             </div>
+
+            {/* sort pills — most helpful first by default */}
+            {reviews.length > 1 && (
+              <div className="mt-2.5 flex flex-wrap items-center gap-1.5" role="group" aria-label="Sort reviews">
+                <span className="inline-flex items-center gap-1 text-[9.5px] font-extrabold uppercase tracking-wider text-kmuted">
+                  <ArrowDownWideNarrow className="h-3 w-3" /> Sort
+                </span>
+                {([
+                  ["helpful", "Most helpful"],
+                  ["recent", "Newest"],
+                  ["high", "Highest"],
+                  ["low", "Lowest"],
+                ] as const).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setReviewSort(key)}
+                    aria-pressed={reviewSort === key}
+                    className={cn(
+                      "touch-target rounded-full px-2.5 py-1 text-[10px] font-extrabold transition-all active:scale-95",
+                      reviewSort === key
+                        ? "bg-ink text-white shadow-sm"
+                        : "bg-kbg text-kmuted hover:bg-surface hover:text-body"
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* rating summary — big avg + distribution bars */}
             {ratingSummary.count > 0 && (
@@ -429,7 +468,7 @@ export default function AgentView() {
             )}
 
             <ul className="mt-1 divide-y divide-kline">
-              {reviews.map((r) => (
+              {sortedReviews.map((r) => (
                 <li key={r.id} className="py-3 first:pt-3 last:pb-0">
                   <div className="flex gap-3">
                     <span
@@ -493,6 +532,11 @@ export default function AgentView() {
                           <div className="min-w-0">
                             <p className="flex flex-wrap items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-[0.12em] text-ok-strong">
                               <BadgeCheck className="h-3 w-3 text-verified" /> Agent reply
+                              {isVerifiedPoster && (
+                                <span className="inline-flex items-center gap-0.5 rounded-full bg-verified px-1.5 py-0.5 text-[8.5px] font-extrabold text-white normal-case tracking-normal">
+                                  <BadgeCheck className="h-2.5 w-2.5" /> VERIFIED POSTER
+                                </span>
+                              )}
                               {r.repliedAt && <span className="font-bold normal-case tracking-normal text-kmuted">• {fmtDate(r.repliedAt)}</span>}
                             </p>
                             <p className="mt-0.5 text-[11.5px] font-semibold leading-relaxed text-body">{r.reply}</p>

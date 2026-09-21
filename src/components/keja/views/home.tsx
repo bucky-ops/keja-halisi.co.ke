@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search, ArrowRight, BadgeCheck, ShieldCheck, Building2, Flag, CalendarClock,
   Play, Zap, MapPin, Smartphone, Ban, ChevronRight, History as HistoryIcon,
-  GraduationCap, Trophy, Star, CalendarCheck, Calculator, BellRing, X,
+  GraduationCap, Trophy, Star, CalendarCheck, Calculator, BellRing, X, ShieldQuestion,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
@@ -545,6 +545,30 @@ export default function HomeView() {
               Array.from({ length: 3 }).map((_, i) => <li key={i} className="h-11 rounded-2xl shimmer" aria-hidden />)}
           </ol>
         </section>
+      </section>
+
+      {/* ========== 5b-a. SCAM SHIELD BAND ========== */}
+      <section
+        className="card-lift relative mt-4 flex flex-wrap items-center gap-4 overflow-hidden rounded-3xl border border-scam/20 bg-gradient-to-r from-scam-soft via-surface to-gold/10 p-5 shadow-[0_10px_30px_rgba(17,25,40,0.06)]"
+        aria-label="Scam Shield number checker"
+      >
+        <div className="pointer-events-none absolute -left-10 -top-14 h-40 w-40 rounded-full bg-scam/10 blur-2xl" aria-hidden />
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-ink text-white shadow-lg" aria-hidden>
+          <ShieldQuestion className="h-5.5 w-5.5" />
+        </span>
+        <div className="min-w-[220px] flex-1">
+          <div className="flex items-center gap-2">
+            <h3 className="font-display text-[15.5px] font-extrabold text-body">{t("shieldTileTitle")}</h3>
+            <span className="rounded-full bg-verified px-2 py-0.5 text-[8.5px] font-extrabold uppercase tracking-wider text-white">{t("shieldTileBadge")}</span>
+          </div>
+          <p className="mt-0.5 max-w-md text-[11.5px] font-semibold leading-relaxed text-kmuted">{t("shieldTileSub")}</p>
+        </div>
+        <button
+          onClick={() => navigate("shield")}
+          className="touch-target inline-flex items-center gap-2 rounded-full bg-scam px-5 py-3 font-display text-[12.5px] font-extrabold text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
+        >
+          {t("shieldTileCta")} <ArrowRight className="h-3.5 w-3.5" />
+        </button>
       </section>
 
       {/* ========== 5b. RENT REALITY CHECK BAND ========== */}

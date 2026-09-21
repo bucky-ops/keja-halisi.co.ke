@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Search, Home, MapPin, Heart, Scale, ShieldCheck, LayoutDashboard, ShieldAlert,
   Wallet, Play, Moon, Sun, Globe, Zap, ZapOff, Building2, CornerDownLeft, ListFilter,
-  Trophy, GraduationCap, Calculator,
+  Trophy, GraduationCap, Calculator, ShieldQuestion,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast, type ViewName } from "@/lib/store";
@@ -99,6 +99,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
     agents: Trophy,
     quiz: GraduationCap,
     afford: Calculator,
+    shield: ShieldQuestion,
   };
   const NAV_LABELS: Record<string, string> = {
     home: "Discover — home feed",
@@ -116,6 +117,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
     agents: "Agents — trust leaderboard",
     quiz: "Scam safety quiz — Scam au Legit?",
     afford: "Rent reality check — can you afford it?",
+    shield: "Scam Shield — check any agent or number",
   };
 
   const nav: PaletteItem[] = (Object.keys(NAV_LABELS) as ViewName[]).map((v) => ({

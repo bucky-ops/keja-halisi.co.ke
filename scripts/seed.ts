@@ -240,6 +240,9 @@ async function main() {
   await db.report.create({ data: { listingId: listingIds[6], reason: "Taken", details: "Nilipiga simu, imeisha", createdAt: new Date(now - 2 * H) } });
   await db.listing.update({ where: { id: listingIds[10] }, data: { reportsCount: 2 } });
   await db.listing.update({ where: { id: listingIds[6] }, data: { reportsCount: 1 } });
+  // one verified agent with a single report — demos the YELLOW "check" shield verdict
+  await db.report.create({ data: { listingId: listingIds[17], reason: "LocationFake", details: "Estate ilikuja tofauti kidogo na video", createdAt: new Date(now - 40 * H) } });
+  await db.listing.update({ where: { id: listingIds[17] }, data: { reportsCount: 1 } });
 
   // historical report rows (community policing volume for the trend chart;
   // reportsCount above stays untouched — those demo the strike UI)

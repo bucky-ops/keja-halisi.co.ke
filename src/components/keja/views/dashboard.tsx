@@ -324,7 +324,7 @@ export default function DashboardView() {
   if (!data) {
     return (
       <div className="mx-auto max-w-[1440px] px-4 py-6">
-        <div className="grid gap-5 lg:grid-cols-[14rem_1fr]">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[14rem_1fr]">
           <aside className="hidden space-y-3 lg:block">
             <div className="h-44 rounded-3xl shimmer" />
             <div className="h-56 rounded-3xl shimmer" />
@@ -369,7 +369,7 @@ export default function DashboardView() {
 
       {/* ================= OWNER ROLE ================= */}
       {role === "Owner" && (
-        <section className="mt-5 grid gap-4 lg:grid-cols-[1fr_20rem]">
+        <section className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_20rem]">
           <div className="space-y-4">
             <div className="rounded-3xl border border-kline bg-card p-6">
               <h2 className="font-display text-[16px] font-extrabold text-body">Owner: Single unit flow</h2>
@@ -484,9 +484,9 @@ export default function DashboardView() {
 
       {/* ================= DEVELOPER (default) ================= */}
       {role === "Developer" && (
-        <div className="mt-5 grid gap-5 lg:grid-cols-[14rem_1fr]">
+        <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[14rem_1fr]">
           {/* sidebar */}
-          <aside className="lg:sticky lg:top-20 lg:self-start">
+          <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
             <nav className="flex gap-1.5 overflow-x-auto scrollbar-hide lg:flex-col" aria-label="Dashboard sections">
               {TABS.map((t) => (
                 <button
