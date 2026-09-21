@@ -5,6 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Scale, X, Play, MapPin, BadgeCheck, TriangleAlert } from "lucide-react";
 import { useKeja, toast } from "@/lib/store";
 import { useT } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
+import { computeTrustScore, scoreChipCls } from "@/lib/trust-score";
+import { Fingerprint } from "lucide-react";
 import { fetchListings } from "../api";
 import { kes, kesShort } from "@/lib/nairobi";
 import type { ListingDTO } from "@/lib/types";
@@ -55,6 +58,8 @@ export default function CompareView() {
   const minDist = rows.length ? Math.min(...rows.map((l) => l.distanceToRoadM)) : 0;
   const maxEvidence = rows.length; // evidence is always 5/5 pre-publish — highlight none
   const hasNoFee = rows.some((l) => !l.fee);
+  const scores = useMemo(() => new Map(rows.map((l) => [l.id, computeTrustScore(l).score])), [rows]);
+  const maxScore = rows.length ? Math.max(...scores.values()) : 0;
 
   const gridCols =
     rows.length >= 3
@@ -155,6 +160,24 @@ export default function CompareView() {
                 </button>
               </div>
             ))}
+
+            {/* keja score */}
+            <Row label="Keja Score">
+              {rows.map((l) => {
+                const score = scores.get(l.id) ?? 0;
+                return (
+                  <div key={`ks${l.id}`} className="border-t border-kline px-3 py-3">
+                    <p className="flex items-center gap-1.5">
+                      <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-extrabold tabular-nums", scoreChipCls(score))}>
+                        <Fingerprint className="h-3.5 w-3.5" /> {score}
+                      </span>
+                      <Best show={score === maxScore && rows.length > 1} label={t("best")} />
+                    </p>
+                    <p className="mt-0.5 text-[10.5px] font-semibold text-kmuted">Trust signals in one glance</p>
+                  </div>
+                );
+              })}
+            </Row>
 
             {/* price */}
             <Row label={t("priceRow")}>

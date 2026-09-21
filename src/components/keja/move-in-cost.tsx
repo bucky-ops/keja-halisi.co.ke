@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { Calculator, ShieldCheck, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { kes } from "@/lib/nairobi";
+import { useT } from "@/lib/i18n";
 import type { ListingDTO } from "@/lib/types";
 
 const EXTRAS = [
@@ -16,6 +17,7 @@ const EXTRAS = [
 ] as const;
 
 export function MoveInCost({ listing }: { listing: ListingDTO }) {
+  const t = useT();
   const [depositMonths, setDepositMonths] = useState(1);
   const [extras, setExtras] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(EXTRAS.map((e) => [e.key, e.on]))
@@ -36,19 +38,19 @@ export function MoveInCost({ listing }: { listing: ListingDTO }) {
     <section className="rounded-3xl border border-kline bg-surface p-5" aria-label="Move-in cost estimator">
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 font-display text-[14.5px] font-extrabold text-body">
-          <Calculator className="h-4 w-4 text-trust" /> Move-in cost
+          <Calculator className="h-4 w-4 text-trust" /> {t("moveTitle")}
         </h3>
         <span className="rounded-full bg-trust-soft px-2.5 py-1 text-[9.5px] font-extrabold uppercase tracking-wider text-trust">
           estimator
         </span>
       </div>
       <p className="mt-1 text-[11px] font-semibold text-kmuted">
-        What a fair first payment looks like here — compare before you send anything.
+        {t("moveSub")}
       </p>
 
       {/* deposit months selector */}
       <div className="mt-3.5 flex items-center gap-2" role="group" aria-label="Deposit months">
-        <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-kmuted">Deposit</span>
+        <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-kmuted">{t("moveDeposit")}</span>
         {[0, 1, 2].map((m) => (
           <button
             key={m}
@@ -59,7 +61,7 @@ export function MoveInCost({ listing }: { listing: ListingDTO }) {
               depositMonths === m ? "bg-ink text-white" : "bg-kbg text-body/70 hover:bg-ink/10"
             )}
           >
-            {m === 0 ? "None" : `${m} mo`}
+            {m === 0 ? t("moveNone") : `${m} ${t("moveMo")}`}
           </button>
         ))}
       </div>
@@ -91,20 +93,20 @@ export function MoveInCost({ listing }: { listing: ListingDTO }) {
       {/* breakdown */}
       <dl className="mt-3.5 space-y-1.5 border-t border-kline pt-3 text-[12px] font-bold text-body">
         <div className="flex items-center justify-between">
-          <dt className="text-kmuted">First month rent</dt>
+          <dt className="text-kmuted">{t("moveRent")}</dt>
           <dd className="tabular-nums">{kes(math.rent)}</dd>
         </div>
         <div className="flex items-center justify-between">
-          <dt className="text-kmuted">Deposit ({depositMonths === 0 ? "waived" : `${depositMonths} mo`})</dt>
+          <dt className="text-kmuted">{t("moveDeposit")} ({depositMonths === 0 ? t("moveWaived") : `${depositMonths} ${t("moveMo")}`})</dt>
           <dd className="tabular-nums">{math.deposit ? kes(math.deposit) : "—"}</dd>
         </div>
         <div className="flex items-center justify-between">
-          <dt className="text-kmuted">One-off extras</dt>
+          <dt className="text-kmuted">{t("moveExtras")}</dt>
           <dd className="tabular-nums">{math.extrasTotal ? kes(math.extrasTotal) : "—"}</dd>
         </div>
         <div className="flex items-center justify-between border-t border-kline pt-2">
           <dt className="flex items-center gap-1.5 font-display text-[13px] font-extrabold">
-            <TrendingUp className="h-3.5 w-3.5 text-trust" /> Move-in total
+            <TrendingUp className="h-3.5 w-3.5 text-trust" /> {t("moveTotal")}
           </dt>
           <dd className="font-display text-[16px] font-extrabold tabular-nums text-trust">{kes(math.total)}</dd>
         </div>
@@ -112,8 +114,7 @@ export function MoveInCost({ listing }: { listing: ListingDTO }) {
 
       <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-verified-soft px-3 py-2 text-[10.5px] font-semibold leading-snug text-ok-strong">
         <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        Anyone demanding more than this BEFORE the viewing = red flag. Viewing is free — hakuna kulipa. Deposits are
-        refundable per your tenancy agreement.
+        {t("moveWarn")}
       </p>
     </section>
   );

@@ -9,7 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
 import { EVIDENCE_ITEMS, kes, kesShort, timeAgo } from "@/lib/nairobi";
-import { fetchListing, fetchListings } from "../api";
+import { fetchListing, fetchListings, fetchFairPrice, type FairPrice } from "../api";
 import { MiniListingCard } from "../listing-card";
 import { VerificationBadge, TrustChecksNotice, PrivacyNotice, FeeWarning } from "../badges";
 import { ReportModal, ContactModal } from "../modals";
@@ -17,6 +17,8 @@ import { ViewingModal } from "../viewing";
 import { RatingSheet } from "../rating";
 import { FairPriceWidget } from "../fair-price";
 import { MoveInCost } from "../move-in-cost";
+import { TrustScoreWidget } from "../trust-score";
+import { TrustTimeline } from "../trust-timeline";
 import type { ListingDTO } from "@/lib/types";
 
 type Oembed = { thumb: string | null; author: string | null } | null;
@@ -28,6 +30,8 @@ export default function ListingView() {
   const [reportOpen, setReportOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [viewingOpen, setViewingOpen] = useState(false);
+  // shared fair-price fetch — ONE request feeds both the Keja Score and the radar widget
+  const [fairPrice, setFairPrice] = useState<{ id: string | null; data: FairPrice | null }>({ id: null, data: null });
   // trust feedback loop — after a lead is logged, invite the renter to rate the agent
   const [leadLogged, setLeadLogged] = useState(false);
   const [rateOpen, setRateOpen] = useState(false);
@@ -56,6 +60,17 @@ export default function ListingView() {
   /* ---------------- recently viewed (drives home rail + saved metrics) ---------------- */
   useEffect(() => {
     if (id && payload.id === id && payload.l) pushRecent(id);
+  }, [id, payload.id, payload.l]);
+
+  /* ---------------- fair-price comps (shared: score + radar) ---------------- */
+  useEffect(() => {
+    const l = payload.id === id ? payload.l : null;
+    if (!l) return;
+    let alive = true;
+    fetchFairPrice(l.estate, l.beds, l.price, l.id)
+      .then((d) => { if (alive) setFairPrice({ id: l.id, data: d }); })
+      .catch(() => { if (alive) setFairPrice({ id: l.id, data: null }); });
+    return () => { alive = false; };
   }, [id, payload.id, payload.l]);
 
   /* ---------------- TikTok oEmbed (legal; falls back offline) ---------------- */
@@ -304,6 +319,9 @@ export default function ListingView() {
             </p>
           </section>
 
+          {/* 3b. Keja history ledger (append-only audit trail) */}
+          <TrustTimeline listing={l} />
+
           {/* 4. Similar kejas rail */}
           {similar.length > 0 && (
             <section aria-label="Similar kejas">
@@ -325,6 +343,9 @@ export default function ListingView() {
 
         {/* ============================ RIGHT (sticky) ============================ */}
         <aside className="min-w-0 space-y-4 self-start lg:sticky lg:top-24">
+          {/* 0. Keja Score — glanceable trust ring + explainable breakdown */}
+          <TrustScoreWidget listing={l} fairPrice={fairPrice.id === l.id ? fairPrice.data : null} />
+
           {/* 1. price panel */}
           <section className="rounded-3xl border border-kline bg-surface p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -503,8 +524,8 @@ export default function ListingView() {
             </div>
           </section>
 
-          {/* 5. fair-price radar (anti-bait) */}
-          <FairPriceWidget listing={l} />
+          {/* 5. fair-price radar (anti-bait) — shares the listing-level fetch */}
+          <FairPriceWidget listing={l} shared={fairPrice.id === l.id ? fairPrice.data : null} />
 
           {/* 5b. move-in cost estimator (budget trust tool) */}
           <MoveInCost listing={l} />

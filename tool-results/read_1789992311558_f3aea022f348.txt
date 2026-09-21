@@ -1,0 +1,633 @@
+     1→"use client";
+     2→// KEJA HALISI — ListingView: TikTok embed + trust stack + evidence gate + agent panel.
+     3→import { useEffect, useMemo, useState } from "react";
+     4→import {
+     5→  ArrowLeft, Play, Flag, MessageCircle, Phone, BadgeCheck, Check, MapPin,
+     6→  CloudSun, ExternalLink, Clock, Eye, Zap, ChevronRight, Home as HomeIcon,
+     7→  Star, ZapOff, CalendarCheck, Share2, Printer, Heart,
+     8→} from "lucide-react";
+     9→import { cn } from "@/lib/utils";
+    10→import { useKeja, toast } from "@/lib/store";
+    11→import { EVIDENCE_ITEMS, kes, kesShort, timeAgo } from "@/lib/nairobi";
+    12→import { fetchListing, fetchListings } from "../api";
+    13→import { MiniListingCard } from "../listing-card";
+    14→import { VerificationBadge, TrustChecksNotice, PrivacyNotice, FeeWarning } from "../badges";
+    15→import { ReportModal, ContactModal } from "../modals";
+    16→import { ViewingModal } from "../viewing";
+    17→import { RatingSheet } from "../rating";
+    18→import { FairPriceWidget } from "../fair-price";
+    19→import { MoveInCost } from "../move-in-cost";
+    20→import type { ListingDTO } from "@/lib/types";
+    21→
+    22→type Oembed = { thumb: string | null; author: string | null } | null;
+    23→
+    24→export default function ListingView() {
+    25→  const { params, back, navigate, lowData, bumpActivity, notify, logReport, pushRecent, toggleSaved, saved } = useKeja();
+    26→  const [oembed, setOembed] = useState<Oembed>(null);
+    27→  const [similar, setSimilar] = useState<ListingDTO[]>([]);
+    28→  const [reportOpen, setReportOpen] = useState(false);
+    29→  const [contactOpen, setContactOpen] = useState(false);
+    30→  const [viewingOpen, setViewingOpen] = useState(false);
+    31→  // trust feedback loop — after a lead is logged, invite the renter to rate the agent
+    32→  const [leadLogged, setLeadLogged] = useState(false);
+    33→  const [rateOpen, setRateOpen] = useState(false);
+    34→
+    35→  /* payload keyed by listingId — loading/failed derived, no cascading setState */
+    36→  const id = params.listingId ?? null;
+    37→  const [payload, setPayload] = useState<{ id: string | null; l: ListingDTO | null; failed: boolean }>({
+    38→    id: null,
+    39→    l: null,
+    40→    failed: false,
+    41→  });
+    42→  const loading = id !== payload.id; // waiting for a different listing than the one we hold
+    43→  const failed = payload.failed && payload.id === id;
+    44→  const listing = payload.id === id ? payload.l : null;
+    45→
+    46→  /* ---------------- fetch detail ---------------- */
+    47→  useEffect(() => {
+    48→    if (!id) return; // nothing selected — render layer shows the empty state
+    49→    let alive = true;
+    50→    fetchListing(id)
+    51→      .then((l) => { if (alive) setPayload({ id, l, failed: false }); })
+    52→      .catch(() => { if (alive) setPayload({ id, l: null, failed: true }); });
+    53→    return () => { alive = false; };
+    54→  }, [id]);
+    55→
+    56→  /* ---------------- recently viewed (drives home rail + saved metrics) ---------------- */
+    57→  useEffect(() => {
+    58→    if (id && payload.id === id && payload.l) pushRecent(id);
+    59→  }, [id, payload.id, payload.l]);
+    60→
+    61→  /* ---------------- TikTok oEmbed (legal; falls back offline) ---------------- */
+    62→  // low-data mode derives an invisible embed — no remote fetch at all
+    63→  useEffect(() => {
+    64→    if (!listing?.tiktokUrl || lowData) return;
+    65→    const ctrl = new AbortController();
+    66→    const timer = setTimeout(() => ctrl.abort(), 4000);
+    67→    fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(listing.tiktokUrl)}`, {
+    68→      signal: ctrl.signal,
+    69→    })
+    70→      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("oembed unavailable"))))
+    71→      .then((d: { thumbnail_url?: string; author_name?: string }) =>
+    72→        setOembed({ thumb: d.thumbnail_url ?? null, author: d.author_name ?? null })
+    73→      )
+    74→      .catch(() => setOembed(null))
+    75→      .finally(() => clearTimeout(timer));
+    76→    return () => { ctrl.abort(); clearTimeout(timer); };
+    77→  }, [listing?.tiktokUrl, lowData]);
+    78→  const oembedShown = lowData ? null : oembed;
+    79→
+    80→  /* ---------------- similar kejas (same estate, exclude self) ---------------- */
+    81→  useEffect(() => {
+    82→    if (!listing) return;
+    83→    let alive = true;
+    84→    fetchListings({ estate: listing.estate, limit: 12 })
+    85→      .then((rows) => {
+    86→        if (!alive) return;
+    87→        const others = rows.filter((l) => l.id !== listing.id);
+    88→        if (others.length === 0 && rows.length > 0) {
+    89→          // estate only has this keja — fall back to freshest catalog rail
+    90→          return fetchListings({ limit: 12 }).then((all) => {
+    91→            if (alive) setSimilar(all.filter((l) => l.id !== listing.id).slice(0, 8));
+    92→          });
+    93→        }
+    94→        if (alive) setSimilar(others.slice(0, 8));
+    95→      })
+    96→      .catch(() => { /* rail stays empty */ });
+    97→    return () => { alive = false; };
+    98→  }, [listing]);
+    99→
+   100→  /* after report modal closes: silently re-check — 404 means 3-strike auto-hide */
+   101→  const closeReport = async () => {
+   102→    setReportOpen(false);
+   103→    if (!listing) return;
+   104→    try {
+   105→      await fetchListing(listing.id);
+   106→    } catch {
+   107→      toast("error", "Listing hidden after 3 reports");
+   108→      navigate("estate");
+   109→    }
+   110→  };
+   111→
+   112→  const specs = useMemo(() => {
+   113→    if (!listing) return [];
+   114→    return [
+   115→      { label: "Size", value: listing.sizeSqm ? `${listing.sizeSqm}sqm` : "—" },
+   116→      { label: "Floor", value: listing.floor || "—" },
+   117→      { label: "Deposit", value: kesShort(listing.deposit) },
+   118→      { label: "Water", value: listing.amenities[0] || "Borehole + county" },
+   119→      { label: "Noise", value: "Quiet" },
+   120→      { label: "Landlord", value: "Lives no" },
+   121→    ];
+   122→  }, [listing]);
+   123→
+   124→  /* ---------------- loading skeleton ---------------- */
+   125→  if (loading) {
+   126→    return (
+   127→      <div className="mx-auto max-w-[1440px] px-4 py-6">
+   128→        <div className="h-9 w-24 rounded-full shimmer" />
+   129→        <div className="mt-5 grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
+   130→          <div className="space-y-4">
+   131→            <div className="h-[420px] rounded-3xl shimmer" />
+   132→            <div className="h-20 rounded-2xl shimmer" />
+   133→            <div className="h-20 rounded-2xl shimmer" />
+   134→            <div className="h-36 rounded-2xl shimmer" />
+   135→          </div>
+   136→          <div className="space-y-4">
+   137→            <div className="h-40 rounded-3xl shimmer" />
+   138→            <div className="h-28 rounded-3xl shimmer" />
+   139→            <div className="h-24 rounded-3xl shimmer" />
+   140→          </div>
+   141→        </div>
+   142→      </div>
+   143→    );
+   144→  }
+   145→
+   146→  /* ---------------- empty state ---------------- */
+   147→  if (!listing) {
+   148→    return (
+   149→      <div className="mx-auto max-w-[1440px] px-4 py-6">
+   150→        <div className="mx-auto max-w-md rounded-3xl border border-dashed border-kline bg-surface p-10 text-center">
+   151→          <HomeIcon className="mx-auto h-9 w-9 text-kline" aria-hidden />
+   152→          <p className="mt-3 font-display text-[16px] font-extrabold text-body">
+   153→            {failed ? "Listing not found" : "No keja selected"}
+   154→          </p>
+   155→          <p className="mt-1.5 text-[12.5px] font-semibold leading-relaxed text-kmuted">
+   156→            {failed
+   157→              ? "It may have been hidden after reports, expired, or already taken."
+   158→              : "Open a keja from the estates grid or the featured rail."}
+   159→          </p>
+   160→          <button
+   161→            onClick={() => navigate("home")}
+   162→            className="touch-target mt-5 rounded-full bg-ink px-5 py-2.5 text-[12.5px] font-extrabold text-white"
+   163→          >
+   164→            Back to discover
+   165→          </button>
+   166→        </div>
+   167→      </div>
+   168→    );
+   169→  }
+   170→
+   171→  const l = listing;
+   172→  const statusPill =
+   173→    l.status === "Available"
+   174→      ? { cls: "bg-verified-soft text-ok", dot: "bg-verified pulse-dot", label: "Available" }
+   175→      : l.status === "Reserved"
+   176→        ? { cls: "bg-pending-soft text-warn-strong", dot: "bg-pending", label: "Reserved" }
+   177→        : { cls: "bg-kbg text-kmuted", dot: "bg-kmuted", label: l.status };
+   178→
+   179→  const initials = l.poster.tiktokHandle.replace("@", "").slice(0, 2).toUpperCase();
+   180→  const walkMin = Math.max(1, Math.round(l.distanceToRoadM / 70));
+   181→
+   182→  return (
+   183→    <div className={cn("mx-auto max-w-[1440px] px-4 py-6", l.status === "Available" && "pb-36 md:pb-6")}>
+   184→      {/* print-only spec sheet (browser print / save-as-PDF) */}
+   185→      <div className="hidden print:block print:text-black" aria-hidden>
+   186→        <div className="flex items-center justify-between border-b-2 border-black pb-2">
+   187→          <p className="font-display text-lg font-extrabold">KEJA HALISI — Real House Verified</p>
+   188→          <p className="text-[10px] font-bold">keja-halisi.co.ke • {new Date().toLocaleDateString("en-KE")}</p>
+   189→        </div>
+   190→        <h1 className="mt-3 text-base font-extrabold">
+   191→          {l.beds} • {l.estate} — KES {l.price.toLocaleString()}/mo
+   192→        </h1>
+   193→        <p className="mt-1 text-[11px]">
+   194→          {l.road ?? l.estate} • {l.subCounty} • {l.borough} • {l.distanceToRoadM}m to road ({walkMin} min walk)
+   195→        </p>
+   196→        <p className="mt-2 text-[11px]">
+   197→          Deposit {kes(l.deposit)} • {l.sizeSqm ? `${l.sizeSqm}sqm • ` : ""}{l.floor ?? "—"} • Amenities: {l.amenities.join(", ") || "not declared"}
+   198→        </p>
+   199→        <p className="mt-2 text-[11px]">
+   200→          Listed by {l.poster.tiktokHandle} ({l.poster.role}, {l.poster.verificationStatus}) • Rating {l.poster.rating}★ • TikTok: {l.tiktokUrl}
+   201→        </p>
+   202→        <p className="mt-3 border-t border-black pt-2 text-[10px] font-bold">
+   203→          HAKUNA KULIPA KABLA YA KUONA NYUMBA — no viewing fee before viewing. Exact house number &amp; landlord phone are protected until contact.
+   204→        </p>
+   205→      </div>
+   206→
+   207→      <button
+   208→        onClick={back}
+   209→        className="touch-target inline-flex items-center gap-1.5 rounded-full border border-kline bg-surface px-4 py-2.5 text-[12.5px] font-extrabold text-body hover:bg-kbg print:hidden"
+   210→      >
+   211→        <ArrowLeft className="h-4 w-4" /> Back
+   212→      </button>
+   213→
+   214→      <div className="mt-4 grid items-start gap-6 lg:grid-cols-[1.4fr_0.8fr] print:mt-0 print:block">
+   215→        {/* ============================= LEFT ============================= */}
+   216→        <div className="min-w-0 space-y-4">
+   217→          {/* 1. TikTok embed card */}
+   218→          <section className="rounded-3xl bg-tiktok p-4 text-white" aria-label="TikTok walkthrough">
+   219→            <header className="flex items-center justify-between gap-2">
+   220→              <p className="flex items-center gap-2 text-[10px] font-extrabold tracking-[0.16em] text-white/60">
+   221→                <span className="h-1.5 w-1.5 rounded-full bg-tiktok-pink pulse-dot" aria-hidden />
+   222→                TIKTOK • AUTO MUTED PLAYING
+   223→              </p>
+   224→              <button
+   225→                onClick={() => setReportOpen(true)}
+   226→                className="touch-target inline-flex items-center gap-1.5 rounded-full border border-scam/70 px-3.5 py-2 text-[11px] font-extrabold text-[#ff6b6b] transition-colors hover:bg-scam hover:text-white"
+   227→              >
+   228→                <Flag className="h-3.5 w-3.5" /> Report
+   229→              </button>
+   230→            </header>
+   231→
+   232→            {/* embed area — real oEmbed attempted, styled fallback offline */}
+   233→            <div className="relative mx-auto mt-3.5 flex max-h-[480px] w-full max-w-[270px] items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-white/10 to-black/40 keja-building" style={{ aspectRatio: "9 / 16" }}>
+   234→              {oembedShown?.thumb ? (
+   235→                <div
+   236→                  className="absolute inset-0 bg-cover bg-center opacity-60"
+   237→                  style={{ backgroundImage: `url(${oembedShown.thumb})` }}
+   238→                  aria-hidden
+   239→                />
+   240→              ) : null}
+   241→              <div className="relative z-10 grid place-items-center px-4 text-center">
+   242→                <span className="grid h-14 w-14 place-items-center rounded-full bg-white/15 backdrop-blur-sm ring-1 ring-white/30">
+   243→                  <Play className="h-6 w-6 fill-white text-white" />
+   244→                </span>
+   245→                <p className="mt-3 line-clamp-2 font-display text-[13px] font-extrabold">
+   246→                  {l.title} • {l.poster.tiktokHandle}
+   247→                </p>
+   248→                <p className="mt-1 text-[10px] font-semibold text-white/60">
+   249→                  {oembedShown?.author ? `oEmbed OK • ${oembedShown.author}` : `${l.beds} walkthrough • ${l.estate}`}
+   250→                </p>
+   251→              </div>
+   252→              <span className="absolute bottom-2.5 left-2.5 z-10 rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-bold text-white/80 backdrop-blur-sm">
+   253→                TikTok embed • simulated (legal oEmbed iframe in production)
+   254→              </span>
+   255→              <span className="absolute right-2.5 top-2.5 z-10 rounded-full bg-tiktok-pink px-2 py-0.5 text-[9px] font-extrabold">
+   256→                {l.freshH <= 24 ? "Fresh" : "Catalog"}
+   257→              </span>
+   258→              {lowData && (
+   259→                <span className="absolute left-2.5 top-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-safaricom px-2 py-0.5 text-[9px] font-extrabold text-white">
+   260→                  <ZapOff className="h-2.5 w-2.5" /> Low-data • autoplay off
+   261→                </span>
+   262→              )}
+   263→            </div>
+   264→
+   265→            {/* muted note + photo thumbs */}
+   266→            <p className="mt-2.5 text-center text-[9.5px] font-semibold text-white/45">
+   267→              {lowData ? "Low-data mode • autoplay disabled • tap to play in production" : "Autoplay muted • captions burned in • vertical evidence"}
+   268→            </p>
+   269→            <div className="mt-3 grid grid-cols-3 gap-2">
+   270→              {(l.photos.length > 0 ? l.photos : ["p1", "p2", "p3"]).slice(0, 3).map((p, i) => (
+   271→                <div
+   272→                  key={`${p}-${i}`}
+   273→                  className="grid h-16 place-items-center rounded-xl bg-gradient-to-br from-white/15 to-white/5 text-[10px] font-extrabold text-white/70 ring-1 ring-white/15"
+   274→                  aria-label={`Photo ${i + 1}`}
+   275→                >
+   276→                  Photo {i + 1}
+   277→                </div>
+   278→              ))}
+   279→            </div>
+   280→          </section>
+   281→
+   282→          {/* 2. Trust notices stack */}
+   283→          <TrustChecksNotice />
+   284→          <PrivacyNotice />
+   285→          {l.fee ? <FeeWarning /> : null}
+   286→
+   287→          {/* 3. Evidence checklist — readOnly, all green (passed publish gate) */}
+   288→          <section className="rounded-2xl border border-verified/20 bg-verified-soft p-4" aria-label="Evidence checklist">
+   289→            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+   290→              {EVIDENCE_ITEMS.map((item) => (
+   291→                <div
+   292→                  key={item}
+   293→                  className="flex items-center gap-2 rounded-xl border border-verified/30 bg-surface px-2.5 py-2.5"
+   294→                >
+   295→                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-verified">
+   296→                    <Check className="h-3 w-3 text-white" />
+   297→                  </span>
+   298→                  <span className="truncate text-[11px] font-extrabold text-ok-strong">{item}</span>
+   299→                </div>
+   300→              ))}
+   301→            </div>
+   302→            <p className="mt-2.5 flex items-center gap-1.5 text-[10.5px] font-bold text-ok">
+   303→              <BadgeCheck className="h-3.5 w-3.5" /> Evidence checklist • 5 required before publish
+   304→            </p>
+   305→          </section>
+   306→
+   307→          {/* 4. Similar kejas rail */}
+   308→          {similar.length > 0 && (
+   309→            <section aria-label="Similar kejas">
+   310→              <h2 className="font-display text-[15px] font-extrabold text-body">
+   311→                Similar kejas in {l.estate} • Horizontal scroll
+   312→              </h2>
+   313→              <div className="keja-scroll -mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-2">
+   314→                {similar.map((s) => (
+   315→                  <MiniListingCard
+   316→                    key={s.id}
+   317→                    listing={s}
+   318→                    onOpen={() => navigate("listing", { listingId: s.id })}
+   319→                  />
+   320→                ))}
+   321→              </div>
+   322→            </section>
+   323→          )}
+   324→        </div>
+   325→
+   326→        {/* ============================ RIGHT (sticky) ============================ */}
+   327→        <aside className="min-w-0 space-y-4 self-start lg:sticky lg:top-24">
+   328→          {/* 1. price panel */}
+   329→          <section className="rounded-3xl border border-kline bg-surface p-5">
+   330→            <div className="flex flex-wrap items-center justify-between gap-2">
+   331→              <p className="font-display text-2xl font-extrabold tabular-nums text-body">
+   332→                {kes(l.price)}<span className="text-[13px] font-bold text-kmuted"> /mo</span>
+   333→              </p>
+   334→              <span className={cn("inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-extrabold", statusPill.cls)}>
+   335→                <span className={cn("h-1.5 w-1.5 rounded-full", statusPill.dot)} aria-hidden /> {statusPill.label}
+   336→              </span>
+   337→            </div>
+   338→            <p className="mt-1.5 text-[12px] font-semibold text-kmuted">
+   339→              Deposit {kes(l.deposit)} • {l.beds}
+   340→              {l.sizeSqm ? ` • ${l.sizeSqm}sqm` : ""}
+   341→              {l.floor ? ` • ${l.floor}` : ""}
+   342→              {l.sizeSqm ? ` • KES ${Math.round(l.price / l.sizeSqm)}/sqm` : ""}
+   343→            </p>
+   344→
+   345→            {/* share / print / save quick actions */}
+   346→            <div className="mt-3 flex items-center gap-2 print:hidden">
+   347→              <button
+   348→                onClick={async () => {
+   349→                  const text = `${l.beds} • ${l.estate} • KES ${l.price.toLocaleString()}/mo — verified on Keja Halisi`;
+   350→                  const url = typeof window !== "undefined" ? window.location.href : "";
+   351→                  // 1) native share sheet when available
+   352→                  if (typeof navigator !== "undefined" && navigator.share && navigator.canShare?.({ text, url })) {
+   353→                    try {
+   354→                      await navigator.share({ title: `Keja Halisi — ${l.beds} in ${l.estate}`, text, url });
+   355→                      return; // user completed (or cancelled) the native sheet
+   356→                    } catch (err) {
+   357→                      if ((err as DOMException)?.name === "AbortError") return; // cancelled
+   358→                      // fall through to clipboard
+   359→                    }
+   360→                  }
+   361→                  // 2) clipboard API
+   362→                  try {
+   363→                    await navigator.clipboard.writeText(`${text}\n${url}`);
+   364→                    toast("success", "Listing copied to clipboard • share it");
+   365→                    return;
+   366→                  } catch {
+   367→                    /* fall through to legacy copy */
+   368→                  }
+   369→                  // 3) legacy execCommand copy
+   370→                  try {
+   371→                    const ta = document.createElement("textarea");
+   372→                    ta.value = `${text}\n${url}`;
+   373→                    ta.style.position = "fixed";
+   374→                    ta.style.opacity = "0";
+   375→                    document.body.appendChild(ta);
+   376→                    ta.select();
+   377→                    document.execCommand("copy");
+   378→                    document.body.removeChild(ta);
+   379→                    toast("success", "Listing copied to clipboard • share it");
+   380→                  } catch {
+   381→                    toast("warning", "Copy blocked by browser — share manually");
+   382→                  }
+   383→                }}
+   384→                className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-full border border-kline py-2 text-[11px] font-extrabold text-body transition-colors hover:bg-kbg"
+   385→                aria-label="Share listing"
+   386→              >
+   387→                <Share2 className="h-3.5 w-3.5 text-trust" /> Share
+   388→              </button>
+   389→              <button
+   390→                onClick={() => window.print()}
+   391→                className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-full border border-kline py-2 text-[11px] font-extrabold text-body transition-colors hover:bg-kbg"
+   392→                aria-label="Print listing sheet"
+   393→              >
+   394→                <Printer className="h-3.5 w-3.5 text-trust" /> Print
+   395→              </button>
+   396→              <button
+   397→                onClick={() => {
+   398→                  toggleSaved(l.id);
+   399→                  toast("success", saved.includes(l.id) ? "Removed from your shortlist" : "Saved to your kejas • Heart filled");
+   400→                }}
+   401→                className={cn(
+   402→                  "touch-target flex flex-1 items-center justify-center gap-1.5 rounded-full border py-2 text-[11px] font-extrabold transition-colors",
+   403→                  saved.includes(l.id) ? "border-tiktok-pink/40 bg-tiktok-pink/10 text-tiktok-pink" : "border-kline text-body hover:bg-kbg"
+   404→                )}
+   405→                aria-label={saved.includes(l.id) ? "Remove from saved" : "Save keja"}
+   406→              >
+   407→                <Heart className={cn("h-3.5 w-3.5", saved.includes(l.id) ? "fill-tiktok-pink text-tiktok-pink" : "text-tiktok-pink")} />
+   408→                {saved.includes(l.id) ? "Saved" : "Save"}
+   409→              </button>
+   410→            </div>
+   411→
+   412→            {/* 2. meta */}
+   413→            <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-kline pt-3 text-[11px] font-semibold text-kmuted">
+   414→              <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3 text-trust" /> Posted {timeAgo(l.freshH)}</span>
+   415→              <span className="inline-flex items-center gap-1"><Zap className="h-3 w-3 text-verified" /> Response ~{l.responseTime}min</span>
+   416→              <span className="inline-flex items-center gap-1"><Eye className="h-3 w-3 text-trust" /> {l.views} views</span>
+   417→            </p>
+   418→          </section>
+   419→
+   420→          {/* 3. agent card */}
+   421→          <section>
+   422→            <button
+   423→              onClick={() => navigate("agent", { handle: l.poster.tiktokHandle })}
+   424→              className="w-full card-lift rounded-3xl border border-kline bg-surface p-4 text-left"
+   425→              aria-label={`Open agent profile ${l.poster.tiktokHandle}`}
+   426→            >
+   427→              <div className="flex items-center gap-3">
+   428→                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-trust to-verified font-display text-[13px] font-extrabold text-white">
+   429→                  {initials}
+   430→                </span>
+   431→                <div className="min-w-0 flex-1">
+   432→                  <p className="flex items-center gap-1.5 truncate font-display text-[13.5px] font-extrabold text-body">
+   433→                    {l.poster.tiktokHandle}
+   434→                    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-kmuted" />
+   435→                  </p>
+   436→                  <p className="mt-0.5 text-[10.5px] font-semibold text-kmuted">
+   437→                    {l.poster.listingsCount} listings • {l.poster.rating}★ • Reports {l.reportsCount}
+   438→                  </p>
+   439→                </div>
+   440→                <VerificationBadge status={l.poster.verificationStatus} role={l.poster.role} />
+   441→              </div>
+   442→            </button>
+   443→          </section>
+   444→
+   445→          {/* 4. CTA buttons */}
+   446→          <section className="space-y-2" aria-label="Contact actions">
+   447→            <div className="grid grid-cols-2 gap-2">
+   448→              <button
+   449→                onClick={() => {
+   450→                  toast("success", "Number copied • Lead logged • Haptic vibrate");
+   451→                  setContactOpen(true);
+   452→                }}
+   453→                className="touch-target flex items-center justify-center gap-1.5 rounded-full bg-safaricom text-[12.5px] font-extrabold text-white shadow-[0_8px_20px_rgba(0,177,64,0.3)] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+   454→              >
+   455→                <Phone className="h-4 w-4" /> Call Agent
+   456→              </button>
+   457→              <button
+   458→                onClick={() => {
+   459→                  toast("success", "Opening WhatsApp • wa.me/2547...");
+   460→                  setContactOpen(true);
+   461→                }}
+   462→                className="touch-target flex items-center justify-center gap-1.5 rounded-full bg-wa text-[12.5px] font-extrabold text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
+   463→              >
+   464→                <MessageCircle className="h-4 w-4" /> WhatsApp
+   465→              </button>
+   466→            </div>
+   467→            <button
+   468→              onClick={() => toast("info", `Opening TikTok ${l.poster.tiktokHandle}`)}
+   469→              className="touch-target flex w-full items-center justify-center gap-1.5 rounded-full bg-tiktok py-3 text-[12.5px] font-extrabold text-white transition-transform hover:scale-[1.01] active:scale-[0.99]"
+   470→            >
+   471→              <ExternalLink className="h-4 w-4 text-tiktok-cyan" /> View on TikTok
+   472→            </button>
+   473→            <button
+   474→              onClick={() => setViewingOpen(true)}
+   475→              className="touch-target flex w-full items-center justify-center gap-1.5 rounded-full border-2 border-trust bg-trust-soft py-3 text-[12.5px] font-extrabold text-trust transition-all hover:bg-trust hover:text-white"
+   476→            >
+   477→              <CalendarCheck className="h-4 w-4" /> Book viewing • free
+   478→            </button>
+   479→          </section>
+   480→
+   481→          {/* 5. specs grid */}
+   482→          <section className="rounded-3xl border border-kline bg-surface p-4" aria-label="Unit specs">
+   483→            <div className="grid grid-cols-3 gap-2.5">
+   484→              {specs.map((s) => (
+   485→                <div key={s.label} className="rounded-2xl bg-kbg p-2.5 text-center">
+   486→                  <p className="text-[9px] font-extrabold uppercase tracking-wider text-kmuted">{s.label}</p>
+   487→                  <p className="mt-0.5 truncate font-display text-[12px] font-extrabold text-body">{s.value}</p>
+   488→                </div>
+   489→              ))}
+   490→            </div>
+   491→
+   492→            {/* 6. amenities chips */}
+   493→            <div className="mt-3.5 flex flex-wrap gap-1.5 border-t border-kline pt-3.5" aria-label="Amenities">
+   494→              {l.amenities.length === 0 ? (
+   495→                <span className="text-[11px] font-semibold text-kmuted">Amenities not declared — ask on call</span>
+   496→              ) : (
+   497→                l.amenities.map((a) => (
+   498→                  <span key={a} className="inline-flex items-center gap-1 rounded-full bg-verified-soft px-2.5 py-1.5 text-[10.5px] font-extrabold text-ok-strong">
+   499→                    <Check className="h-3 w-3" /> {a}
+   500→                  </span>
+   501→                ))
+   502→              )}
+   503→            </div>
+   504→          </section>
+   505→
+   506→          {/* 5. fair-price radar (anti-bait) */}
+   507→          <FairPriceWidget listing={l} />
+   508→
+   509→          {/* 5b. move-in cost estimator (budget trust tool) */}
+   510→          <MoveInCost listing={l} />
+   511→
+   512→          {/* 6. location */}
+   513→          <section className="rounded-3xl border border-kline bg-surface p-4" aria-label="Location">
+   514→            <p className="flex items-start gap-1.5 text-[12px] font-bold leading-relaxed text-body">
+   515→              <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-trust" />
+   516→              {l.estate}, near {l.road || "main road"} - {l.distanceToRoadM}m to road - {walkMin} min walk - Matatu 2 min
+   517→            </p>
+   518→            <div className="keja-map relative mt-3 h-24 overflow-hidden rounded-2xl" role="img" aria-label={`Map pin for ${l.estate}`}>
+   519→              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+   520→                <span className="bounce-pin grid h-8 w-8 place-items-center rounded-full bg-trust text-white ring-2 ring-white shadow-lg">
+   521→                  <MapPin className="h-3.5 w-3.5" />
+   522→                </span>
+   523→              </span>
+   524→              <span className="absolute left-2 top-2 rounded-full bg-surface/90 px-2 py-0.5 text-[8.5px] font-extrabold tracking-wider text-body">
+   525→                {l.subCounty.toUpperCase()} • DEMO LAYER
+   526→              </span>
+   527→            </div>
+   528→            <p className="mt-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-kmuted">
+   529→              <CloudSun className="h-3.5 w-3.5 text-gold" /> {l.weather.temp}°C • Windy
+   530→            </p>
+   531→          </section>
+   532→
+   533→          {/* 8. rate-after-call trust loop */}
+   534→          {leadLogged && (
+   535→            <section className="pop rounded-3xl border border-gold/40 bg-gold/10 p-4" aria-label="Rate after viewing">
+   536→              <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-warn">
+   537→                <Star className="h-4 w-4 fill-gold text-gold" /> Rate after viewing?
+   538→              </p>
+   539→              <p className="mt-1 text-[11.5px] font-semibold text-warn/90">
+   540→                Was this keja real? Rate {l.poster.tiktokHandle} — shows on their agent card.
+   541→              </p>
+   542→              <button
+   543→                onClick={() => setRateOpen(true)}
+   544→                className="touch-target mt-2.5 w-full rounded-full bg-gold py-2.5 text-[12px] font-extrabold text-body transition-transform hover:scale-[1.02] active:scale-[0.98]"
+   545→              >
+   546→                ⭐ Rate {l.poster.tiktokHandle}
+   547→              </button>
+   548→            </section>
+   549→          )}
+   550→
+   551→          {/* 9. report */}
+   552→          <button
+   553→            onClick={() => setReportOpen(true)}
+   554→            className="touch-target flex w-full items-center justify-center gap-1.5 rounded-full border-2 border-scam py-3 text-[12.5px] font-extrabold text-scam transition-colors hover:bg-scam hover:text-white print:hidden"
+   555→          >
+   556→            <Flag className="h-4 w-4" /> 🚩 Report Scam / Fake
+   557→          </button>
+   558→        </aside>
+   559→      </div>
+   560→
+   561→      {/* mobile sticky call bar — above bottom nav (wireframe File C) */}
+   562→      {l.status === "Available" && (
+   563→        <div
+   564→          className="fixed inset-x-0 bottom-[68px] z-40 flex gap-2 border-t border-kline bg-surface/95 p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] backdrop-blur-md md:hidden"
+   565→          role="navigation"
+   566→          aria-label="Quick contact"
+   567→        >
+   568→          <button
+   569→            onClick={() => setContactOpen(true)}
+   570→            className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-full bg-verified py-2.5 text-[12.5px] font-extrabold text-white active:scale-[0.98]"
+   571→          >
+   572→            <Phone className="h-4 w-4" /> Call
+   573→          </button>
+   574→          <button
+   575→            onClick={() => setContactOpen(true)}
+   576→            className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-full bg-wa py-2.5 text-[12.5px] font-extrabold text-white active:scale-[0.98]"
+   577→          >
+   578→            <MessageCircle className="h-4 w-4" /> WhatsApp
+   579→          </button>
+   580→        </div>
+   581→      )}
+   582→
+   583→      {/* modals + rating sheet */}
+   584→      <ReportModal
+   585→        listing={l}
+   586→        open={reportOpen}
+   587→        onClose={closeReport}
+   588→        onReported={(r) => {
+   589→          bumpActivity({ reports: 1 });
+   590→          logReport({ listingId: l.id, estate: l.estate, reason: r.reason, autoHidden: r.autoHidden });
+   591→        }}
+   592→      />
+   593→      <ContactModal
+   594→        listing={l}
+   595→        open={contactOpen}
+   596→        onClose={() => setContactOpen(false)}
+   597→        onLeadLogged={(action) => {
+   598→          setLeadLogged(true);
+   599→          bumpActivity({ leads: 1 });
+   600→          notify(
+   601→            "success",
+   602→            action === "call" ? "Lead logged — call connected" : "Lead logged — WhatsApp",
+   603→            `${l.estate} • ${l.beds} • agent ${l.poster.tiktokHandle} contacted. Rate after viewing!`
+   604→          );
+   605→          // simulated agent reply (production: Africa's Talking delivery report → push)
+   606→          const replies = [
+   607→            `Karibu! Hiyo ${l.beds} iko available — come see it anytime`,
+   608→            `Sawa, niko jobo around. Can we do the viewing today?`,
+   609→            `Yes the house is ready — water iko and gate keeper anajua mimi`,
+   610→            `Pole kwa delay — nitakuwa estate after 5pm, viewing iko free`,
+   611→          ];
+   612→          const delay = 6000 + Math.floor(Math.random() * 4000);
+   613→          window.setTimeout(() => {
+   614→            notify(
+   615→              "info",
+   616→              `${l.poster.tiktokHandle} replied • SMS (simulated)`,
+   617→              replies[Math.floor(Math.random() * replies.length)]
+   618→            );
+   619→          }, delay);
+   620→        }}
+   621→      />
+   622→      <RatingSheet
+   623→        open={rateOpen}
+   624→        onClose={() => setRateOpen(false)}
+   625→        agentHandle={l.poster.tiktokHandle}
+   626→        agentId={l.poster.id}
+   627→        estateHint={l.estate}
+   628→      />
+   629→      <ViewingModal listing={l} open={viewingOpen} onClose={() => setViewingOpen(false)} />
+   630→    </div>
+   631→  );
+   632→}
+   633→

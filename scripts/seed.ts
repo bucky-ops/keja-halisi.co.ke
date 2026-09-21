@@ -95,6 +95,11 @@ const LISTINGS: {
   { title: "Bedsitter • Ngara • CBD Edge", estate: "Ngara", sub: "Starehe", borough: "Central", road: "Park Rd", price: 14000, deposit: 14000, beds: "Bedsitter", freshH: 12, response: 7, fee: false, status: "Available", publish: "approved", verified: true, agent: "@keja_hunter_nairobi", amenities: ["Fibre", "Water", "Security"], distance: 180, size: 21, floor: "2nd Floor" },
   { title: "1BR • Ngong Rd • Near Matatu Stage", estate: "Ngong Road", sub: "Dagoretti South", borough: "Western", road: "Ngong Rd", price: 16000, deposit: 16000, beds: "1BR", freshH: 9, response: 15, fee: false, status: "Available", publish: "approved", verified: true, agent: "@keja_kile", amenities: ["Water", "Tokens", "Security"], distance: 90, size: 34, floor: "1st Floor" },
   { title: "2BR • Kahawa West • Thika Rd Corridor", estate: "Kahawa West", sub: "Roysambu", borough: "Northern", road: "Thika Rd", price: 26000, deposit: 26000, beds: "2BR", freshH: 28, response: 17, fee: false, status: "Available", publish: "approved", verified: true, agent: "@roy_homes", amenities: ["Parking", "Water", "Security", "Borehole"], distance: 450, size: 70, floor: "1st Floor" },
+  // catalog depth — older listings spread across the 14-day trust-trend window
+  { title: "Bedsitter • Donholm • Near Stage", estate: "Donholm", sub: "Embakasi Central", borough: "Eastern", road: "Outering Rd", price: 11000, deposit: 11000, beds: "Bedsitter", freshH: 55, response: 13, fee: false, status: "Available", publish: "approved", verified: true, agent: "@eastlands_homes", amenities: ["Water", "Security", "Tokens"], distance: 240, size: 20, floor: "2nd Floor" },
+  { title: "1BR • Kayole • Borehole + CCTV", estate: "Kayole", sub: "Embakasi East", borough: "Eastern", road: "Kayole Spine Rd", price: 13000, deposit: 13000, beds: "1BR", freshH: 78, response: 19, fee: false, status: "Available", publish: "approved", verified: true, agent: "@eastlands_homes", amenities: ["Water 24/7", "Borehole", "CCTV", "Security"], distance: 310, size: 40, floor: "1st Floor" },
+  { title: "2BR • Mwiki • Family Unit", estate: "Mwiki", sub: "Kasarani", borough: "Northern", road: "Mwiki Rd", price: 24000, deposit: 24000, beds: "2BR", freshH: 122, response: 16, fee: false, status: "Available", publish: "approved", verified: true, agent: "@roy_homes", amenities: ["Parking", "Borehole", "Fibre", "Security"], distance: 360, size: 72, floor: "3rd Floor" },
+  { title: "Bedsitter • Githurai 45 • Honest Price", estate: "Githurai", sub: "Ruaraka", borough: "Northern", road: "Thika Rd", price: 7500, deposit: 7500, beds: "Bedsitter", freshH: 160, response: 21, fee: false, status: "Available", publish: "approved", verified: true, agent: "@keja_hunter_nairobi", amenities: ["Water", "Tokens", "Security"], distance: 170, size: 17, floor: "Ground" },
 ];
 
 async function main() {
@@ -229,10 +234,24 @@ async function main() {
   await db.listing.update({ where: { id: listingIds[10] }, data: { reportsCount: 2 } });
   await db.listing.update({ where: { id: listingIds[6] }, data: { reportsCount: 1 } });
 
+  // historical report rows (community policing volume for the trend chart;
+  // reportsCount above stays untouched — those demo the strike UI)
+  const histReports: [number, string, number][] = [
+    [4, "Taken", 40], [8, "FakePrice", 70], [10, "LocationFake", 92],
+    [2, "Repost", 118], [6, "ViewingFee", 141], [13, "AlreadyRented", 190], [18, "Taken", 240],
+  ];
+  for (const [idx, reason, hoursAgo] of histReports) {
+    await db.report.create({ data: { listingId: listingIds[idx], reason, details: "historical community report", createdAt: new Date(now - hoursAgo * H) } });
+  }
+
   console.log("Seeding leads...");
   const leadDefs: [number, string, string, number][] = [
     [0, "call", "07** *** 123", 2], [0, "whatsapp", "07** *** 891", 5], [15, "call", "07** *** 456", 26],
     [1, "whatsapp", "07** *** 220", 8], [9, "call", "07** *** 774", 1],
+    // historical spread → admin trust-trend sparklines have real shape across 14 days
+    [4, "call", "07** *** 331", 30], [5, "whatsapp", "07** *** 512", 52], [8, "call", "07** *** 648", 74],
+    [13, "whatsapp", "07** *** 190", 96], [17, "call", "07** *** 275", 120], [19, "call", "07** *** 808", 145],
+    [11, "whatsapp", "07** *** 417", 168], [3, "call", "07** *** 963", 220], [6, "whatsapp", "07** *** 556", 260],
   ];
   for (const [idx, action, masked, hoursAgo] of leadDefs) {
     await db.lead.create({ data: { listingId: listingIds[idx], action, phoneMasked: masked, createdAt: new Date(now - hoursAgo * H) } });
@@ -246,7 +265,7 @@ async function main() {
 
   console.log("Seeding audit events...");
   const audits: [string, string, string, string][] = [
-    ["admin", "listing.approved", "listing", listingIds[0]],
+    // NOTE: listing.approved for every listing is written by the per-listing loop below — no duplicates here
     ["ai", "fee_signal.detected", "listing", listingIds[2]],
     ["ai", "evidence_checklist.incomplete", "listing", listingIds[10]],
     ["admin", "caretaker.mandate_verified", "agent", agentMap.get("@kasa_homes")!],
@@ -256,6 +275,15 @@ async function main() {
   for (let i = 0; i < audits.length; i++) {
     const [actor, action, object, objectId] = audits[i];
     await db.auditEvent.create({ data: { actor, action, object, objectId, timestamp: new Date(now - i * 37 * 60000), metadata: JSON.stringify({ source: "seed" }) } });
+  }
+
+  // per-listing history for the public Keja history ledger (submitted → approved pairs)
+  for (let i = 0; i < listingIds.length; i++) {
+    const ageH = LISTINGS[i].freshH;
+    await db.auditEvent.create({ data: { actor: "poster", action: "listing.submitted", object: "listing", objectId: listingIds[i], timestamp: new Date(now - (ageH + 0.4) * H), metadata: JSON.stringify({ evidence: 5 }) } });
+    if (LISTINGS[i].publish === "approved") {
+      await db.auditEvent.create({ data: { actor: "admin", action: "listing.approved", object: "listing", objectId: listingIds[i], timestamp: new Date(now - (ageH + 0.2) * H), metadata: JSON.stringify({ reviewer: "trust-team" }) } });
+    }
   }
 
   const counts = {

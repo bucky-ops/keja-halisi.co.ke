@@ -232,7 +232,22 @@ export const useKeja = create<KejaState>()(
         const prev = history[history.length - 1];
         set({ view: prev.view, params: prev.params, history: history.slice(0, -1) });
       },
-      setFilters: (patch) => set({ filters: { ...get().filters, ...patch } }),
+      setFilters: (patch) => {
+        const cur = get().filters;
+        let next = { ...cur, ...patch };
+        // Estate is the most specific scope: whenever a concrete estate is set without
+        // explicitly setting coarser scopes, drop borough/subCounty — they'd AND the query
+        // into an impossible combo (e.g. estate=Umoja + borough=Western → 0 results).
+        if (
+          patch.estate !== undefined &&
+          patch.estate !== "" &&
+          patch.borough === undefined &&
+          patch.subCounty === undefined
+        ) {
+          next = { ...next, borough: "", subCounty: "" };
+        }
+        set({ filters: next });
+      },
       resetFilters: () => set({ filters: { ...DEFAULT_FILTERS } }),
       toggleSaved: (id) => {
         const { saved } = get();

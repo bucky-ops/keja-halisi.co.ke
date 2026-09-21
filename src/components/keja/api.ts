@@ -238,3 +238,18 @@ export async function runCron(job: "expire-listings" | "nudge-availability"): Pr
   const res = await fetch(`/api/cron/${job}`, { method: "POST" });
   return res.json();
 }
+
+export interface AdminAnalytics {
+  days: string[];
+  listings: number[];
+  reports: number[];
+  leads: number[];
+  totals: { listings: number; reports: number; leads: number };
+  deltas: { listings: number; reports: number; leads: number };
+}
+
+export async function fetchAdminAnalytics(): Promise<AdminAnalytics> {
+  const res = await fetch("/api/admin/analytics", { cache: "no-store" });
+  if (!res.ok) throw new Error("Analytics failed");
+  return res.json();
+}

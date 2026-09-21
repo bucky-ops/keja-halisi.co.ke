@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils";
 import { kes, maskPhone, timeAgo } from "@/lib/nairobi";
 import { toast, useKeja } from "@/lib/store";
 import { Download } from "lucide-react";
-import { fetchAdminQueue, reviewAgent, reviewListing, runCron } from "@/components/keja/api";
+import { fetchAdminAnalytics, fetchAdminQueue, reviewAgent, reviewListing, runCron, type AdminAnalytics } from "@/components/keja/api";
+import { Sparkline } from "../sparkline";
 import type { AgentDTO, AiFlag } from "@/lib/types";
 
 type Queue = Awaited<ReturnType<typeof fetchAdminQueue>>;
@@ -118,6 +119,7 @@ function EmptyState({ icon: Icon, title, sub }: { icon: typeof ShieldCheck; titl
 
 export default function AdminView() {
   const [queue, setQueue] = useState<Queue | null>(null);
+  const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
   const [failed, setFailed] = useState(false);
   const [tab, setTab] = useState<Tab>("agents");
   const [rejecting, setRejecting] = useState<{ kind: "agent" | "listing"; id: string } | null>(null);
@@ -182,6 +184,7 @@ export default function AdminView() {
 
   useEffect(() => {
     void load();
+    fetchAdminAnalytics().then(setAnalytics).catch(() => {}); // trend row is additive — never blocks the queue
   }, [load]);
 
   const approveAgent = async (id: string) => {
@@ -303,6 +306,49 @@ export default function AdminView() {
           {cronBusy === "nudge-availability" ? "Running..." : "Run nudge-availability"}
         </button>
       </section>
+
+      {/* trust trend — 14-day sparklines (listings / reports / leads) */}
+      {analytics && (
+        <section className="mt-3 rounded-3xl border border-kline bg-card p-4" aria-label="Trust trend">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="flex items-center gap-2 font-display text-[13px] font-extrabold text-body">
+              <Bot className="h-4 w-4 text-trust" /> Trust trend • last 14 days
+            </p>
+            <p className="text-[10px] font-semibold text-kmuted">
+              {analytics.days[0]} → {analytics.days[analytics.days.length - 1]} • vs previous 14 days
+            </p>
+          </div>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <Sparkline
+              data={analytics.listings}
+              color="text-verified"
+              fillFrom="#0E9F6E"
+              fillTo="#0E9F6E"
+              label="New listings"
+              total={analytics.totals.listings}
+              delta={analytics.deltas.listings}
+            />
+            <Sparkline
+              data={analytics.reports}
+              color="text-scam"
+              fillFrom="#E02424"
+              fillTo="#E02424"
+              label="Reports filed"
+              total={analytics.totals.reports}
+              delta={analytics.deltas.reports}
+            />
+            <Sparkline
+              data={analytics.leads}
+              color="text-trust"
+              fillFrom="#1976D2"
+              fillTo="#1976D2"
+              label="Leads (masked)"
+              total={analytics.totals.leads}
+              delta={analytics.deltas.leads}
+            />
+          </div>
+        </section>
+      )}
 
       {/* tabs with counts */}
       <div className="mt-4 flex flex-wrap items-center gap-1.5">

@@ -1,9 +1,10 @@
 "use client";
 // KEJA HALISI — Listing card with ALL states
 // default / hover lift / skeleton shimmer / expired-taken grayed / reported red border
-import { Heart, MapPin, TriangleAlert, Play, BadgeCheck, Clock, Scale } from "lucide-react";
+import { Heart, MapPin, TriangleAlert, Play, BadgeCheck, Clock, Scale, Fingerprint } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { kes } from "@/lib/nairobi";
+import { computeTrustScore, scoreChipCls } from "@/lib/trust-score";
 import { useKeja, toast } from "@/lib/store";
 import type { ListingDTO } from "@/lib/types";
 import { FreshBadge, FeeWarningBadge, NoFeeBadge, VerifiedBadge, GoldBadge, CaretakerBadge, PendingBadge } from "./badges";
@@ -126,6 +127,18 @@ export function ListingCard({ listing: l, compact = false, onOpen, onCall, index
             </p>
             <p className={cn("mt-0.5 truncate text-[11.5px] text-body/80 font-semibold", compact && "text-[10.5px]")}>{l.title}</p>
           </div>
+          {/* Keja Score chip — deterministic, no extra fetch (price band neutral) */}
+          {(() => {
+            const score = computeTrustScore(l).score;
+            return (
+              <span
+                className={cn("flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[9.5px] font-extrabold tabular-nums", scoreChipCls(score))}
+                title={`Keja Score ${score}/100 — computed from agent tier, fee honesty, freshness, reports & speed`}
+              >
+                <Fingerprint className="h-3 w-3" /> {score}
+              </span>
+            );
+          })()}
         </div>
         <p className="mt-1.5 flex items-center gap-1 text-[11px] text-kmuted truncate">
           <MapPin className="h-3 w-3 shrink-0 text-trust" />
