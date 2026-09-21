@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search, ArrowRight, BadgeCheck, ShieldCheck, Building2, Flag, CalendarClock,
   Play, Zap, MapPin, Smartphone, Ban, ChevronRight, History as HistoryIcon,
-  GraduationCap, Trophy, Star, CalendarCheck, Calculator,
+  GraduationCap, Trophy, Star, CalendarCheck, Calculator, BellRing, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
@@ -37,7 +37,7 @@ function useCountUp(target: number, duration = 1800): number {
 const AGENTS_ONLINE = 1247;
 
 export default function HomeView() {
-  const { navigate, setFilters, filters, recent, clearRecent, activity } = useKeja();
+  const { navigate, setFilters, filters, recent, clearRecent, activity, savedSearches, runSearch: runSavedSearch, markSearchSeen } = useKeja();
   const t = useT();
   const [stats, setStats] = useState<HomeStats | null>(null);
   const [pulse, setPulse] = useState<MarketPulseData | null>(null);
@@ -138,6 +138,10 @@ export default function HomeView() {
       .filter((v) => typeof v.ts === "number" && v.ts > now - 2 * 3600e3 && v.ts < now + 36 * 3600e3)
       .sort((a, b) => (a.ts ?? 0) - (b.ts ?? 0))[0];
   }, [activity.viewingLog]);
+
+  /* saved-search alerts with fresh matches (banner + notification center) */
+  const newAlerts = useMemo(() => savedSearches.filter((s) => s.newCount > 0), [savedSearches]);
+  const newAlertsTotal = useMemo(() => newAlerts.reduce((s, a) => s + a.newCount, 0), [newAlerts]);
 
   const runSearch = () => {
     setFilters({ estate: estateInput.trim(), beds, minPrice: budget.min, maxPrice: budget.max });
@@ -370,6 +374,46 @@ export default function HomeView() {
           </p>
         </section>
       </div>
+
+      {/* ============ 2b. SAVED-SEARCH ALERT BANNER (new matches since last sync) ============ */}
+      {newAlerts[0] && (
+        <div className="relative z-10 mx-auto mt-4 max-w-[880px]">
+          <div
+            className="relative flex flex-wrap items-center gap-3 overflow-hidden rounded-2xl border border-verified/30 bg-gradient-to-r from-trust-soft via-verified-soft/70 to-surface px-4 py-3 shadow-lg shadow-verified/10"
+            role="status"
+            aria-label="New matches for your saved search"
+          >
+            {/* shimmer accent edge */}
+            <span className="shimmer pointer-events-none absolute inset-y-0 left-0 w-1.5 rounded-full" aria-hidden />
+            <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-verified text-white">
+              <BellRing className="h-4.5 w-4.5" />
+            </span>
+            <span className="relative min-w-0 flex-1">
+              <span className="block truncate text-[12.5px] font-extrabold text-body">
+                {newAlertsTotal === 1 ? t("alertBannerTitle1") : t("alertBannerTitleMany").replace("{n}", String(newAlertsTotal))}
+              </span>
+              <span className="block truncate text-[10.5px] font-semibold text-kmuted">
+                {newAlerts[0].label} {newAlerts.length > 1 ? `+ ${newAlerts.length - 1} ${t("alertMoreSearches")}` : `• ${t("alertBannerSub")}`}
+              </span>
+            </span>
+            <span className="relative flex items-center gap-1.5">
+              <button
+                onClick={() => runSavedSearch(newAlerts[0].id)}
+                className="touch-target inline-flex items-center gap-1.5 rounded-full bg-verified px-4 py-2 text-[11.5px] font-extrabold text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {t("alertOpen")} <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => markSearchSeen(newAlerts[0].id)}
+                className="touch-target grid h-9 w-9 place-items-center rounded-full text-kmuted transition-colors hover:bg-surface hover:text-body"
+                aria-label={t("alertDismiss")}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* ============================ 3. STATS STRIP ============================ */}
       <section className="keja-hero-dark mt-8 rounded-3xl px-4 py-6" aria-label="Platform stats">

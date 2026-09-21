@@ -6,11 +6,12 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Calculator, TrendingUp, ArrowLeft, ShieldCheck, PiggyBank, ChevronRight,
-  CircleCheck, TriangleAlert, CircleX, Wallet,
+  CircleCheck, TriangleAlert, CircleX, Wallet, BellRing,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { kes } from "@/lib/nairobi";
 import { toast, useKeja } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { fetchMarketTrends } from "../api";
 
 const QUICK_INCOME = [15000, 25000, 40000, 60000, 100000];
@@ -37,11 +38,13 @@ const FIT_STYLE: Record<Fit, { cls: string; icon: typeof CircleCheck }> = {
 };
 
 export default function AffordView() {
-  const { params, back, navigate, setFilters, resetFilters } = useKeja();
+  const t = useT();
+  const { params, back, navigate, setFilters, resetFilters, saveSearch } = useKeja();
   const [income, setIncome] = useState<number>(params.income ?? 0);
   const [side, setSide] = useState(0);
   const [deps, setDeps] = useState<keyof typeof SHARES>("none");
   const [savings, setSavings] = useState(0);
+  const [alertSaved, setAlertSaved] = useState(false);
   const [trends, setTrends] = useState<{ borough: string; avgPrice: number; count: number }[]>([]);
   const [trendsLoading, setTrendsLoading] = useState(true);
 
@@ -89,6 +92,18 @@ export default function AffordView() {
     setFilters({ maxPrice: Math.max(3000, safe), minPrice: 3000, estate: "", borough: "", subCounty: "" });
     navigate("estate", { maxPrice: Math.max(3000, safe) });
     toast("success", `Showing kejas ≤ ${kes(Math.max(3000, safe))} — your safe band`);
+  };
+
+  /* save the current band as a search alert — pings when fresh kejas fit */
+  const saveAlert = () => {
+    if (!hasIncome) {
+      toast("warning", "Enter your income first — hata alerts zinahitaji namba");
+      return;
+    }
+    resetFilters();
+    setFilters({ maxPrice: Math.max(3000, safe), minPrice: 3000, estate: "", borough: "", subCounty: "" });
+    saveSearch(`${t("affordAlertLabel")} ${kes(Math.max(3000, safe))}`);
+    setAlertSaved(true);
   };
 
   return (
@@ -304,6 +319,30 @@ export default function AffordView() {
           >
             <ShieldCheck className="h-4 w-4" /> Show kejas in my range <ChevronRight className="h-4 w-4" />
           </button>
+
+          {/* save this band as an alert — pings when fresh kejas fit your safe rent */}
+          {hasIncome && (
+            <button
+              onClick={saveAlert}
+              className={cn(
+                "touch-target mt-2.5 flex w-full items-center justify-center gap-2 rounded-full border py-3 text-[12px] font-extrabold transition-all active:scale-[0.99]",
+                alertSaved
+                  ? "border-verified bg-verified-soft text-ok-strong"
+                  : "border-dashed border-trust/50 bg-trust-soft/50 text-trust hover:border-trust hover:bg-trust-soft"
+              )}
+              aria-live="polite"
+            >
+              {alertSaved ? (
+                <>
+                  <CircleCheck className="h-4 w-4 text-verified" /> {t("affordAlertSaved")}
+                </>
+              ) : (
+                <>
+                  <BellRing className="h-4 w-4" /> {t("affordSaveAlert")}
+                </>
+              )}
+            </button>
+          )}
         </section>
       </div>
 

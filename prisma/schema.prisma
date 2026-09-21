@@ -180,14 +180,17 @@ model AuditEvent {
 
 // tenant reviews — post-viewing trust feedback (public-safe, no PII)
 model Review {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   agentId      String
-  agent        Agent    @relation(fields: [agentId], references: [id])
-  authorHandle String // masked community handle, e.g. "@wanjiku_m"
-  stars        Int // 1..5
+  agent        Agent     @relation(fields: [agentId], references: [id])
+  authorHandle String    // masked community handle, e.g. "@wanjiku_m"
+  stars        Int       // 1..5
   text         String
-  verifiedStay Boolean  @default(false) // lead existed for this agent when review was left
-  createdAt    DateTime @default(now())
+  verifiedStay Boolean   @default(false) // lead existed for this agent when review was left
+  helpful      Int       @default(0) // "helpful" votes from other renters
+  reply        String?   // agent's public reply (simulated poster account in demo)
+  repliedAt    DateTime?
+  createdAt    DateTime  @default(now())
 
   @@index([agentId, createdAt])
 }

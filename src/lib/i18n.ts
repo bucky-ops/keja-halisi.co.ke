@@ -172,6 +172,17 @@ const EN = {
   affordTileTitle: "Can you afford it?",
   affordTileSub: "The 30% rule, Nairobi-calibrated — get your honest rent band in 30 seconds",
   affordTileCta: "Check my band",
+  // saved-search alert banner (home)
+  alertBannerTitle1: "1 fresh keja matches your alert",
+  alertBannerTitleMany: "{n} fresh kejas match your alerts",
+  alertMoreSearches: "more searches",
+  alertBannerSub: "new since your last visit — viewing is free",
+  alertOpen: "Open matches",
+  alertDismiss: "Dismiss alert",
+  // afford → saved-search alert
+  affordAlertLabel: "My safe band ≤",
+  affordSaveAlert: "Save this band as an alert — ping me on fresh kejas",
+  affordAlertSaved: "Alert saved — we watch for fresh kejas in this band",
 } as const;
 
 export type DictKey = keyof typeof EN;
@@ -320,6 +331,17 @@ const SW: Partial<Record<DictKey, string>> = {
   affordTileTitle: "Unaweza kulipa?",
   affordTileSub: "Kanuni ya 30% kwa Nairobi — pata bei yako ya kweli kwa sekunde 30",
   affordTileCta: "Kagua bei yangu",
+  // saved-search alert banner (home)
+  alertBannerTitle1: "Keja 1 mpya inalingana na alert yako",
+  alertBannerTitleMany: "Keja {n} mpya zinalingana na alerts zako",
+  alertMoreSearches: "alerts zaidi",
+  alertBannerSub: "mpya tangu ulitembelea mwisho — kuona ni bure",
+  alertOpen: "Fungua zilizopatikana",
+  alertDismiss: "Ondoa taarifa",
+  // afford → saved-search alert
+  affordAlertLabel: "Bei yangu salama ≤",
+  affordSaveAlert: "Hifadhi bei hii kama alert — nipingishe keja mpya",
+  affordAlertSaved: "Alert imehifadhiwa — tunafuatilia keja mpya kwenye bei hii",
 };
 
 const DICTS: Record<Lang, Partial<Record<DictKey, string>>> = { en: EN, sw: SW };

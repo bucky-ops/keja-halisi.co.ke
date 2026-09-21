@@ -156,6 +156,8 @@ interface KejaState {
   saveSearch: (label: string) => void;
   removeSearch: (id: number) => void;
   runSearch: (id: number) => void;
+  /** clear the new-match counter without navigating (banner dismiss) */
+  markSearchSeen: (id: number) => void;
   /** sync saved searches against a catalog snapshot; notifies on new matches */
   syncSavedSearches: (rows: SearchMatchRow[]) => void;
   setSession: (s: Partial<KejaState["session"]>) => void;
@@ -310,6 +312,8 @@ export const useKeja = create<KejaState>()(
         get().notify("success", "Search alert created", `${label} — you'll get a notification when new kejas match.`);
       },
       removeSearch: (id) => set({ savedSearches: get().savedSearches.filter((s) => s.id !== id) }),
+      markSearchSeen: (id) =>
+        set({ savedSearches: get().savedSearches.map((s) => (s.id === id ? { ...s, newCount: 0 } : s)) }),
       runSearch: (id) => {
         const s = get().savedSearches.find((x) => x.id === id);
         if (!s) return;

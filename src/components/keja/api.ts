@@ -36,6 +36,9 @@ export interface TenantReview {
   stars: number;
   text: string;
   verifiedStay: boolean;
+  helpful: number;
+  reply: string | null;
+  repliedAt: string | null;
   createdAt: string;
 }
 
@@ -54,6 +57,28 @@ export async function fetchAgentProfile(handle: string): Promise<{
 }> {
   const res = await fetch(`/api/agents/${encodeURIComponent(handle)}`, { cache: "no-store" });
   if (!res.ok) throw new Error("Agent not found");
+  return res.json();
+}
+
+/** +1 helpful vote on a tenant review (demo: increments, no auth) */
+export async function voteReviewHelpful(id: string): Promise<{ id: string; helpful: number }> {
+  const res = await fetch(`/api/reviews/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "helpful" }),
+  });
+  if (!res.ok) throw new Error("Vote failed");
+  return res.json();
+}
+
+/** agent public reply on a tenant review (simulated verified-poster account) */
+export async function replyToReview(id: string, text: string): Promise<{ id: string; reply: string; repliedAt: string }> {
+  const res = await fetch(`/api/reviews/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "reply", text }),
+  });
+  if (!res.ok) throw new Error("Reply failed");
   return res.json();
 }
 

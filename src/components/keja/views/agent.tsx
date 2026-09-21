@@ -13,10 +13,14 @@ import {
   BadgeCheck,
   MapPin,
   Vault,
+  ThumbsUp,
+  Reply,
+  SendHorizontal,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
-import { fetchAgentProfile, type TenantReview, type RatingSummary } from "../api";
+import { fetchAgentProfile, voteReviewHelpful, replyToReview, type TenantReview, type RatingSummary } from "../api";
 import { VerificationBadge } from "../badges";
 import { ListingCard, ListingCardSkeleton } from "../listing-card";
 import { RatingSheet } from "../rating";
@@ -53,6 +57,11 @@ export default function AgentView() {
   const [data, setData] = useState<ProfileData | null>(null);
   const [error, setError] = useState(false);
   const [loadedHandle, setLoadedHandle] = useState<string | null>(null);
+  // live reviews — votes/replies mutate this list optimistically
+  const [liveReviews, setLiveReviews] = useState<TenantReview[]>([]);
+  const [voted, setVoted] = useState<Record<string, true>>({});
+  const [replyFor, setReplyFor] = useState<string | null>(null); // review id with open composer
+  const [replyText, setReplyText] = useState("");
   // derived loading — true until the fetch for the *current* handle resolves
   const loading = loadedHandle !== handle;
 
@@ -62,12 +71,14 @@ export default function AgentView() {
       .then((res) => {
         if (!alive) return;
         setData(res);
+        setLiveReviews(res.reviews);
         setError(false);
         setLoadedHandle(handle);
       })
       .catch(() => {
         if (!alive) return;
         setData(null);
+        setLiveReviews([]);
         setError(true);
         setLoadedHandle(handle);
       });
@@ -75,6 +86,40 @@ export default function AgentView() {
       alive = false;
     };
   }, [handle]);
+
+  /* ---------- review interactions ---------- */
+  const voteHelpful = async (reviewId: string) => {
+    if (voted[reviewId]) return;
+    setVoted((v) => ({ ...v, [reviewId]: true }));
+    setLiveReviews((rs) => rs.map((r) => (r.id === reviewId ? { ...r, helpful: r.helpful + 1 } : r)));
+    try {
+      const res = await voteReviewHelpful(reviewId);
+      setLiveReviews((rs) => rs.map((r) => (r.id === reviewId ? { ...r, helpful: res.helpful } : r)));
+    } catch {
+      // rollback on failure
+      setVoted((v) => {
+        const next = { ...v };
+        delete next[reviewId];
+        return next;
+      });
+      setLiveReviews((rs) => rs.map((r) => (r.id === reviewId ? { ...r, helpful: Math.max(0, r.helpful - 1) } : r)));
+      toast("error", "Vote failed — try again");
+    }
+  };
+
+  const submitReply = async (reviewId: string) => {
+    const text = replyText.trim();
+    if (!text) return;
+    try {
+      const res = await replyToReview(reviewId, text);
+      setLiveReviews((rs) => rs.map((r) => (r.id === reviewId ? { ...r, reply: res.reply, repliedAt: res.repliedAt } : r)));
+      setReplyFor(null);
+      setReplyText("");
+      toast("success", "Reply posted — visible to every renter + audit trail");
+    } catch {
+      toast("error", "Reply failed — try again");
+    }
+  };
 
   /* ---------- loading skeleton ---------- */
   if (loading) {
@@ -141,7 +186,8 @@ export default function AgentView() {
   }
 
   /* ---------- data ---------- */
-  const { agent, listings, verifications, reviews, ratingSummary } = data;
+  const { agent, listings, verifications, ratingSummary } = data;
+  const reviews = liveReviews;
   const initials = agent.tiktokHandle.replace("@", "").slice(0, 2).toUpperCase();
 
   // trust feedback loop — community "legit" upvotes (demo base + local vote)
@@ -384,28 +430,112 @@ export default function AgentView() {
 
             <ul className="mt-1 divide-y divide-kline">
               {reviews.map((r) => (
-                <li key={r.id} className="flex gap-3 py-3 first:pt-3 last:pb-0">
-                  <span
-                    className={cn(
-                      "grid h-8 w-8 shrink-0 place-items-center rounded-xl font-display text-[10.5px] font-extrabold",
-                      r.verifiedStay ? "bg-verified-soft text-ok-strong ring-1 ring-verified/30" : "bg-kbg text-kmuted"
-                    )}
-                    aria-hidden
-                  >
-                    {r.authorHandle.replace("@", "").slice(0, 2).toUpperCase()}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <Stars n={r.stars} />
-                      {r.verifiedStay && (
-                        <span className="inline-flex items-center gap-0.5 rounded-full bg-verified-soft px-1.5 py-0.5 text-[9px] font-extrabold text-ok-strong">
-                          <CircleCheck className="h-2.5 w-2.5" /> VERIFIED STAY
-                        </span>
+                <li key={r.id} className="py-3 first:pt-3 last:pb-0">
+                  <div className="flex gap-3">
+                    <span
+                      className={cn(
+                        "grid h-8 w-8 shrink-0 place-items-center rounded-xl font-display text-[10.5px] font-extrabold",
+                        r.verifiedStay ? "bg-verified-soft text-ok-strong ring-1 ring-verified/30" : "bg-kbg text-kmuted"
                       )}
-                      <span className="ml-auto text-[9.5px] font-semibold text-kmuted">{fmtDate(r.createdAt)}</span>
+                      aria-hidden
+                    >
+                      {r.authorHandle.replace("@", "").slice(0, 2).toUpperCase()}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <Stars n={r.stars} />
+                        {r.verifiedStay && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-verified-soft px-1.5 py-0.5 text-[9px] font-extrabold text-ok-strong">
+                            <CircleCheck className="h-2.5 w-2.5" /> VERIFIED STAY
+                          </span>
+                        )}
+                        <span className="ml-auto text-[9.5px] font-semibold text-kmuted">{fmtDate(r.createdAt)}</span>
+                      </div>
+                      <p className="mt-1 text-[12px] font-semibold leading-relaxed text-body">{r.text}</p>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <p className="text-[10px] font-bold text-trust">{r.authorHandle}</p>
+                        {/* helpful vote — optimistic, one per session */}
+                        <button
+                          type="button"
+                          onClick={() => voteHelpful(r.id)}
+                          disabled={Boolean(voted[r.id])}
+                          aria-label={voted[r.id] ? "You voted this review helpful" : "Vote this review helpful"}
+                          className={cn(
+                            "touch-target ml-auto inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[9.5px] font-extrabold transition-all active:scale-95",
+                            voted[r.id]
+                              ? "border-verified bg-verified-soft text-ok-strong"
+                              : "border-kline bg-surface text-kmuted hover:border-verified/40 hover:text-ok-strong"
+                          )}
+                        >
+                          <ThumbsUp className={cn("h-2.5 w-2.5", voted[r.id] && "fill-verified text-verified")} />
+                          {r.helpful > 0 ? `${r.helpful} helpful` : "Helpful?"}
+                        </button>
+                        {!r.reply && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReplyFor(replyFor === r.id ? null : r.id);
+                              setReplyText("");
+                            }}
+                            className="touch-target inline-flex items-center gap-1 rounded-full border border-kline bg-surface px-2 py-1 text-[9.5px] font-extrabold text-kmuted transition-colors hover:border-trust/40 hover:text-trust"
+                          >
+                            <Reply className="h-2.5 w-2.5" /> Reply as agent
+                          </button>
+                        )}
+                      </div>
+
+                      {/* agent reply bubble — public trust surface */}
+                      {r.reply && (
+                        <div className="mt-2.5 flex items-start gap-2 rounded-2xl rounded-tl-md border border-verified/20 bg-verified-soft/60 px-3 py-2.5" role="note" aria-label="Agent reply">
+                          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-ink font-display text-[8.5px] font-extrabold text-white" aria-hidden>
+                            {initials}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="flex flex-wrap items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-[0.12em] text-ok-strong">
+                              <BadgeCheck className="h-3 w-3 text-verified" /> Agent reply
+                              {r.repliedAt && <span className="font-bold normal-case tracking-normal text-kmuted">• {fmtDate(r.repliedAt)}</span>}
+                            </p>
+                            <p className="mt-0.5 text-[11.5px] font-semibold leading-relaxed text-body">{r.reply}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* inline reply composer (demo: simulates the verified poster account) */}
+                      {replyFor === r.id && !r.reply && (
+                        <div className="mt-2.5 rounded-2xl border border-trust/30 bg-trust-soft p-2.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-trust">Reply as {agent.tiktokHandle} • demo</p>
+                            <button
+                              type="button"
+                              onClick={() => setReplyFor(null)}
+                              className="touch-target grid h-6 w-6 place-items-center rounded-full text-kmuted hover:bg-surface"
+                              aria-label="Cancel reply"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          <textarea
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value.slice(0, 280))}
+                            rows={2}
+                            placeholder="Asante kwa feedback…"
+                            className="mt-1.5 w-full resize-none rounded-xl border border-trust/20 bg-surface px-3 py-2 text-[11.5px] font-semibold text-body placeholder:text-kmuted/70 focus:outline-none focus:ring-2 focus:ring-trust/40"
+                            aria-label="Reply text"
+                          />
+                          <div className="mt-1.5 flex items-center justify-between gap-2">
+                            <span className="text-[9px] font-bold text-kmuted">{replyText.length}/280 • logged to audit trail</span>
+                            <button
+                              type="button"
+                              onClick={() => submitReply(r.id)}
+                              disabled={!replyText.trim()}
+                              className="touch-target inline-flex items-center gap-1.5 rounded-full bg-trust px-3.5 py-1.5 text-[10px] font-extrabold text-white transition-all hover:brightness-110 disabled:opacity-40"
+                            >
+                              <SendHorizontal className="h-3 w-3" /> Post reply
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <p className="mt-1 text-[12px] font-semibold leading-relaxed text-body">{r.text}</p>
-                    <p className="mt-0.5 text-[10px] font-bold text-trust">{r.authorHandle}</p>
                   </div>
                 </li>
               ))}

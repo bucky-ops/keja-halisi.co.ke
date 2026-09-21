@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft, Play, Flag, MessageCircle, Phone, BadgeCheck, Check, MapPin,
-  CloudSun, ExternalLink, Clock, Eye, Zap, ChevronRight, Home as HomeIcon,
-  Star, ZapOff, CalendarCheck, Share2, Printer, Heart,
+  CloudSun, ExternalLink, Clock, Eye, Zap, ChevronRight, ChevronLeft, Home as HomeIcon,
+  Star, ZapOff, CalendarCheck, Share2, Printer, Heart, ZoomIn, X, Images,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
@@ -35,6 +35,8 @@ export default function ListingView() {
   // trust feedback loop — after a lead is logged, invite the renter to rate the agent
   const [leadLogged, setLeadLogged] = useState(false);
   const [rateOpen, setRateOpen] = useState(false);
+  // photo lightbox — index into listing.photos, null = closed
+  const [lightbox, setLightbox] = useState<number | null>(null);
 
   /* payload keyed by listingId — loading/failed derived, no cascading setState */
   const id = params.listingId ?? null;
@@ -72,6 +74,19 @@ export default function ListingView() {
       .catch(() => { if (alive) setFairPrice({ id: l.id, data: null }); });
     return () => { alive = false; };
   }, [id, payload.id, payload.l]);
+
+  /* ---------------- lightbox keyboard nav (Esc / arrows) ---------------- */
+  useEffect(() => {
+    if (lightbox === null || !listing) return;
+    const total = listing.photos.length;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightbox(null);
+      if (e.key === "ArrowRight" && total > 0) setLightbox((i) => ((i ?? 0) + 1) % total);
+      if (e.key === "ArrowLeft" && total > 0) setLightbox((i) => ((i ?? 0) - 1 + total) % total);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightbox, listing]);
 
   /* ---------------- TikTok oEmbed (legal; falls back offline) ---------------- */
   // low-data mode derives an invisible embed — no remote fetch at all
@@ -277,20 +292,70 @@ export default function ListingView() {
               )}
             </div>
 
-            {/* muted note + photo thumbs */}
+            {/* muted note + photo gallery — real photos when the poster completed evidence, placeholders otherwise */}
             <p className="mt-2.5 text-center text-[9.5px] font-semibold text-white/45">
               {lowData ? "Low-data mode • autoplay disabled • tap to play in production" : "Autoplay muted • captions burned in • vertical evidence"}
             </p>
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              {(l.photos.length > 0 ? l.photos : ["p1", "p2", "p3"]).slice(0, 3).map((p, i) => (
-                <div
-                  key={`${p}-${i}`}
-                  className="grid h-16 place-items-center rounded-xl bg-gradient-to-br from-white/15 to-white/5 text-[10px] font-extrabold text-white/70 ring-1 ring-white/15"
-                  aria-label={`Photo ${i + 1}`}
-                >
-                  Photo {i + 1}
+            <div className="mt-3">
+              {l.photos.length > 0 ? (
+                <>
+                  {/* main photo */}
+                  <button
+                    type="button"
+                    onClick={() => setLightbox(0)}
+                    className="group relative block w-full overflow-hidden rounded-xl ring-1 ring-white/15 transition-all hover:ring-2 hover:ring-tiktok-cyan/60"
+                    aria-label="Open photo gallery"
+                  >
+                    <img
+                      src={l.photos[0]}
+                      alt={`${l.title} — ${l.estate} main photo`}
+                      className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-[1.04] sm:h-52"
+                      loading="lazy"
+                    />
+                    <span className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" aria-hidden />
+                    <span className="absolute bottom-2 left-2.5 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-extrabold text-white/90 backdrop-blur-sm">
+                      <Images className="h-3 w-3 text-tiktok-cyan" /> {l.photos.length} PHOTOS • TAP TO ZOOM
+                    </span>
+                    <span className="absolute right-2.5 top-2.5 grid h-7 w-7 place-items-center rounded-full bg-black/45 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                      <ZoomIn className="h-3.5 w-3.5" />
+                    </span>
+                  </button>
+                  {/* thumbs */}
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {l.photos.slice(0, 3).map((p, i) => (
+                      <button
+                        key={`${p}-${i}`}
+                        type="button"
+                        onClick={() => setLightbox(i)}
+                        className="group relative h-16 overflow-hidden rounded-xl ring-1 ring-white/15 transition-all hover:ring-2 hover:ring-tiktok-cyan/60"
+                        aria-label={`Open photo ${i + 1} of ${l.photos.length}`}
+                      >
+                        <img
+                          src={p}
+                          alt={`${l.title} ${l.estate} photo ${i + 1}`}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          loading="lazy"
+                        />
+                        <span className="absolute inset-0 grid place-items-center bg-black/25 opacity-0 transition-opacity group-hover:opacity-100">
+                          <ZoomIn className="h-4 w-4 text-white" />
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  {["p1", "p2", "p3"].map((p, i) => (
+                    <div
+                      key={`${p}-${i}`}
+                      className="grid h-16 place-items-center rounded-xl bg-gradient-to-br from-white/15 to-white/5 text-[10px] font-extrabold text-white/70 ring-1 ring-white/15"
+                      aria-label={`Photo ${i + 1}`}
+                    >
+                      Photo {i + 1}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           </section>
 
@@ -648,6 +713,91 @@ export default function ListingView() {
         estateHint={l.estate}
       />
       <ViewingModal listing={l} open={viewingOpen} onClose={() => setViewingOpen(false)} />
+
+      {/* ================= photo lightbox ================= */}
+      {lightbox !== null && l.photos.length > 0 && (
+        <div
+          className="fixed inset-0 z-[90] flex flex-col bg-black/85 backdrop-blur-md"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Photo ${lightbox + 1} of ${l.photos.length} — ${l.title}`}
+          onClick={() => setLightbox(null)}
+        >
+          {/* top bar */}
+          <div className="flex items-center justify-between gap-3 px-4 py-3.5 text-white" onClick={(e) => e.stopPropagation()}>
+            <p className="flex items-center gap-2 text-[11px] font-extrabold tracking-[0.14em] text-white/70">
+              <Images className="h-3.5 w-3.5 text-tiktok-cyan" />
+              {l.title} • {l.estate}
+            </p>
+            <div className="flex items-center gap-2.5">
+              <span className="rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-extrabold tabular-nums">
+                {lightbox + 1} / {l.photos.length}
+              </span>
+              <button
+                type="button"
+                onClick={() => setLightbox(null)}
+                className="touch-target grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+                aria-label="Close gallery"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* stage */}
+          <div className="relative flex min-h-0 flex-1 items-center justify-center px-4 pb-4" onClick={(e) => e.stopPropagation()}>
+            {l.photos.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setLightbox((lightbox - 1 + l.photos.length) % l.photos.length)}
+                className="touch-target absolute left-3 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-all hover:scale-105 hover:bg-white/25"
+                aria-label="Previous photo"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+            )}
+            <img
+              key={l.photos[lightbox]}
+              src={l.photos[lightbox]}
+              alt={`${l.title} — ${l.estate} photo ${lightbox + 1}`}
+              className="pop max-h-full max-w-full rounded-2xl object-contain shadow-2xl ring-1 ring-white/20"
+            />
+            {l.photos.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setLightbox((lightbox + 1) % l.photos.length)}
+                className="touch-target absolute right-3 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-all hover:scale-105 hover:bg-white/25"
+                aria-label="Next photo"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            )}
+          </div>
+
+          {/* thumb strip */}
+          <div className="flex justify-center gap-2 px-4 pb-5" onClick={(e) => e.stopPropagation()}>
+            {l.photos.map((p, i) => (
+              <button
+                key={`${p}-lb-${i}`}
+                type="button"
+                onClick={() => setLightbox(i)}
+                className={cn(
+                  "h-12 w-20 overflow-hidden rounded-lg transition-all",
+                  i === lightbox ? "ring-2 ring-tiktok-cyan scale-105" : "opacity-50 ring-1 ring-white/20 hover:opacity-90"
+                )}
+                aria-label={`View photo ${i + 1}`}
+                aria-current={i === lightbox}
+              >
+                <img src={p} alt="" className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+
+          <p className="pb-5 text-center text-[10px] font-semibold text-white/40">
+            Esc to close • ← → to navigate • photos supplement the TikTok walkthrough — hakuna kulipa
+          </p>
+        </div>
+      )}
     </div>
   );
 }
