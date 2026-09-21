@@ -1,0 +1,225 @@
+// KEJA HALISI — PRODUCTION data model (Supabase Postgres via Prisma)
+// Usage:
+//   1. Set DATABASE_URL (pooled, port 6543, pgbouncer) + DIRECT_URL (direct, port 5432)
+//      → see DEPLOY.md step 2 for where to copy these in the Supabase dashboard
+//   2. bun run db:push:pg          # create tables
+//   3. bun run db:seed:pg          # load 29 estates, 10 agents, 18 listings
+// Reference SQL w/ full RLS policies: /supabase/migrations/0001_init.sql
+// Notes:
+//  - Enum-like columns are String + validated in API layer (keeps both variants in sync)
+//  - JSON columns are String holding JSON — swap to Json later if you migrate fully
+//  - Private vault refs (idEncrypted, selfieUrl, mandateLetterUrl, exactNumberEnc)
+//    are NEVER exposed through public API routes
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // pooled connection (Supabase → Connect → Connection pooler, port 6543)
+  directUrl = env("DIRECT_URL")   // direct connection (Supabase → Connect → Direct connection, port 5432) — used by db push / migrate
+}
+
+// estates — 6 boroughs x 17 sub-counties
+model Estate {
+  id        String   @id @default(uuid())
+  name      String
+  subCounty String
+  borough   String // Western | Southern | Central | Eastern | South Eastern | Northern
+  lat       Float
+  lng       Float
+  avgPrice  Int
+  createdAt DateTime @default(now())
+
+  @@unique([name, subCounty])
+  @@index([borough])
+  @@index([subCounty])
+}
+
+// agents — 4 roles: Agent | Owner | Developer | Caretaker
+model Agent {
+  id                 String    @id @default(uuid())
+  userId             String?
+  role               String    @default("Agent")
+  phone              String    @unique
+  tiktokHandle       String    @unique
+  verificationStatus String    @default("pending") // pending | verified | rejected | gold | caretaker
+  badge              String?
+  idEncrypted        String? // PRIVATE VAULT verification-docs
+  selfieUrl          String? // PRIVATE VAULT verification-docs
+  mandateLetterUrl   String? // PRIVATE VAULT mandate-letters (Caretaker)
+  mandateEstates     String? // JSON string[] — estates caretaker is permitted
+  mandateExpiry      DateTime?
+  responseTime       Int       @default(30) // minutes — fastest sort
+  rating             Float     @default(5.0)
+  listingsCount      Int       @default(0)
+  reportsCount       Int       @default(0)
+  verifiedSince      DateTime?
+  bio                String?
+  createdAt          DateTime  @default(now())
+
+  listings      Listing[]
+  verifications Verification[]
+  reviews       Review[]
+  developer     Developer?
+  payments      Payment[]
+
+  @@index([verificationStatus])
+}
+
+model Listing {
+  id              String    @id @default(uuid())
+  posterId        String
+  poster          Agent     @relation(fields: [posterId], references: [id])
+  title           String
+  tiktokUrl       String
+  estate          String
+  subCounty       String
+  borough         String
+  road            String? // public location cue — exact number hidden
+  price           Int
+  deposit         Int
+  beds            String // Bedsitter | 1BR | 2BR | 3BR
+  status          String    @default("Available") // Available | Taken | Reserved | Expired
+  publishState    String    @default("pending_review") // draft | pending_review | approved | rejected | expired
+  amenities       String    @default("[]") // JSON string[]
+  lat             Float
+  lng             Float
+  distanceToRoadM Int       @default(0)
+  weatherCache    String?
+  photos          String    @default("[]") // JSON string[] — listing-photos bucket
+  aiFlags         String    @default("[]") // JSON [{type,label,severity}]
+  reportsCount    Int       @default(0)
+  fee             Boolean   @default(false) // viewing-fee signal → red warning
+  freshH          Int       @default(0) // hours since posted
+  responseTime    Int       @default(30) // minutes
+  sizeSqm         Int?
+  floor           String?
+  views           Int       @default(0)
+  exactNumberEnc  String? // PRIVATE VAULT — never public
+  expiresAt       DateTime
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  reports Report[]
+  leads   Lead[]
+
+  @@index([borough, subCounty, estate])
+  @@index([status, publishState])
+}
+
+model Verification {
+  id         String    @id @default(uuid())
+  agentId    String
+  agent      Agent     @relation(fields: [agentId], references: [id])
+  docType    String // otp | id_selfie | referral | mandate_letter | kra_pin | title_deed | kplc_bill
+  storageRef String? // private vault ref
+  status     String    @default("pending")
+  reviewer   String?
+  reviewedAt DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+model Report {
+  id          String   @id @default(uuid())
+  listingId   String
+  listing     Listing  @relation(fields: [listingId], references: [id])
+  reporterRef String?
+  reason      String // Taken | FakePrice | ViewingFee | LocationFake | AlreadyRented | Repost
+  details     String?
+  createdAt   DateTime @default(now())
+
+  @@index([listingId])
+}
+
+model Lead {
+  id          String   @id @default(uuid())
+  listingId   String
+  listing     Listing  @relation(fields: [listingId], references: [id])
+  userRef     String?
+  action      String // call | whatsapp | tiktok
+  phoneMasked String
+  createdAt   DateTime @default(now())
+
+  @@index([listingId])
+}
+
+model Developer {
+  id          String   @id @default(uuid())
+  agentId     String   @unique
+  agent       Agent    @relation(fields: [agentId], references: [id])
+  companyName String
+  proofStatus String   @default("pending") // pending | verified | rejected
+  projects    String   @default("[]") // JSON [{name, location, units}]
+  createdAt   DateTime @default(now())
+
+  units Unit[]
+}
+
+model Unit {
+  id          String    @id @default(uuid())
+  developerId String
+  developer   Developer @relation(fields: [developerId], references: [id])
+  code        String // A1, A2, B1...
+  beds        String
+  price       Int
+  status      String    @default("Available") // Available | Taken | Reserved
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([developerId])
+}
+
+// audit_events — append-only (no update/delete; enforced in API layer)
+model AuditEvent {
+  id        String   @id @default(uuid())
+  actor     String?
+  action    String
+  object    String
+  objectId  String?
+  timestamp DateTime @default(now())
+  metadata  String? // JSON
+
+  @@index([object, objectId])
+}
+
+// tenant reviews — post-viewing trust feedback (public-safe, no PII)
+model Review {
+  id           String    @id @default(uuid())
+  agentId      String
+  agent        Agent     @relation(fields: [agentId], references: [id])
+  authorHandle String    // masked community handle, e.g. "@wanjiku_m"
+  stars        Int       // 1..5
+  text         String
+  verifiedStay Boolean   @default(false) // lead existed for this agent when review was left
+  helpful      Int       @default(0) // "helpful" votes from other renters
+  reply        String?   // agent's public reply (simulated poster account in demo)
+  repliedAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([agentId, createdAt])
+}
+
+// OTP codes (Africa's Talking mock)
+model Otp {
+  id        String   @id @default(uuid())
+  phone     String
+  code      String
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  agentId   String?
+  agent     Agent?   @relation(fields: [agentId], references: [id])
+  kind      String   @default("subscription") // subscription | escrow | payout
+  plan      String?
+  amount    Int
+  phone     String?
+  status    String   @default("pending") // pending | processing | success | failed
+  receipt   String?
+  createdAt DateTime @default(now())
+}

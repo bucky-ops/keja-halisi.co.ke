@@ -6,6 +6,20 @@
 
 ---
 
+## 🚀 Ship to production (GitHub → Supabase → Vercel)
+
+Full stepwise guide with checkpoints + troubleshooting: **[DEPLOY.md](./DEPLOY.md)** — or the 3-command path:
+
+```bash
+bash scripts/deploy/01-push-github.sh  https://github.com/<you>/keja-halisi.co.ke.git
+bash scripts/deploy/02-supabase-env.sh   # tables + seed + keys → .env.production.local
+bash scripts/deploy/03-vercel-deploy.sh  # env vars → Vercel production deploy
+```
+
+Cron jobs (7-day expiry, availability nudge) are pre-wired in `vercel.json`. Supabase RLS + append-only audit SQL: `supabase/migrations/0001_init.sql`. Postgres Prisma schema: `prisma/schema.postgres.prisma`.
+
+---
+
 ## 🛡️ ANTI-SCAM RULES (PRODUCT LAW — non-negotiable)
 
 | Rule | Enforcement |
