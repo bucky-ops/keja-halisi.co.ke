@@ -1,0 +1,702 @@
+   706→                  },
+   707→                  S,
+   708→                ),
+   709→              ),
+   710→            }),
+   711→            a("div", {
+   712→              className: "flex items-center gap-2",
+   713→              children: [
+   714→                a("button", {
+   715→                  onClick: () =>
+   716→                    xe("Phone masked until contact • Lead logged", "info"),
+   717→                  className:
+   718→                    "hidden md:flex items-center gap-2 px-3 py-2 rounded-full bg-[#F5F7FA] border text-[13px]",
+   719→                  children: [
+   720→                    o(re, { className: "w-4 h-4" }),
+   721→                    " Masked Call Demo",
+   722→                  ],
+   723→                }),
+   724→                o("button", {
+   725→                  onClick: () => R(!0),
+   726→                  className:
+   727→                    "px-4 py-2 rounded-full bg-[#12B44A] text-white text-[13px] font-semibold hover:opacity-90",
+   728→                  children: "M-Pesa STK",
+   729→                }),
+   730→              ],
+   731→            }),
+   732→          ],
+   733→        }),
+   734→      }),
+   735→      o("div", {
+   736→        className: "fixed bottom-4 right-4 z-50 flex flex-col gap-2",
+   737→        children: u.map((c) =>
+   738→          a(
+   739→            "div",
+   740→            {
+   741→              className: `px-4 py-3 rounded-2xl shadow-xl text-[13px] font-medium flex items-center gap-2 max-w-[320px] ${c.type === "error" ? "bg-[#E02424] text-white" : c.type === "warn" ? "bg-[#C27803] text-white" : c.type === "success" ? "bg-[#0E9F6E] text-white" : "bg-[#111928] text-white"}`,
+   742→              children: [
+   743→                c.type === "success"
+   744→                  ? o(ne, { className: "w-4 h-4" })
+   745→                  : c.type === "warn"
+   746→                    ? o(CA, { className: "w-4 h-4" })
+   747→                    : o(It, { className: "w-4 h-4" }),
+   748→                o("span", { children: c.text }),
+   749→              ],
+   750→            },
+   751→            c.id,
+   752→          ),
+   753→        ),
+   754→      }),
+   755→      a("main", {
+   756→        className: "max-w-[1280px] mx-auto px-4 md:px-6 py-6 space-y-12",
+   757→        children: [
+   758→          a("div", {
+   759→            className: "grid md:grid-cols-[1.2fr_0.8fr] gap-6",
+   760→            children: [
+   761→              a("div", {
+   762→                className:
+   763→                  "bg-white rounded-[28px] p-6 md:p-8 border shadow-sm",
+   764→                children: [
+   765→                  o("div", {
+   766→                    className:
+   767→                      "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1976D2]/10 text-[#1976D2] text-[11px] font-bold tracking-wide",
+   768→                    children:
+   769→                      "TRUST BLUE #1976D2 • SAFARICOM GREEN #00B140 • VERIFIED #0E9F6E",
+   770→                  }),
+   771→                  a("h1", {
+   772→                    className:
+   773→                      "jakarta text-[32px] md:text-[44px] font-bold leading-[0.95] mt-4 tracking-tight",
+   774→                    children: [
+   775→                      "Nairobi rentals with ",
+   776→                      o("span", {
+   777→                        className: "text-[#1976D2]",
+   778→                        children: "trust checks,",
+   779→                      }),
+   780→                      " no viewing fee, evidence video.",
+   781→                    ],
+   782→                  }),
+   783→                  o("p", {
+   784→                    className:
+   785→                      "mt-3 text-[15px] leading-6 text-black/60 max-w-[56ch]",
+   786→                    children:
+   787→                      "Keja Halisi v3 merges new updates: 4 roles including Caretaker, trust filters, fee enforcement, privacy rule (exact number hidden), evidence checklist, borough model 6×17, Market Pulse + Trustbar, freshH & response time meta.",
+   788→                  }),
+   789→                  a("div", {
+   790→                    className: "mt-5 flex flex-wrap gap-2",
+   791→                    children: [
+   792→                      a("span", {
+   793→                        className:
+   794→                          "px-3 py-1.5 rounded-full bg-[#0E9F6E] text-white text-[12px] font-semibold flex items-center gap-1.5",
+   795→                        children: [
+   796→                          o(De, { className: "w-4 h-4" }),
+   797→                          "Trust checks: phone verified • evidence video • no fee rule • re-check",
+   798→                        ],
+   799→                      }),
+   800→                      o("span", {
+   801→                        className:
+   802→                          "px-3 py-1.5 rounded-full bg-[#111928] text-white text-[12px]",
+   803→                        children: "Exact house number intentionally not shown",
+   804→                      }),
+   805→                      o("span", {
+   806→                        className:
+   807→                          "px-3 py-1.5 rounded-full border text-[12px]",
+   808→                        children:
+   809→                          "Public UI shows estate + road, not exact house number",
+   810→                      }),
+   811→                    ],
+   812→                  }),
+   813→                  a("div", {
+   814→                    className: "mt-6 flex gap-2",
+   815→                    children: [
+   816→                      o("button", {
+   817→                        onClick: () =>
+   818→                          document
+   819→                            .getElementById("pages")
+   820→                            ?.scrollIntoView({ behavior: "smooth" }),
+   821→                        className:
+   822→                          "px-5 py-3 rounded-full bg-[#161616] text-white text-[14px] font-semibold",
+   823→                        children: "Explore 7 Pages",
+   824→                      }),
+   825→                      o("button", {
+   826→                        onClick: () =>
+   827→                          document
+   828→                            .getElementById("designsystem")
+   829→                            ?.scrollIntoView({ behavior: "smooth" }),
+   830→                        className:
+   831→                          "px-5 py-3 rounded-full bg-white border text-[14px] font-semibold",
+   832→                        children: "Design System",
+   833→                      }),
+   834→                    ],
+   835→                  }),
+   836→                ],
+   837→              }),
+   838→              a("div", {
+   839→                className: "space-y-4",
+   840→                children: [
+   841→                  a("div", {
+   842→                    className: "bg-white rounded-[24px] border p-5",
+   843→                    children: [
+   844→                      a("div", {
+   845→                        className: "flex items-center justify-between",
+   846→                        children: [
+   847→                          o("h3", {
+   848→                            className: "jakarta font-bold text-[14px]",
+   849→                            children: "Market Pulse • Nairobi Live",
+   850→                          }),
+   851→                          o("span", {
+   852→                            className:
+   853→                              "text-[10px] px-2 py-1 rounded-full bg-[#0E9F6E]/10 text-[#0E9F6E] font-bold",
+   854→                            children: "LIVE TODAY",
+   855→                          }),
+   856→                        ],
+   857→                      }),
+   858→                      a("div", {
+   859→                        className: "grid grid-cols-2 gap-3 mt-4",
+   860→                        children: [
+   861→                          a("div", {
+   862→                            className: "rounded-2xl bg-[#F5F7FA] p-3",
+   863→                            children: [
+   864→                              o("div", {
+   865→                                className: "text-[11px] text-black/50",
+   866→                                children: "Verified Today",
+   867→                              }),
+   868→                              o("div", {
+   869→                                className: "jakarta text-[20px] font-bold",
+   870→                                children: "127",
+   871→                              }),
+   872→                              o("div", {
+   873→                                className: "text-[11px] text-[#0E9F6E]",
+   874→                                children: "+18% vs yest",
+   875→                              }),
+   876→                            ],
+   877→                          }),
+   878→                          a("div", {
+   879→                            className: "rounded-2xl bg-[#F5F7FA] p-3",
+   880→                            children: [
+   881→                              o("div", {
+   882→                                className: "text-[11px] text-black/50",
+   883→                                children: "Scams Blocked",
+   884→                              }),
+   885→                              o("div", {
+   886→                                className: "jakarta text-[20px] font-bold",
+   887→                                children: "34",
+   888→                              }),
+   889→                              o("div", {
+   890→                                className: "text-[11px] text-[#E02424]",
+   891→                                children: "Fee signal • repost",
+   892→                              }),
+   893→                            ],
+   894→                          }),
+   895→                          a("div", {
+   896→                            className: "rounded-2xl bg-[#F5F7FA] p-3",
+   897→                            children: [
+   898→                              o("div", {
+   899→                                className: "text-[11px] text-black/50",
+   900→                                children: "Avg Response",
+   901→                              }),
+   902→                              o("div", {
+   903→                                className: "jakarta text-[20px] font-bold",
+   904→                                children: "9 min",
+   905→                              }),
+   906→                              o("div", {
+   907→                                className: "text-[11px]",
+   908→                                children: "Fastest 4 min",
+   909→                              }),
+   910→                            ],
+   911→                          }),
+   912→                          a("div", {
+   913→                            className: "rounded-2xl bg-[#F5F7FA] p-3",
+   914→                            children: [
+   915→                              o("div", {
+   916→                                className: "text-[11px] text-black/50",
+   917→                                children: "Fresh Listings",
+   918→                              }),
+   919→                              o("div", {
+   920→                                className: "jakarta text-[20px] font-bold",
+   921→                                children: "89 ≤24h",
+   922→                              }),
+   923→                              o("div", {
+   924→                                className: "text-[11px] text-[#1976D2]",
+   925→                                children: "Kile • Syoki • Zimm",
+   926→                              }),
+   927→                            ],
+   928→                          }),
+   929→                        ],
+   930→                      }),
+   931→                    ],
+   932→                  }),
+   933→                  a("div", {
+   934→                    className: "bg-[#161616] rounded-[20px] p-4 text-white",
+   935→                    children: [
+   936→                      o("div", {
+   937→                        className: "text-[11px] tracking-[0.14em] opacity-60",
+   938→                        children: "TRUSTBAR PILLS",
+   939→                      }),
+   940→                      a("div", {
+   941→                        className: "mt-2 flex flex-wrap gap-2",
+   942→                        children: [
+   943→                          a("span", {
+   944→                            className:
+   945→                              "px-3 py-1.5 rounded-full bg-[#0E9F6E] text-[12px] font-semibold flex items-center gap-1",
+   946→                            children: [
+   947→                              o(MA, { className: "w-4 h-4" }),
+   948→                              "Verified Green",
+   949→                            ],
+   950→                          }),
+   951→                          o("span", {
+   952→                            className:
+   953→                              "px-3 py-1.5 rounded-full bg-[#1976D2] text-[12px] font-semibold",
+   954→                            children: "No Viewing Fee Blue",
+   955→                          }),
+   956→                          a("span", {
+   957→                            className:
+   958→                              "px-3 py-1.5 rounded-full bg-[#E02424] text-[12px] font-semibold flex items-center gap-1",
+   959→                            children: [
+   960→                              o(Be, { className: "w-4 h-4" }),
+   961→                              "Reported Red",
+   962→                            ],
+   963→                          }),
+   964→                          o("span", {
+   965→                            className:
+   966→                              "px-3 py-1.5 rounded-full bg-white text-black text-[12px] font-semibold",
+   967→                            children: "Fresh ≤24h",
+   968→                          }),
+   969→                        ],
+   970→                      }),
+   971→                      o("div", {
+   972→                        className: "mt-3 text-[12px] leading-5 opacity-70",
+   973→                        children:
+   974→                          "Every card shows freshH, response mins, fee boolean, verified. Filters hide fee listings when No Fee active.",
+   975→                      }),
+   976→                    ],
+   977→                  }),
+   978→                ],
+   979→              }),
+   980→            ],
+   981→          }),
+   982→          a("section", {
+   983→            id: "moodboards",
+   984→            className: "scroll-mt-20",
+   985→            children: [
+   986→              o("h2", {
+   987→                className: "jakarta text-[24px] font-bold",
+   988→                children: "Mood Boards 3 + Winner A+B",
+   989→              }),
+   990→              o("div", {
+   991→                className: "mt-4 grid md:grid-cols-4 gap-4",
+   992→                children: [
+   993→                  {
+   994→                    name: "A • Trust Editorial",
+   995→                    desc: "Serif headings, paper texture, verified green checks, estate breadcrumbs",
+   996→                    color: "#1976D2",
+   997→                    vibe: "Editorial trust",
+   998→                  },
+   999→                  {
+  1000→                    name: "B • TikTok Native",
+  1001→                    desc: "Black #161616, pink #FF0050 cyan #00F2EA, vertical video, swipe",
+  1002→                    color: "#161616",
+  1003→                    vibe: "Native motion",
+  1004→                  },
+  1005→                  {
+  1006→                    name: "C • M-Pesa Utility",
+  1007→                    desc: "Till green #12B44A, STK push, wallet, escrow, big tap targets",
+  1008→                    color: "#12B44A",
+  1009→                    vibe: "Payment first",
+  1010→                  },
+  1011→                  {
+  1012→                    name: "Winner A+B Fusion",
+  1013→                    desc: "Trust Blue headers + TikTok video cards + M-Pesa wallet. Verified green pill + No-fee blue pill + masked phone",
+  1014→                    color: "#0E9F6E",
+  1015→                    vibe: "Keja Halisi v3",
+  1016→                  },
+  1017→                ].map((c) =>
+  1018→                  a(
+  1019→                    "div",
+  1020→                    {
+  1021→                      className: "bg-white rounded-[20px] border p-4",
+  1022→                      children: [
+  1023→                        o("div", {
+  1024→                          className:
+  1025→                            "h-28 rounded-[16px] flex items-center justify-center text-white font-bold",
+  1026→                          style: { background: c.color },
+  1027→                          children: c.vibe,
+  1028→                        }),
+  1029→                        o("div", {
+  1030→                          className: "mt-3 jakarta font-bold text-[14px]",
+  1031→                          children: c.name,
+  1032→                        }),
+  1033→                        o("div", {
+  1034→                          className: "text-[12px] text-black/60 mt-1 leading-5",
+  1035→                          children: c.desc,
+  1036→                        }),
+  1037→                      ],
+  1038→                    },
+  1039→                    c.name,
+  1040→                  ),
+  1041→                ),
+  1042→              }),
+  1043→            ],
+  1044→          }),
+  1045→          a("section", {
+  1046→            id: "designsystem",
+  1047→            className: "scroll-mt-20 space-y-6",
+  1048→            children: [
+  1049→              o("h2", {
+  1050→                className: "jakarta text-[24px] font-bold",
+  1051→                children: "Design System • All States + New Components",
+  1052→              }),
+  1053→              a("div", {
+  1054→                className: "grid md:grid-cols-3 gap-4",
+  1055→                children: [
+  1056→                  a("div", {
+  1057→                    className: "bg-white rounded-[20px] border p-5",
+  1058→                    children: [
+  1059→                      o("div", {
+  1060→                        className: "text-[11px] tracking-widest opacity-60",
+  1061→                        children: "BRAND TOKENS",
+  1062→                      }),
+  1063→                      o("div", {
+  1064→                        className: "mt-3 grid grid-cols-2 gap-2 text-[11px]",
+  1065→                        children: [
+  1066→                          ["Trust Blue", "#1976D2"],
+  1067→                          ["Safaricom Green", "#00B140"],
+  1068→                          ["M-Pesa Green", "#12B44A"],
+  1069→                          ["TikTok Black", "#161616"],
+  1070→                          ["Pink", "#FF0050"],
+  1071→                          ["Cyan", "#00F2EA"],
+  1072→                          ["Verified", "#0E9F6E"],
+  1073→                          ["Pending", "#C27803"],
+  1074→                          ["Scam Red", "#E02424"],
+  1075→                          ["BG", "#F5F7FA"],
+  1076→                        ].map(([c, S]) =>
+  1077→                          a(
+  1078→                            "div",
+  1079→                            {
+  1080→                              className: "flex items-center gap-2",
+  1081→                              children: [
+  1082→                                o("span", {
+  1083→                                  className: "h-5 w-5 rounded-full border",
+  1084→                                  style: { background: S },
+  1085→                                }),
+  1086→                                a("span", { children: [c, " ", S] }),
+  1087→                              ],
+  1088→                            },
+  1089→                            c,
+  1090→                          ),
+  1091→                        ),
+  1092→                      }),
+  1093→                    ],
+  1094→                  }),
+  1095→                  a("div", {
+  1096→                    className: "bg-white rounded-[20px] border p-5",
+  1097→                    children: [
+  1098→                      o("div", {
+  1099→                        className: "text-[11px] tracking-widest opacity-60",
+  1100→                        children: "ROLE SELECTOR (4 ROLES) NEW",
+  1101→                      }),
+  1102→                      o("div", {
+  1103→                        className: "mt-3 grid grid-cols-2 gap-2",
+  1104→                        children: [
+  1105→                          "Agent",
+  1106→                          "Owner",
+  1107→                          "Developer",
+  1108→                          "Caretaker",
+  1109→                        ].map((c) =>
+  1110→                          a(
+  1111→                            "button",
+  1112→                            {
+  1113→                              className: `p-3 rounded-2xl border text-left ${O === c ? "bg-[#111928] text-white border-[#111928]" : "bg-[#F5F7FA] hover:bg-white"}`,
+  1114→                              children: [
+  1115→                                a("div", {
+  1116→                                  className:
+  1117→                                    "font-semibold text-[13px] flex items-center gap-1.5",
+  1118→                                  children: [
+  1119→                                    c === "Caretaker"
+  1120→                                      ? o(Qt, { className: "w-4 h-4" })
+  1121→                                      : c === "Developer"
+  1122→                                        ? o(Ft, { className: "w-4 h-4" })
+  1123→                                        : c === "Owner"
+  1124→                                          ? o(te, { className: "w-4 h-4" })
+  1125→                                          : o(Lt, { className: "w-4 h-4" }),
+  1126→                                    c,
+  1127→                                  ],
+  1128→                                }),
+  1129→                                o("div", {
+  1130→                                  className: "text-[11px] opacity-70 mt-1",
+  1131→                                  children:
+  1132→                                    c === "Caretaker"
+  1133→                                      ? "Estate mandate required • specific estates"
+  1134→                                      : "Verified poster",
+  1135→                                }),
+  1136→                              ],
+  1137→                            },
+  1138→                            c,
+  1139→                          ),
+  1140→                        ),
+  1141→                      }),
+  1142→                      o("div", {
+  1143→                        className:
+  1144→                          "mt-3 text-[11px] bg-[#FEF3C7] border border-[#F59E0B]/30 p-2 rounded-xl",
+  1145→                        children:
+  1146→                          "Caretaker needs owner mandate letter • permissions for specific estates",
+  1147→                      }),
+  1148→                    ],
+  1149→                  }),
+  1150→                  a("div", {
+  1151→                    className: "bg-white rounded-[20px] border p-5",
+  1152→                    children: [
+  1153→                      o("div", {
+  1154→                        className: "text-[11px] tracking-widest opacity-60",
+  1155→                        children: "TRUST FILTER PILLS • ACTUALLY FILTER",
+  1156→                      }),
+  1157→                      a("div", {
+  1158→                        className: "mt-3 flex flex-wrap gap-2",
+  1159→                        children: [
+  1160→                          [
+  1161→                            { k: "fresh", label: "Fresh ≤24h" },
+  1162→                            { k: "available", label: "Available Only" },
+  1163→                            { k: "noFee", label: "No Viewing Fee" },
+  1164→                            { k: "verified", label: "Verified Only" },
+  1165→                          ].map((c) =>
+  1166→                            o(
+  1167→                              "button",
+  1168→                              {
+  1169→                                onClick: () =>
+  1170→                                  h((S) => ({ ...S, [c.k]: !S[c.k] })),
+  1171→                                className: `px-3 py-2 rounded-full text-[12px] font-semibold border transition ${m[c.k] ? "bg-[#111928] text-white border-[#111928]" : "bg-white hover:bg-[#F5F7FA]"}`,
+  1172→                                children: c.label,
+  1173→                              },
+  1174→                              c.k,
+  1175→                            ),
+  1176→                          ),
+  1177→                          o("button", {
+  1178→                            onClick: () =>
+  1179→                              h((c) => ({
+  1180→                                ...c,
+  1181→                                sortResponse: !c.sortResponse,
+  1182→                              })),
+  1183→                            className: `px-3 py-2 rounded-full text-[12px] font-semibold border ${m.sortResponse ? "bg-[#1976D2] text-white border-[#1976D2]" : "bg-white"}`,
+  1184→                            children: "Response Time ↓ fastest",
+  1185→                          }),
+  1186→                        ],
+  1187→                      }),
+  1188→                      a("div", {
+  1189→                        className: "mt-3 text-[11px] text-black/60",
+  1190→                        children: [
+  1191→                          "Showing ",
+  1192→                          Cn.length,
+  1193→                          " / ",
+  1194→                          dl.length,
+  1195→                          " • Fresh = freshH≤24h, No Fee hides fee=true",
+  1196→                        ],
+  1197→                      }),
+  1198→                    ],
+  1199→                  }),
+  1200→                ],
+  1201→              }),
+  1202→              a("div", {
+  1203→                className: "grid md:grid-cols-3 gap-4",
+  1204→                children: [
+  1205→                  a("div", {
+  1206→                    className: "bg-white rounded-[20px] border p-5",
+  1207→                    children: [
+  1208→                      o("div", {
+  1209→                        className: "text-[11px] tracking-widest opacity-60",
+  1210→                        children: "EVIDENCE CHECKLIST COMPONENT NEW",
+  1211→                      }),
+  1212→                      a("div", {
+  1213→                        className:
+  1214→                          "mt-3 rounded-2xl bg-[#ECFDF5] border border-[#0E9F6E]/20 p-3",
+  1215→                        children: [
+  1216→                          a("div", {
+  1217→                            className:
+  1218→                              "text-[12px] font-bold text-[#0E9F6E] flex items-center gap-1.5",
+  1219→                            children: [
+  1220→                              o(ne, { className: "w-4 h-4" }),
+  1221→                              "Evidence checklist: Outside • gate • inside • water running • window view",
+  1222→                            ],
+  1223→                          }),
+  1224→                          o("div", {
+  1225→                            className:
+  1226→                              "mt-2 grid grid-cols-2 gap-2 text-[11px]",
+  1227→                            children: [
+  1228→                              "Outside",
+  1229→                              "Gate",
+  1230→                              "Inside",
+  1231→                              "Water running",
+  1232→                              "Window view",
+  1233→                            ].map((c) =>
+  1234→                              a(
+  1235→                                "div",
+  1236→                                {
+  1237→                                  className: "flex items-center gap-1.5",
+  1238→                                  children: [
+  1239→                                    o("span", {
+  1240→                                      className:
+  1241→                                        "h-4 w-4 rounded-full bg-[#0E9F6E] text-white grid place-items-center text-[10px]",
+  1242→                                      children: "✓",
+  1243→                                    }),
+  1244→                                    c,
+  1245→                                  ],
+  1246→                                },
+  1247→                                c,
+  1248→                              ),
+  1249→                            ),
+  1250→                          }),
+  1251→                          o("div", {
+  1252→                            className: "mt-2 text-[11px]",
+  1253→                            children:
+  1254→                              "Required before publish • AI checks presence",
+  1255→                          }),
+  1256→                        ],
+  1257→                      }),
+  1258→                      a("div", {
+  1259→                        className:
+  1260→                          "mt-3 rounded-2xl bg-white border p-3 flex gap-2",
+  1261→                        children: [
+  1262→                          o(Fn, { className: "w-4 h-4 text-[#1976D2]" }),
+  1263→                          o(Ct, { className: "w-4 h-4 text-[#1976D2]" }),
+  1264→                          o(Et, { className: "w-4 h-4 text-[#1976D2]" }),
+  1265→                          o(te, { className: "w-4 h-4 text-[#1976D2]" }),
+  1266→                          o("span", {
+  1267→                            className: "text-[11px]",
+  1268→                            children: "TikTok vertical evidence • 5 clips",
+  1269→                          }),
+  1270→                        ],
+  1271→                      }),
+  1272→                    ],
+  1273→                  }),
+  1274→                  a("div", {
+  1275→                    className: "bg-white rounded-[20px] border p-5",
+  1276→                    children: [
+  1277→                      o("div", {
+  1278→                        className: "text-[11px] tracking-widest opacity-60",
+  1279→                        children: "PRIVACY NOTICE + MASKED PHONE NEW",
+  1280→                      }),
+  1281→                      a("div", {
+  1282→                        className: "mt-3 space-y-2",
+  1283→                        children: [
+  1284→                          a("div", {
+  1285→                            className:
+  1286→                              "rounded-xl bg-[#111928] text-white p-3 text-[12px] flex items-start gap-2",
+  1287→                            children: [
+  1288→                              o(Ge, { className: "w-4 h-4 mt-0.5" }),
+  1289→                              a("span", {
+  1290→                                children: [
+  1291→                                  o("b", {
+  1292→                                    children:
+  1293→                                      "Exact house number is intentionally not shown",
+  1294→                                  }),
+  1295→                                  " in public prototype. Public UI shows estate + road, not exact house number. Private vault stores exact door.",
+  1296→                                ],
+  1297→                              }),
+  1298→                            ],
+  1299→                          }),
+  1300→                          a("div", {
+  1301→                            className:
+  1302→                              "rounded-xl bg-[#F5F7FA] border p-3 text-[12px] flex items-center gap-2",
+  1303→                            children: [
+  1304→                              o(re, { className: "w-4 h-4" }),
+  1305→                              "Phone masked until contact • Call logs lead with masked toast • Report shows 5 reasons",
+  1306→                            ],
+  1307→                          }),
+  1308→                        ],
+  1309→                      }),
+  1310→                      a("div", {
+  1311→                        className: "mt-3",
+  1312→                        children: [
+  1313→                          o("div", {
+  1314→                            className: "text-[11px] opacity-60",
+  1315→                            children:
+  1316→                              "OTP 6 BOXES • ID SELFIE • CARETAKER MANDATE",
+  1317→                          }),
+  1318→                          o("div", {
+  1319→                            className: "mt-2 flex gap-1.5",
+  1320→                            children: Wn.map((c, S) =>
+  1321→                              o(
+  1322→                                "input",
+  1323→                                {
+  1324→                                  value: c,
+  1325→                                  onChange: (eA) => {
+  1326→                                    let be = [...Wn];
+  1327→                                    if (
+  1328→                                      ((be[S] = eA.target.value.slice(-1)),
+  1329→                                      Oc(be),
+  1330→                                      eA.target.value && S < 5)
+  1331→                                    )
+  1332→                                      document
+  1333→                                        .getElementById(`otp-${S + 1}`)
+  1334→                                        ?.focus();
+  1335→                                  },
+  1336→                                  id: `otp-${S}`,
+  1337→                                  className:
+  1338→                                    "h-9 w-9 rounded-xl border text-center font-bold",
+  1339→                                  placeholder: "•",
+  1340→                                },
+  1341→                                S,
+  1342→                              ),
+  1343→                            ),
+  1344→                          }),
+  1345→                          a("div", {
+  1346→                            className: "mt-2 grid grid-cols-2 gap-2",
+  1347→                            children: [
+  1348→                              a("div", {
+  1349→                                className:
+  1350→                                  "rounded-xl border border-dashed p-3 text-[11px] flex items-center gap-2",
+  1351→                                children: [
+  1352→                                  o(zn, { className: "w-4 h-4" }),
+  1353→                                  "ID selfie upload • Liveness",
+  1354→                                ],
+  1355→                              }),
+  1356→                              a("div", {
+  1357→                                className:
+  1358→                                  "rounded-xl border border-dashed p-3 text-[11px] flex items-center gap-2",
+  1359→                                children: [
+  1360→                                  o(Sn, { className: "w-4 h-4" }),
+  1361→                                  "Caretaker mandate upload • Owner letter",
+  1362→                                ],
+  1363→                              }),
+  1364→                            ],
+  1365→                          }),
+  1366→                        ],
+  1367→                      }),
+  1368→                    ],
+  1369→                  }),
+  1370→                  a("div", {
+  1371→                    className: "bg-white rounded-[20px] border p-5",
+  1372→                    children: [
+  1373→                      o("div", {
+  1374→                        className: "text-[11px] tracking-widest opacity-60",
+  1375→                        children: "PUBLISHING RULES + FEE ENFORCEMENT NEW",
+  1376→                      }),
+  1377→                      a("div", {
+  1378→                        className:
+  1379→                          "mt-3 rounded-2xl bg-white border p-3 space-y-2 text-[12px]",
+  1380→                        children: [
+  1381→                          a("div", {
+  1382→                            className: "flex gap-2",
+  1383→                            children: [
+  1384→                              o("span", {
+  1385→                                className: "text-[#0E9F6E]",
+  1386→                                children: "•",
+  1387→                              }),
+  1388→                              a("span", {
+  1389→                                children: [
+  1390→                                  o("b", {
+  1391→                                    children: "No viewing fee before viewing",
+  1392→                                  }),
+  1393→                                  " • Pay only via M-Pesa escrow after viewing",
+  1394→                                ],
+  1395→                              }),
+  1396→                            ],
+  1397→                          }),
+  1398→                          a("div", {
+  1399→                            className: "flex gap-2",
+  1400→                            children: [
+  1401→                              o("span", {
+  1402→                                className: "text-[#0E9F6E]",
+  1403→                                children: "•",
+  1404→                              }),
+  1405→                              o("span", {
+
+[showing lines 706-1405 of 4066; use offset=1406 with limit to continue reading]

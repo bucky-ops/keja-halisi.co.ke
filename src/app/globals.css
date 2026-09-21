@@ -1,0 +1,271 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* KEJA HALISI brand tokens */
+  --color-trust: #1976d2;
+  --color-trust-soft: #eaf3ff;
+  --color-safaricom: #00b140;
+  --color-mpesa: #12b44a;
+  --color-tiktok: #161616;
+  --color-tiktok-pink: #ff0050;
+  --color-tiktok-cyan: #00f2ea;
+  --color-verified: #0e9f6e;
+  --color-verified-soft: #e9f8ef;
+  --color-pending: #c27803;
+  --color-pending-soft: #fff7ea;
+  --color-scam: #e02424;
+  --color-scam-soft: #fff3f3;
+  --color-ink: #111928;
+  --color-kmuted: #667085;
+  --color-kbg: #f5f7fa;
+  --color-kline: #e7ebf0;
+  --color-gold: #facc15;
+  --color-wa: #25d366;
+}
+
+:root {
+  --radius: 1rem;
+  --background: #f5f7fa;
+  --foreground: #111928;
+  --card: #ffffff;
+  --card-foreground: #111928;
+  --popover: #ffffff;
+  --popover-foreground: #111928;
+  --primary: #1976d2;
+  --primary-foreground: #ffffff;
+  --secondary: #eef2f6;
+  --secondary-foreground: #111928;
+  --muted: #eef2f6;
+  --muted-foreground: #667085;
+  --accent: #eaf3ff;
+  --accent-foreground: #145ca8;
+  --destructive: #e02424;
+  --border: #e7ebf0;
+  --input: #e7ebf0;
+  --ring: #1976d2;
+  --chart-1: #1976d2;
+  --chart-2: #0e9f6e;
+  --chart-3: #c27803;
+  --chart-4: #e02424;
+  --chart-5: #12b44a;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #111928;
+  --sidebar-primary: #1976d2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eaf3ff;
+  --sidebar-accent-foreground: #145ca8;
+  --sidebar-border: #e7ebf0;
+  --sidebar-ring: #1976d2;
+}
+
+.dark {
+  --background: #0d1117;
+  --foreground: #f0f4f8;
+  --card: #161b22;
+  --card-foreground: #f0f4f8;
+  --popover: #161b22;
+  --popover-foreground: #f0f4f8;
+  --primary: #1976d2;
+  --primary-foreground: #ffffff;
+  --secondary: #1f2630;
+  --secondary-foreground: #f0f4f8;
+  --muted: #1f2630;
+  --muted-foreground: #8b98a9;
+  --accent: #142438;
+  --accent-foreground: #7cb7ec;
+  --destructive: #e02424;
+  --border: #232b36;
+  --input: #232b36;
+  --ring: #1976d2;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
+  }
+  h1, h2, h3, .font-display {
+    font-family: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
+/* ---- Keja custom scrollbar ---- */
+.keja-scroll::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.keja-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.keja-scroll::-webkit-scrollbar-thumb {
+  background: #d3dae3;
+  border-radius: 999px;
+}
+.keja-scroll::-webkit-scrollbar-thumb:hover {
+  background: #b9c4d0;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ---- Wireframe keyframes (Full Product v1 spec) ---- */
+@keyframes shimmer {
+  0% { background-position: 400% 0; }
+  100% { background-position: -400% 0; }
+}
+.shimmer {
+  background: linear-gradient(100deg, #e9edf2 35%, #f6f8fa 50%, #e9edf2 65%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.6); opacity: 0.55; }
+}
+.pulse-dot {
+  animation: pulseDot 1.6s ease-in-out infinite;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.8); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.pop {
+  animation: pop 0.35s ease-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+.shake {
+  animation: shake 0.35s ease-in-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.slide-up {
+  animation: slideUp 0.28s ease-out;
+}
+
+@keyframes toastIn {
+  from { transform: translateY(16px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.toast-in {
+  animation: toastIn 0.25s ease-out;
+}
+
+@keyframes buzz {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  25% { transform: translateX(-2px) rotate(-1deg); }
+  75% { transform: translateX(2px) rotate(1deg); }
+}
+.buzz {
+  animation: buzz 0.3s ease-in-out infinite;
+}
+
+@keyframes bouncePin {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.bounce-pin {
+  animation: bouncePin 1.6s ease-in-out infinite;
+}
+
+@keyframes confettiFall {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(90vh) rotate(720deg); opacity: 0; }
+}
+.confetti-piece {
+  animation: confettiFall 1.6s ease-in forwards;
+}
+
+/* ---- Hero radial glows (TikTok vibrant mood) ---- */
+.keja-hero-dark {
+  background:
+    radial-gradient(600px at 20% -10%, rgba(0, 242, 234, 0.14), transparent),
+    radial-gradient(500px at 80% 0%, rgba(255, 0, 80, 0.12), transparent),
+    radial-gradient(800px at 50% 120%, rgba(25, 118, 210, 0.2), transparent),
+    #161616;
+}
+
+/* building illustration for listing covers */
+.keja-building {
+  background:
+    radial-gradient(120px 90px at 78% 18%, rgba(255, 255, 255, 0.22), transparent),
+    linear-gradient(135deg, #16365d 0%, #0e9f6e 100%);
+}
+
+/* map canvas */
+.keja-map {
+  background:
+    radial-gradient(420px at 18% 22%, rgba(25, 118, 210, 0.1), transparent),
+    radial-gradient(420px at 82% 78%, rgba(14, 159, 110, 0.1), transparent),
+    repeating-linear-gradient(0deg, transparent 0 33px, #dfe7ee 33px 34px),
+    repeating-linear-gradient(90deg, transparent 0 33px, #dfe7ee 33px 34px),
+    #eef3f6;
+}
+
+/* 44px min touch target */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}

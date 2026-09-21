@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- House body: Trust Blue -->
+  <path d="M8 30 L32 8 L56 30 V52 a4 4 0 0 1 -4 4 H12 a4 4 0 0 1 -4 -4 Z" fill="#1976D2"/>
+  <!-- Nairobi skyline roof (KICC tower silhouette) -->
+  <path d="M12 30 h8 v-6 h3 v-4 h2.5 v4 h3 v-9 h4 v-6 l1.5 -3 1.5 3 v6 h4 v9 h3 v-4 h2.5 v4 h3 v6 h-8 v-5 h-27 z" fill="#FFFFFF" opacity="0.95"/>
+  <!-- Green tick: Verified -->
+  <path d="M22 42 l7 7 13 -14" stroke="#00B140" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

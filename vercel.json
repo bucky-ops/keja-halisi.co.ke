@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "regions": ["fra1"],
+  "crons": [
+    {
+      "path": "/api/cron/expire-listings",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/nudge-availability",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}
