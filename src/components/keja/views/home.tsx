@@ -5,15 +5,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search, ArrowRight, BadgeCheck, ShieldCheck, Building2, Flag, CalendarClock,
   Play, Zap, MapPin, Smartphone, Ban, ChevronRight, History as HistoryIcon,
+  GraduationCap, Trophy, Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
 import { useT, type DictKey } from "@/lib/i18n";
 import { BOROUGHS, BOROUGH_INFO, BEDS_OPTIONS } from "@/lib/nairobi";
-import { fetchListings, fetchMarketPulse, fetchHomeStats } from "../api";
+import { fetchListings, fetchMarketPulse, fetchHomeStats, fetchAgents } from "../api";
 import { MiniListingCard } from "../listing-card";
 import { MarketPulse, Trustbar, StatsStrip } from "../market-pulse";
-import type { HomeStats, ListingDTO, MarketPulse as MarketPulseData } from "@/lib/types";
+import type { AgentDTO, HomeStats, ListingDTO, MarketPulse as MarketPulseData } from "@/lib/types";
 
 /* ---------- count-up (rAF, 1.8s ease-out) ---------- */
 function useCountUp(target: number, duration = 1800): number {
@@ -36,13 +37,14 @@ function useCountUp(target: number, duration = 1800): number {
 const AGENTS_ONLINE = 1247;
 
 export default function HomeView() {
-  const { navigate, setFilters, filters, recent, clearRecent } = useKeja();
+  const { navigate, setFilters, filters, recent, clearRecent, activity } = useKeja();
   const t = useT();
   const [stats, setStats] = useState<HomeStats | null>(null);
   const [pulse, setPulse] = useState<MarketPulseData | null>(null);
   const [catalog, setCatalog] = useState<ListingDTO[]>([]);
   const [featured, setFeatured] = useState<ListingDTO[]>([]);
   const [featuredReady, setFeaturedReady] = useState(false);
+  const [topAgents, setTopAgents] = useState<AgentDTO[]>([]);
 
   /* --- Find Keja card state --- */
   const [estateInput, setEstateInput] = useState("");
@@ -58,6 +60,17 @@ export default function HomeView() {
       try { const p = await fetchMarketPulse(); if (alive) setPulse(p); } catch { /* demo defaults */ }
       try { const c = await fetchListings({ limit: 60 }); if (alive) setCatalog(c); } catch { /* empty states handle */ }
       try { const f = await fetchListings({ verified: true, sort: "response", limit: 12 }); if (alive) setFeatured(f); } catch { /* empty states handle */ } finally { if (alive) setFeaturedReady(true); }
+      try {
+        const a = await fetchAgents();
+        if (alive) {
+          const tier: Record<string, number> = { gold: 30, verified: 20, caretaker: 14, pending: 0, rejected: -40 };
+          setTopAgents(
+            a.filter((x) => x.verificationStatus !== "rejected" && x.verificationStatus !== "pending")
+              .sort((x, y) => y.rating * 10 + y.listingsCount * 2 + (tier[y.verificationStatus] ?? 0) - (x.rating * 10 + x.listingsCount * 2 + (tier[x.verificationStatus] ?? 0)))
+              .slice(0, 3)
+          );
+        }
+      } catch { /* teaser stays hidden */ }
     })();
     return () => { alive = false; };
   }, []);
@@ -336,7 +349,7 @@ export default function HomeView() {
               key={b.name}
               onClick={() => pickSubCounty(b.name, (BOROUGHS[b.name] ?? [])[0] ?? "")}
               className={cn(
-                "rounded-2xl border p-3.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-md",
+                "card-lift rounded-2xl border p-3.5 text-left",
                 borough === b.name ? "border-ink bg-ink text-white" : "border-kline bg-surface"
               )}
             >
@@ -352,6 +365,78 @@ export default function HomeView() {
       <section className="mt-10 grid gap-4 lg:grid-cols-2" aria-label="Live market intelligence">
         <MarketPulse pulse={pulse} />
         <Trustbar />
+      </section>
+
+      {/* ========== 5a. SCAM RADAR QUIZ + TOP AGENTS (2-col) ========== */}
+      <section className="mt-4 grid gap-4 lg:grid-cols-2" aria-label="Trust tools">
+        {/* Scam Radar quiz tile */}
+        <section className="relative overflow-hidden rounded-3xl bg-tiktok p-5 text-white shadow-xl" aria-label="Scam radar quiz">
+          <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-tiktok-cyan/20 blur-2xl" aria-hidden />
+          <div className="pointer-events-none absolute -bottom-16 -left-12 h-44 w-44 rounded-full bg-tiktok-pink/25 blur-2xl" aria-hidden />
+          <div className="relative">
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-extrabold tracking-[0.14em] text-tiktok-cyan ring-1 ring-white/20">
+                <GraduationCap className="h-3.5 w-3.5" /> SCAM RADAR
+              </span>
+              {(activity.quizRuns ?? 0) > 0 && (
+                <span className="rounded-full bg-black/30 px-2.5 py-1 text-[10px] font-extrabold text-white/80">
+                  {t("quizBest")} {activity.quizBest ?? 0}%
+                </span>
+              )}
+            </div>
+            <h3 className="mt-3.5 font-display text-xl font-extrabold">{t("quizRadarTitle")} — {t("quizTitle")}</h3>
+            <p className="mt-1.5 max-w-sm text-[12px] font-semibold leading-relaxed text-white/70">{t("quizRadarSub")}</p>
+            <button
+              onClick={() => navigate("quiz")}
+              className="touch-target mt-4 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-display text-[13px] font-extrabold text-[#161616] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Play className="h-4 w-4 fill-[#161616]" /> {t("quizRadarCta")}
+            </button>
+          </div>
+        </section>
+
+        {/* Top agents teaser */}
+        <section className="rounded-3xl border border-kline bg-surface p-5 shadow-[0_10px_30px_rgba(17,25,40,0.06)]" aria-label="Top trusted agents">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="flex items-center gap-1.5 font-display text-[13px] font-bold text-body">
+              <Trophy className="h-4 w-4 text-gold" /> Top trusted agents
+            </h3>
+            <button
+              onClick={() => navigate("agents")}
+              className="touch-target inline-flex items-center gap-1 rounded-full bg-gold/15 px-3 py-1.5 text-[10px] font-extrabold text-warn-strong transition-colors hover:bg-gold hover:text-body"
+            >
+              {t("navAgents")} <ChevronRight className="h-3 w-3" />
+            </button>
+          </div>
+          <ol className="mt-3 space-y-2">
+            {topAgents.map((a, i) => (
+              <li key={a.id}>
+                <button
+                  onClick={() => navigate("agent", { handle: a.tiktokHandle })}
+                  className="flex min-h-11 w-full items-center gap-3 rounded-2xl bg-kbg px-3 py-2 text-left transition-colors hover:bg-ink/10"
+                >
+                  <span className={cn(
+                    "grid h-7 w-7 shrink-0 place-items-center rounded-lg font-display text-[11px] font-extrabold",
+                    i === 0 ? "bg-gold text-white" : i === 1 ? "bg-ink text-white" : "bg-trust text-white"
+                  )}>
+                    {i + 1}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[12.5px] font-extrabold text-body">{a.tiktokHandle}</span>
+                    <span className="mt-0.5 flex items-center gap-2 text-[10px] font-semibold text-kmuted">
+                      <span className="inline-flex items-center gap-0.5"><Star className="h-2.5 w-2.5 fill-gold text-gold" /> {a.rating}★</span>
+                      <span>{a.listingsCount} listings</span>
+                      <span>~{a.responseTime}min</span>
+                    </span>
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0 text-kmuted" />
+                </button>
+              </li>
+            ))}
+            {topAgents.length === 0 &&
+              Array.from({ length: 3 }).map((_, i) => <li key={i} className="h-11 rounded-2xl shimmer" aria-hidden />)}
+          </ol>
+        </section>
       </section>
 
       {/* =================== 5b. RECENTLY VIEWED RAIL =================== */}

@@ -17,7 +17,9 @@ export type ViewName =
   | "admin"
   | "payments"
   | "map"
-  | "compare";
+  | "compare"
+  | "agents"
+  | "quiz";
 
 export interface ViewParams {
   borough?: string;
@@ -98,6 +100,9 @@ interface KejaState {
     lastReadAt: number;
     reportLog: ReportLogItem[];
     viewingLog: ViewingLogItem[];
+    // scam safety quiz (best % score + plays)
+    quizBest: number;
+    quizRuns: number;
   };
   // low-data mode (disables embed autoplay / heavy effects)
   lowData: boolean;
@@ -121,6 +126,7 @@ interface KejaState {
   notify: (kind: KejaNotification["kind"], title: string, body: string) => void;
   markAllRead: () => void;
   logReport: (item: Omit<ReportLogItem, "id" | "at">) => void;
+  recordQuiz: (pct: number) => void;
   setLowData: (v: boolean) => void;
   setTheme: (t: KejaState["theme"]) => void;
   setLang: (l: KejaState["lang"]) => void;
@@ -152,7 +158,7 @@ export const useKeja = create<KejaState>()(
       recent: [],
       compare: [],
       session: { phone: null, verified: false },
-      activity: { leads: 0, reports: 0, ratings: 0, upvotes: {}, notifications: [], lastReadAt: 0, reportLog: [], viewingLog: [] },
+      activity: { leads: 0, reports: 0, ratings: 0, upvotes: {}, notifications: [], lastReadAt: 0, reportLog: [], viewingLog: [], quizBest: 0, quizRuns: 0 },
       lowData: false,
       theme: "light",
       lang: "en",
@@ -256,6 +262,10 @@ export const useKeja = create<KejaState>()(
         );
       },
       setLowData: (v) => set({ lowData: v }),
+      recordQuiz: (pct) => {
+        const a = get().activity;
+        set({ activity: { ...a, quizRuns: (a.quizRuns ?? 0) + 1, quizBest: Math.max(a.quizBest ?? 0, pct) } });
+      },
       setTheme: (t) => set({ theme: t }),
       setLang: (l) => set({ lang: l }),
     }),
@@ -292,6 +302,8 @@ export const useKeja = create<KejaState>()(
           lastReadAt: s.activity.lastReadAt,
           reportLog: s.activity.reportLog,
           viewingLog: s.activity.viewingLog,
+          quizBest: s.activity.quizBest,
+          quizRuns: s.activity.quizRuns,
         },
         lowData: s.lowData,
         theme: s.theme,

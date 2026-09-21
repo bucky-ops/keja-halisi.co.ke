@@ -4,14 +4,14 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ArrowRight, Building2, CreditCard, Crown, KeyRound, Phone, Plus, RefreshCw,
-  Smartphone, Users, Wallet, X, type LucideIcon,
+  Smartphone, Users, Wallet, X, type LucideIcon, Tag, Check, Home as HomeIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { kes, timeAgo } from "@/lib/nairobi";
 import { toast, useKeja } from "@/lib/store";
-import { fetchDeveloperDashboard, toggleUnit } from "@/components/keja/api";
+import { fetchDeveloperDashboard, fetchListings, toggleUnit, updateListingPrice, toggleListingStatus, relistListing } from "@/components/keja/api";
 import { GoldBadge, PendingBadge, VerifiedBadge } from "@/components/keja/badges";
-import type { UnitDTO } from "@/lib/types";
+import type { UnitDTO, ListingDTO } from "@/lib/types";
 
 type DashData = Awaited<ReturnType<typeof fetchDeveloperDashboard>>;
 type Role = "Developer" | "Owner" | "Caretaker";
@@ -28,6 +28,175 @@ const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [
 const DEMO_INVOICES = [{ receipt: "KH-2026-1247", date: "15 May 2026", plan: "Pro", amount: 999 }];
 
 const hoursSince = (iso: string) => (Date.now() - new Date(iso).getTime()) / 3_600_000;
+
+/* ---------------- Owner poster tools: manage your live listings ---------------- */
+function OwnerListings() {
+  const { navigate } = useKeja();
+  const [rows, setRows] = useState<ListingDTO[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const [busy, setBusy] = useState<string | null>(null);
+  const OWNER_HANDLE = "@east_hub"; // demo owner persona (direct landlord, no commission)
+
+  const load = useCallback(async () => {
+    try {
+      setFailed(false);
+      const all = await fetchListings({ limit: 60 });
+      setRows(all.filter((l) => l.poster.tiktokHandle === OWNER_HANDLE));
+    } catch {
+      setFailed(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const savePrice = async (l: ListingDTO) => {
+    const p = Number(draft);
+    if (!Number.isFinite(p) || p < 1000) {
+      toast("warning", "Enter a valid rent (min KES 1,000)");
+      return;
+    }
+    setBusy(l.id);
+    try {
+      await updateListingPrice(l.id, p);
+      setRows((prev) => (prev ?? []).map((r) => (r.id === l.id ? { ...r, price: Math.round(p) } : r)));
+      setEditId(null);
+      toast("success", `Price updated — KES ${p.toLocaleString()} • audit trail saved`);
+    } catch (e) {
+      toast("error", e instanceof Error ? e.message : "Update failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const flipStatus = async (l: ListingDTO) => {
+    const next = l.status === "Available" ? "Taken" : "Available";
+    setBusy(l.id);
+    try {
+      await toggleListingStatus(l.id, next);
+      setRows((prev) => (prev ?? []).map((r) => (r.id === l.id ? { ...r, status: next as ListingDTO["status"] } : r)));
+      toast(next === "Taken" ? "warning" : "success", next === "Taken" ? "Marked Taken — hides from fresh search" : "Back on the market — relisted");
+    } catch {
+      toast("error", "Status toggle failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const relist = async (l: ListingDTO) => {
+    setBusy(l.id);
+    try {
+      await relistListing(l.id);
+      setRows((prev) => (prev ?? []).map((r) => (r.id === l.id ? { ...r, status: "Available", freshH: 0 } : r)));
+      toast("success", "Relisted • expiry extended 7 days • SMS nudge reset");
+    } catch {
+      toast("error", "Relist failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  if (failed) {
+    return (
+      <p className="mt-3 rounded-2xl border border-kline bg-card p-4 text-[12px] font-semibold text-kmuted">
+        Could not load your listings — check the API and retry.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-3 space-y-2.5">
+      {(rows ?? []).map((l) => {
+        const hoursLeft = Math.round((new Date(l.expiresAt).getTime() - Date.now()) / 3_600_000);
+        const expiringSoon = hoursLeft < 48;
+        return (
+          <div key={l.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-kline bg-card p-3.5">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-trust to-verified text-white">
+              <HomeIcon className="h-5 w-5" />
+            </span>
+            <button onClick={() => navigate("listing", { listingId: l.id })} className="min-w-0 flex-1 text-left">
+              <p className="truncate text-[13px] font-extrabold text-body hover:text-trust">{l.title}</p>
+              <p className="mt-0.5 text-[11px] font-semibold text-kmuted">
+                {l.beds} • {l.estate} • {l.views} views
+                {expiringSoon ? <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-pending-soft px-1.5 py-0.5 text-[9px] font-extrabold text-warn-strong"><RefreshCw className="h-2.5 w-2.5" /> expires {hoursLeft <= 0 ? "now" : `${hoursLeft}h`}</span> : null}
+              </p>
+            </button>
+
+            {/* inline price edit */}
+            {editId === l.id ? (
+              <span className="flex items-center gap-1.5">
+                <input
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  inputMode="numeric"
+                  autoFocus
+                  aria-label="New rent price"
+                  className="w-24 rounded-xl border border-kline px-2.5 py-2 text-[12px] font-bold text-body outline-none focus:border-trust focus:ring-4 focus:ring-trust/10"
+                />
+                <button
+                  onClick={() => void savePrice(l)}
+                  disabled={busy === l.id}
+                  className="touch-target grid h-9 w-9 place-items-center rounded-full bg-verified text-white disabled:opacity-50"
+                  aria-label="Save price"
+                >
+                  <Check className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setEditId(null)}
+                  className="touch-target grid h-9 w-9 place-items-center rounded-full border border-kline text-kmuted"
+                  aria-label="Cancel price edit"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </span>
+            ) : (
+              <button
+                onClick={() => { setEditId(l.id); setDraft(String(l.price)); }}
+                className="touch-target inline-flex items-center gap-1.5 rounded-full bg-kbg px-3 py-2 text-[12px] font-extrabold text-body transition-colors hover:bg-ink hover:text-white"
+                aria-label={`Edit price, current KES ${l.price.toLocaleString()}`}
+              >
+                <Tag className="h-3.5 w-3.5 text-trust" /> KES {l.price.toLocaleString()}
+              </button>
+            )}
+
+            <span className={cn(
+              "inline-flex rounded-full px-2.5 py-1 text-[10px] font-extrabold",
+              l.status === "Available" ? "bg-verified-soft text-ok" : l.status === "Reserved" ? "bg-pending-soft text-warn-strong" : "bg-black/10 text-kmuted"
+            )}>
+              {l.status}
+            </span>
+
+            <button
+              onClick={() => void flipStatus(l)}
+              disabled={busy === l.id}
+              className="touch-target rounded-full border border-kline px-3.5 py-2 text-[11px] font-extrabold text-body transition-colors hover:bg-kbg disabled:opacity-50"
+            >
+              {l.status === "Available" ? "Mark taken" : "Mark available"}
+            </button>
+            {(expiringSoon || l.status === "Taken") && (
+              <button
+                onClick={() => void relist(l)}
+                disabled={busy === l.id}
+                className="touch-target inline-flex items-center gap-1.5 rounded-full bg-trust-soft px-3.5 py-2 text-[11px] font-extrabold text-trust transition-colors hover:bg-trust hover:text-white disabled:opacity-50"
+              >
+                <RefreshCw className="h-3.5 w-3.5" /> Relist 7d
+              </button>
+            )}
+          </div>
+        );
+      })}
+      {rows !== null && rows.length === 0 && (
+        <p className="rounded-2xl border border-dashed border-kline bg-card p-5 text-center text-[12.5px] font-semibold text-kmuted">
+          No live listings for {OWNER_HANDLE} yet — post your first keja.
+        </p>
+      )}
+      {rows === null && <div className="h-16 rounded-2xl shimmer" />}
+    </div>
+  );
+}
 
 function expiryChip(u: UnitDTO, now: number | null) {
   if (!u.expiresAt || now === null) return null;
@@ -201,30 +370,44 @@ export default function DashboardView() {
       {/* ================= OWNER ROLE ================= */}
       {role === "Owner" && (
         <section className="mt-5 grid gap-4 lg:grid-cols-[1fr_20rem]">
-          <div className="rounded-3xl border border-kline bg-card p-6">
-            <h2 className="font-display text-[16px] font-extrabold text-body">Owner: Single unit flow</h2>
-            <p className="mt-1 text-[12.5px] text-kmuted">
-              Post your own keja without commission. Phone stays masked until a lead is logged.
-            </p>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              {["Add property", "Evidence video", "Availability", "Leads"].map((s, i) => (
-                <span key={s} className="flex items-center gap-2">
-                  <span className="rounded-full bg-trust-soft px-3 py-1.5 text-[11.5px] font-extrabold text-trust">{s}</span>
-                  {i < 3 && <ArrowRight className="h-3.5 w-3.5 text-kmuted" aria-hidden />}
-                </span>
-              ))}
+          <div className="space-y-4">
+            <div className="rounded-3xl border border-kline bg-card p-6">
+              <h2 className="font-display text-[16px] font-extrabold text-body">Owner: Single unit flow</h2>
+              <p className="mt-1 text-[12.5px] text-kmuted">
+                Post your own keja without commission. Phone stays masked until a lead is logged.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                {["Add property", "Evidence video", "Availability", "Leads"].map((s, i) => (
+                  <span key={s} className="flex items-center gap-2">
+                    <span className="rounded-full bg-trust-soft px-3 py-1.5 text-[11.5px] font-extrabold text-trust">{s}</span>
+                    {i < 3 && <ArrowRight className="h-3.5 w-3.5 text-kmuted" aria-hidden />}
+                  </span>
+                ))}
+              </div>
+              <ul className="mt-4 space-y-1.5 text-[12px] text-body/80">
+                <li>• Shoot the 5-point evidence video: outside, gate, inside, water running, window view.</li>
+                <li>• Price + deposit must match your caption — AI bait-price checks run on submit.</li>
+                <li>• Listing re-checks every 72h — reply YES/NO SMS to keep it live.</li>
+              </ul>
+              <button
+                onClick={() => navigate("post")}
+                className="touch-target mt-5 rounded-full bg-verified px-5 font-extrabold text-[12.5px] text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Add your keja — start posting
+              </button>
             </div>
-            <ul className="mt-4 space-y-1.5 text-[12px] text-body/80">
-              <li>• Shoot the 5-point evidence video: outside, gate, inside, water running, window view.</li>
-              <li>• Price + deposit must match your caption — AI bait-price checks run on submit.</li>
-              <li>• Listing re-checks every 72h — reply YES/NO SMS to keep it live.</li>
-            </ul>
-            <button
-              onClick={() => navigate("post")}
-              className="touch-target mt-5 rounded-full bg-verified px-5 font-extrabold text-[12.5px] text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Add your keja — start posting
-            </button>
+
+            {/* poster tools — manage live listings */}
+            <div className="rounded-3xl border border-kline bg-card p-6">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-display text-[16px] font-extrabold text-body">Your live listings</h2>
+                <span className="rounded-full bg-kbg px-3 py-1 text-[10.5px] font-extrabold text-kmuted">demo persona @east_hub</span>
+              </div>
+              <p className="mt-1 text-[12.5px] text-kmuted">
+                Edit rent inline, mark Taken the moment it lets, or relist before the 72h re-check lapses.
+              </p>
+              <OwnerListings />
+            </div>
           </div>
           <div className="rounded-3xl bg-tiktok p-5 text-white">
             <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-white/55">Owner messaging</p>

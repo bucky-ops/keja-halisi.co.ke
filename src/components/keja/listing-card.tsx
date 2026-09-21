@@ -45,7 +45,7 @@ export function ListingCard({ listing: l, compact = false, onOpen, onCall }: Lis
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && open()}
       className={cn(
-        "group cursor-pointer rounded-3xl bg-card border border-kline shadow-[0_7px_22px_rgba(17,25,40,0.05)] overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(17,25,40,0.12)] focus-visible:outline-2 focus-visible:outline-trust",
+        "group card-lift cursor-pointer rounded-3xl bg-card border border-kline shadow-[0_7px_22px_rgba(17,25,40,0.05)] overflow-hidden focus-visible:outline-2 focus-visible:outline-trust",
         reported && "border-2 border-scam",
         grayed && "opacity-60 saturate-50"
       )}
@@ -198,7 +198,7 @@ export function MiniListingCard({ listing: l, onOpen }: { listing: ListingDTO; o
   return (
     <button
       onClick={onOpen}
-      className="w-44 shrink-0 rounded-2xl bg-card border border-kline overflow-hidden text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
+      className="w-44 shrink-0 card-lift rounded-2xl bg-card border border-kline overflow-hidden text-left"
     >
       <div className="relative h-24 keja-building grid place-items-center">
         <Play className="h-4 w-4 text-white fill-white" />
