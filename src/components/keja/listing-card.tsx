@@ -59,7 +59,7 @@ export function ListingCard({ listing: l, compact = false, onOpen, onCall }: Lis
           </span>
         </div>
         {/* badges */}
-        <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5 max-w-[75%]">
+        <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5 max-w-[calc(100%-112px)]">
           {l.poster.verificationStatus === "gold" ? (
             <GoldBadge label="Gold" className="bg-surface/90" />
           ) : l.poster.verificationStatus === "caretaker" ? (

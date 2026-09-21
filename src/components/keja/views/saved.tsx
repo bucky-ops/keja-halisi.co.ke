@@ -2,7 +2,7 @@
 // KEJA HALISI — SavedView: renter's shortlist + personal dashboard
 // Blueprint "Renter dashboard": Saved / Fresh matches / Leads / Reports + rate-after-viewing loop.
 import { useEffect, useMemo, useState } from "react";
-import { Heart, Zap, Phone, Flag, SearchX, ArrowRight, Star, ShieldCheck, ArrowLeft, Bell } from "lucide-react";
+import { Heart, Zap, Phone, Flag, SearchX, ArrowRight, Star, ShieldCheck, ArrowLeft, Bell, CalendarCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
 import { fetchListings } from "../api";
@@ -122,8 +122,8 @@ export default function SavedView() {
         </section>
       )}
 
-      {/* trust activity: your scam reports + notifications feed */}
-      {(activity.reportLog.length > 0 || activity.notifications.length > 0) && (
+      {/* trust activity: your scam reports + viewing bookings + notifications feed */}
+      {(activity.reportLog.length > 0 || activity.notifications.length > 0 || activity.viewingLog.length > 0) && (
         <section className="mt-5 grid gap-4 lg:grid-cols-2" aria-label="Trust activity">
           {activity.reportLog.length > 0 && (
             <div className="rounded-3xl border border-kline bg-card p-4">
@@ -154,6 +154,39 @@ export default function SavedView() {
                         Under review
                       </span>
                     )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {activity.viewingLog.length > 0 && (
+            <div className="rounded-3xl border border-trust/25 bg-trust-soft/40 p-4">
+              <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-body">
+                <CalendarCheck className="h-4 w-4 text-trust" /> Viewing bookings • {activity.viewingLog.length}
+              </p>
+              <p className="mt-0.5 text-[11px] font-semibold text-kmuted">
+                All viewings are free — never send money before the physical visit.
+              </p>
+              <ul className="keja-scroll mt-3 max-h-56 space-y-2 overflow-y-auto">
+                {activity.viewingLog.map((v) => (
+                  <li
+                    key={v.id}
+                    className="flex items-center justify-between gap-2 rounded-xl border border-trust/20 bg-surface px-3 py-2.5"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-[11.5px] font-extrabold text-body">
+                        {v.estate} • {v.date}
+                      </p>
+                      <p className="text-[10px] font-semibold text-kmuted">
+                        {v.slot} EAT • booked {new Date(v.at).toLocaleDateString()} • SMS simulated
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => navigate("listing", { listingId: v.listingId })}
+                      className="shrink-0 rounded-full bg-trust px-2.5 py-1 text-[9.5px] font-extrabold text-white transition-transform hover:scale-105"
+                    >
+                      Open
+                    </button>
                   </li>
                 ))}
               </ul>

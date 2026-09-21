@@ -347,3 +347,32 @@
   min-height: 44px;
   min-width: 44px;
 }
+
+/* ============================= PRINT ============================= */
+/* Print-friendly listing sheet: hide app chrome, keep the spec sheet.
+   (The print-only summary block lives in views/listing.tsx.) */
+@media print {
+  header,
+  footer,
+  nav,
+  .print\:hidden,
+  [aria-label="TikTok walkthrough"],
+  [aria-label="Contact actions"],
+  [aria-label="Quick contact"],
+  [aria-label="Report Scam"],
+  [aria-label="Rate after viewing"],
+  [aria-label="Similar kejas"],
+  [role="dialog"] {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  body {
+    background: #fff !important;
+  }
+  aside section {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+}

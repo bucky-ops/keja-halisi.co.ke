@@ -36,11 +36,11 @@ export function LogoLockup({ dark = false, onNavigate }: { dark?: boolean; onNav
   return (
     <button onClick={onNavigate} className="flex items-center gap-2.5 text-left group" aria-label="Keja Halisi home">
       <LogoMark dark={dark} />
-      <span className="leading-none">
-        <span className={cn("block font-display font-extrabold tracking-tight text-[15px]", dark ? "text-white" : "text-body")}>
+      <span className="min-w-0 leading-none">
+        <span className={cn("block whitespace-nowrap font-display font-extrabold tracking-tight text-[15px]", dark ? "text-white" : "text-body")}>
           KEJA HALISI
         </span>
-        <span className={cn("block text-[8.5px] font-bold tracking-[0.14em] mt-1", dark ? "text-white/60" : "text-kmuted")}>
+        <span className={cn("mt-1 hidden whitespace-nowrap text-[8.5px] font-bold tracking-[0.14em] sm:block", dark ? "text-white/60" : "text-kmuted")}>
           REAL HOUSE • VERIFIED
         </span>
       </span>

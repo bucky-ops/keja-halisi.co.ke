@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search, ArrowRight, BadgeCheck, ShieldCheck, Building2, Flag, CalendarClock,
-  Play, Zap, MapPin, Smartphone, Ban, ChevronRight,
+  Play, Zap, MapPin, Smartphone, Ban, ChevronRight, History as HistoryIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
@@ -36,7 +36,7 @@ function useCountUp(target: number, duration = 1800): number {
 const AGENTS_ONLINE = 1247;
 
 export default function HomeView() {
-  const { navigate, setFilters, filters } = useKeja();
+  const { navigate, setFilters, filters, recent, clearRecent } = useKeja();
   const t = useT();
   const [stats, setStats] = useState<HomeStats | null>(null);
   const [pulse, setPulse] = useState<MarketPulseData | null>(null);
@@ -76,6 +76,12 @@ export default function HomeView() {
     const fresh = featured.filter((l) => l.freshH <= 24);
     return fresh.length >= 4 ? fresh : featured;
   }, [featured]);
+
+  /* recently viewed — resolved against catalog, recent order, cap 6 */
+  const recentItems = useMemo(() => {
+    const byId = new Map(catalog.map((l) => [l.id, l]));
+    return recent.map((id) => byId.get(id)).filter((l): l is ListingDTO => Boolean(l)).slice(0, 6);
+  }, [recent, catalog]);
 
   /* count-ups for trust snapshot */
   const agents = useCountUp(stats?.verifiedAgents ?? 1247);
@@ -347,6 +353,37 @@ export default function HomeView() {
         <MarketPulse pulse={pulse} />
         <Trustbar />
       </section>
+
+      {/* =================== 5b. RECENTLY VIEWED RAIL =================== */}
+      {recentItems.length > 0 && (
+        <section className="mt-10" aria-label="Recently viewed kejas">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <h2 className="flex items-center gap-2 font-display text-xl font-extrabold text-body">
+                <span className="grid h-8 w-8 place-items-center rounded-xl bg-trust-soft text-trust">
+                  <HistoryIcon className="h-4 w-4" />
+                </span>
+                {t("recentTitle")}
+              </h2>
+              <p className="mt-1 text-[12px] font-semibold text-kmuted">{t("recentSub")}</p>
+            </div>
+            <button
+              onClick={() => {
+                clearRecent();
+                toast("info", "Recently viewed cleared");
+              }}
+            className="touch-target rounded-full border border-kline bg-surface px-4 py-2.5 text-[11px] font-extrabold text-kmuted transition-colors hover:bg-kbg hover:text-body"
+            >
+              {t("clear")}
+            </button>
+          </div>
+          <div className="keja-scroll -mx-4 mt-4 flex gap-4 overflow-x-auto px-4 pb-2 pt-1">
+            {recentItems.map((l) => (
+              <MiniListingCard key={l.id} listing={l} onOpen={() => navigate("listing", { listingId: l.id })} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* =================== 6. FEATURED VERIFIED TIKTOK RAIL =================== */}
       <section className="mt-10" aria-label="Featured verified listings">

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft, Play, Flag, MessageCircle, Phone, BadgeCheck, Check, MapPin,
   CloudSun, ExternalLink, Clock, Eye, Zap, ChevronRight, Home as HomeIcon,
-  Star, ZapOff,
+  Star, ZapOff, CalendarCheck, Share2, Printer, Heart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
@@ -13,17 +13,19 @@ import { fetchListing, fetchListings } from "../api";
 import { MiniListingCard } from "../listing-card";
 import { VerificationBadge, TrustChecksNotice, PrivacyNotice, FeeWarning } from "../badges";
 import { ReportModal, ContactModal } from "../modals";
+import { ViewingModal } from "../viewing";
 import { RatingSheet } from "../rating";
 import type { ListingDTO } from "@/lib/types";
 
 type Oembed = { thumb: string | null; author: string | null } | null;
 
 export default function ListingView() {
-  const { params, back, navigate, lowData, bumpActivity, notify, logReport } = useKeja();
+  const { params, back, navigate, lowData, bumpActivity, notify, logReport, pushRecent, toggleSaved, saved } = useKeja();
   const [oembed, setOembed] = useState<Oembed>(null);
   const [similar, setSimilar] = useState<ListingDTO[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+  const [viewingOpen, setViewingOpen] = useState(false);
   // trust feedback loop — after a lead is logged, invite the renter to rate the agent
   const [leadLogged, setLeadLogged] = useState(false);
   const [rateOpen, setRateOpen] = useState(false);
@@ -48,6 +50,11 @@ export default function ListingView() {
       .catch(() => { if (alive) setPayload({ id, l: null, failed: true }); });
     return () => { alive = false; };
   }, [id]);
+
+  /* ---------------- recently viewed (drives home rail + saved metrics) ---------------- */
+  useEffect(() => {
+    if (id && payload.id === id && payload.l) pushRecent(id);
+  }, [id, payload.id, payload.l]);
 
   /* ---------------- TikTok oEmbed (legal; falls back offline) ---------------- */
   // low-data mode derives an invisible embed — no remote fetch at all
@@ -171,15 +178,38 @@ export default function ListingView() {
   const walkMin = Math.max(1, Math.round(l.distanceToRoadM / 70));
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 py-6">
+    <div className={cn("mx-auto max-w-[1440px] px-4 py-6", l.status === "Available" && "pb-36 md:pb-6")}>
+      {/* print-only spec sheet (browser print / save-as-PDF) */}
+      <div className="hidden print:block print:text-black" aria-hidden>
+        <div className="flex items-center justify-between border-b-2 border-black pb-2">
+          <p className="font-display text-lg font-extrabold">KEJA HALISI — Real House Verified</p>
+          <p className="text-[10px] font-bold">keja-halisi.co.ke • {new Date().toLocaleDateString("en-KE")}</p>
+        </div>
+        <h1 className="mt-3 text-base font-extrabold">
+          {l.beds} • {l.estate} — KES {l.price.toLocaleString()}/mo
+        </h1>
+        <p className="mt-1 text-[11px]">
+          {l.road ?? l.estate} • {l.subCounty} • {l.borough} • {l.distanceToRoadM}m to road ({walkMin} min walk)
+        </p>
+        <p className="mt-2 text-[11px]">
+          Deposit {kes(l.deposit)} • {l.sizeSqm ? `${l.sizeSqm}sqm • ` : ""}{l.floor ?? "—"} • Amenities: {l.amenities.join(", ") || "not declared"}
+        </p>
+        <p className="mt-2 text-[11px]">
+          Listed by {l.poster.tiktokHandle} ({l.poster.role}, {l.poster.verificationStatus}) • Rating {l.poster.rating}★ • TikTok: {l.tiktokUrl}
+        </p>
+        <p className="mt-3 border-t border-black pt-2 text-[10px] font-bold">
+          HAKUNA KULIPA KABLA YA KUONA NYUMBA — no viewing fee before viewing. Exact house number &amp; landlord phone are protected until contact.
+        </p>
+      </div>
+
       <button
         onClick={back}
-        className="touch-target inline-flex items-center gap-1.5 rounded-full border border-kline bg-surface px-4 py-2.5 text-[12.5px] font-extrabold text-body hover:bg-kbg"
+        className="touch-target inline-flex items-center gap-1.5 rounded-full border border-kline bg-surface px-4 py-2.5 text-[12.5px] font-extrabold text-body hover:bg-kbg print:hidden"
       >
         <ArrowLeft className="h-4 w-4" /> Back
       </button>
 
-      <div className="mt-4 grid items-start gap-6 lg:grid-cols-[1.4fr_0.8fr]">
+      <div className="mt-4 grid items-start gap-6 lg:grid-cols-[1.4fr_0.8fr] print:mt-0 print:block">
         {/* ============================= LEFT ============================= */}
         <div className="min-w-0 space-y-4">
           {/* 1. TikTok embed card */}
@@ -307,7 +337,75 @@ export default function ListingView() {
               Deposit {kes(l.deposit)} • {l.beds}
               {l.sizeSqm ? ` • ${l.sizeSqm}sqm` : ""}
               {l.floor ? ` • ${l.floor}` : ""}
+              {l.sizeSqm ? ` • KES ${Math.round(l.price / l.sizeSqm)}/sqm` : ""}
             </p>
+
+            {/* share / print / save quick actions */}
+            <div className="mt-3 flex items-center gap-2 print:hidden">
+              <button
+                onClick={async () => {
+                  const text = `${l.beds} • ${l.estate} • KES ${l.price.toLocaleString()}/mo — verified on Keja Halisi`;
+                  const url = typeof window !== "undefined" ? window.location.href : "";
+                  // 1) native share sheet when available
+                  if (typeof navigator !== "undefined" && navigator.share && navigator.canShare?.({ text, url })) {
+                    try {
+                      await navigator.share({ title: `Keja Halisi — ${l.beds} in ${l.estate}`, text, url });
+                      return; // user completed (or cancelled) the native sheet
+                    } catch (err) {
+                      if ((err as DOMException)?.name === "AbortError") return; // cancelled
+                      // fall through to clipboard
+                    }
+                  }
+                  // 2) clipboard API
+                  try {
+                    await navigator.clipboard.writeText(`${text}\n${url}`);
+                    toast("success", "Listing copied to clipboard • share it");
+                    return;
+                  } catch {
+                    /* fall through to legacy copy */
+                  }
+                  // 3) legacy execCommand copy
+                  try {
+                    const ta = document.createElement("textarea");
+                    ta.value = `${text}\n${url}`;
+                    ta.style.position = "fixed";
+                    ta.style.opacity = "0";
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(ta);
+                    toast("success", "Listing copied to clipboard • share it");
+                  } catch {
+                    toast("warning", "Copy blocked by browser — share manually");
+                  }
+                }}
+                className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-full border border-kline py-2 text-[11px] font-extrabold text-body transition-colors hover:bg-kbg"
+                aria-label="Share listing"
+              >
+                <Share2 className="h-3.5 w-3.5 text-trust" /> Share
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-full border border-kline py-2 text-[11px] font-extrabold text-body transition-colors hover:bg-kbg"
+                aria-label="Print listing sheet"
+              >
+                <Printer className="h-3.5 w-3.5 text-trust" /> Print
+              </button>
+              <button
+                onClick={() => {
+                  toggleSaved(l.id);
+                  toast("success", saved.includes(l.id) ? "Removed from your shortlist" : "Saved to your kejas • Heart filled");
+                }}
+                className={cn(
+                  "touch-target flex flex-1 items-center justify-center gap-1.5 rounded-full border py-2 text-[11px] font-extrabold transition-colors",
+                  saved.includes(l.id) ? "border-tiktok-pink/40 bg-tiktok-pink/10 text-tiktok-pink" : "border-kline text-body hover:bg-kbg"
+                )}
+                aria-label={saved.includes(l.id) ? "Remove from saved" : "Save keja"}
+              >
+                <Heart className={cn("h-3.5 w-3.5", saved.includes(l.id) ? "fill-tiktok-pink text-tiktok-pink" : "text-tiktok-pink")} />
+                {saved.includes(l.id) ? "Saved" : "Save"}
+              </button>
+            </div>
 
             {/* 2. meta */}
             <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-kline pt-3 text-[11px] font-semibold text-kmuted">
@@ -352,7 +450,7 @@ export default function ListingView() {
                 }}
                 className="touch-target flex items-center justify-center gap-1.5 rounded-full bg-safaricom text-[12.5px] font-extrabold text-white shadow-[0_8px_20px_rgba(0,177,64,0.3)] transition-transform hover:scale-[1.02] active:scale-[0.98]"
               >
-                <Phone className="h-4 w-4" /> 📞 Call Agent
+                <Phone className="h-4 w-4" /> Call Agent
               </button>
               <button
                 onClick={() => {
@@ -369,6 +467,12 @@ export default function ListingView() {
               className="touch-target flex w-full items-center justify-center gap-1.5 rounded-full bg-tiktok py-3 text-[12.5px] font-extrabold text-white transition-transform hover:scale-[1.01] active:scale-[0.99]"
             >
               <ExternalLink className="h-4 w-4 text-tiktok-cyan" /> View on TikTok
+            </button>
+            <button
+              onClick={() => setViewingOpen(true)}
+              className="touch-target flex w-full items-center justify-center gap-1.5 rounded-full border-2 border-trust bg-trust-soft py-3 text-[12.5px] font-extrabold text-trust transition-all hover:bg-trust hover:text-white"
+            >
+              <CalendarCheck className="h-4 w-4" /> Book viewing • free
             </button>
           </section>
 
@@ -439,7 +543,7 @@ export default function ListingView() {
           {/* 9. report */}
           <button
             onClick={() => setReportOpen(true)}
-            className="touch-target flex w-full items-center justify-center gap-1.5 rounded-full border-2 border-scam py-3 text-[12.5px] font-extrabold text-scam transition-colors hover:bg-scam hover:text-white"
+            className="touch-target flex w-full items-center justify-center gap-1.5 rounded-full border-2 border-scam py-3 text-[12.5px] font-extrabold text-scam transition-colors hover:bg-scam hover:text-white print:hidden"
           >
             <Flag className="h-4 w-4" /> 🚩 Report Scam / Fake
           </button>
@@ -499,6 +603,7 @@ export default function ListingView() {
         agentId={l.poster.id}
         estateHint={l.estate}
       />
+      <ViewingModal listing={l} open={viewingOpen} onClose={() => setViewingOpen(false)} />
     </div>
   );
 }

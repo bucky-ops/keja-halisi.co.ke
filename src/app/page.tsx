@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useKeja } from "@/lib/store";
 import { TopBar, Header, Footer, BottomNav } from "@/components/keja/nav";
 import { CompareBar } from "@/components/keja/compare-bar";
+import { CommandPalette } from "@/components/keja/command-palette";
 import HomeView from "@/components/keja/views/home";
 import EstateView from "@/components/keja/views/estate";
 import SavedView from "@/components/keja/views/saved";
@@ -95,6 +96,7 @@ export default function Page() {
       <Footer />
       <CompareBar />
       <BottomNav />
+      <CommandPalette />
     </div>
   );
 }

@@ -52,6 +52,16 @@ export interface ReportLogItem {
   autoHidden: boolean;
 }
 
+// ---- viewing bookings (escrow-safe scheduler, no fee before viewing) ----
+export interface ViewingLogItem {
+  id: number;
+  listingId: string;
+  estate: string;
+  date: string;
+  slot: string;
+  at: number;
+}
+
 interface KejaState {
   view: ViewName;
   params: ViewParams;
@@ -72,6 +82,8 @@ interface KejaState {
     sort: "fresh" | "price_asc" | "price_desc" | "response";
   };
   saved: string[];
+  // recently viewed listing ids (cap 8, most recent first)
+  recent: string[];
   // compare tray (max 3)
   compare: string[];
   // demo session (OTP-verified user)
@@ -85,6 +97,7 @@ interface KejaState {
     notifications: KejaNotification[];
     lastReadAt: number;
     reportLog: ReportLogItem[];
+    viewingLog: ViewingLogItem[];
   };
   // low-data mode (disables embed autoplay / heavy effects)
   lowData: boolean;
@@ -97,6 +110,9 @@ interface KejaState {
   setFilters: (patch: Partial<KejaState["filters"]>) => void;
   resetFilters: () => void;
   toggleSaved: (id: string) => void;
+  pushRecent: (id: string) => void;
+  clearRecent: () => void;
+  logViewing: (item: Omit<ViewingLogItem, "id" | "at">) => void;
   toggleCompare: (id: string) => void;
   clearCompare: () => void;
   setSession: (s: Partial<KejaState["session"]>) => void;
@@ -133,9 +149,10 @@ export const useKeja = create<KejaState>()(
       history: [],
       filters: DEFAULT_FILTERS,
       saved: [],
+      recent: [],
       compare: [],
       session: { phone: null, verified: false },
-      activity: { leads: 0, reports: 0, ratings: 0, upvotes: {}, notifications: [], lastReadAt: 0, reportLog: [] },
+      activity: { leads: 0, reports: 0, ratings: 0, upvotes: {}, notifications: [], lastReadAt: 0, reportLog: [], viewingLog: [] },
       lowData: false,
       theme: "light",
       lang: "en",
@@ -166,6 +183,21 @@ export const useKeja = create<KejaState>()(
         if (!isSaved) {
           get().notify("success", "Keja saved", "Added to your shortlist — we watch freshness for you.");
         }
+      },
+      pushRecent: (id) => {
+        const r = get().recent.filter((x) => x !== id);
+        set({ recent: [id, ...r].slice(0, 8) });
+      },
+      clearRecent: () => set({ recent: [] }),
+      logViewing: (item) => {
+        const a = get().activity;
+        const v: ViewingLogItem = { ...item, id: Date.now(), at: Date.now() };
+        set({ activity: { ...a, viewingLog: [v, ...(a.viewingLog ?? [])].slice(0, 8) } });
+        get().notify(
+          "success",
+          "Viewing booked",
+          `${v.estate} • ${v.date} ${v.slot} • confirmation SMS simulated. Viewing is free — hakuna kulipa.`
+        );
       },
       toggleCompare: (id) => {
         const { compare } = get();
@@ -205,7 +237,7 @@ export const useKeja = create<KejaState>()(
       notify: (kind, title, body) => {
         const a = get().activity;
         const n: KejaNotification = { id: Date.now() + Math.floor(Math.random() * 999), kind, title, body, at: Date.now() };
-        set({ activity: { ...a, notifications: [n, ...a.notifications].slice(0, 12) } });
+        set({ activity: { ...a, notifications: [n, ...(a.notifications ?? [])].slice(0, 12) } });
       },
       markAllRead: () => set({ activity: { ...get().activity, lastReadAt: Date.now() } }),
       logReport: (item) => {
@@ -214,7 +246,7 @@ export const useKeja = create<KejaState>()(
         set({
           activity: {
             ...a,
-            reportLog: [r, ...a.reportLog].slice(0, 12),
+            reportLog: [r, ...(a.reportLog ?? [])].slice(0, 12),
           },
         });
         get().notify(
@@ -229,9 +261,26 @@ export const useKeja = create<KejaState>()(
     }),
     {
       name: "keja-halisi-state",
+      // deep-merge nested objects so NEW fields (e.g. viewingLog) survive
+      // hydration from older persisted states instead of being lost to undefined
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<KejaState>;
+        return {
+          ...current,
+          ...p,
+          filters: { ...current.filters, ...(p.filters ?? {}) },
+          session: { ...current.session, ...(p.session ?? {}) },
+          activity: {
+            ...current.activity,
+            ...(p.activity ?? {}),
+            upvotes: { ...(p.activity?.upvotes ?? {}) },
+          },
+        };
+      },
       partialize: (s) => ({
         filters: s.filters,
         saved: s.saved,
+        recent: s.recent,
         compare: s.compare,
         session: s.session,
         activity: {
@@ -242,6 +291,7 @@ export const useKeja = create<KejaState>()(
           notifications: s.activity.notifications,
           lastReadAt: s.activity.lastReadAt,
           reportLog: s.activity.reportLog,
+          viewingLog: s.activity.viewingLog,
         },
         lowData: s.lowData,
         theme: s.theme,
