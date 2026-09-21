@@ -95,3 +95,30 @@ Stage Summary:
 - ALL core flows browser-verified working; no console errors; lint clean
 - Known intentional demo states: fee-signal listings (Zimmerman/Langata/Umoja), taken Kasarani 1BR, pending agent, Umoja at 2/3 reports
 - External integrations (TikTok oEmbed, Maps, OpenWeather, Africa's Talking, Gemini, M-Pesa) are sandbox-mocked with production slot documented in .env.example + docs/architecture.md
+
+---
+Task ID: cron-r2 (2026-09-21 17:34 review round)
+Agent: main orchestrator (Z.ai Code)
+Task: QA sweep + trust feedback loop features (saved shortlist, rating, upvote, low-data, mobile call bar)
+
+Work Log:
+- QA via agent-browser (1440 + 390): all 10 views healthy, no console errors, server 200. Found 3 issues:
+  1. AgentView handle dark-on-dark over gradient cover (contrast bug) → FIXED: identity row now sits in a white shadow card overlapping the cover
+  2. AgentView meta said "Response 4.8★" (mislabel) → FIXED to "Rating 4.8★"
+  3. MapView legend promised "Green = fresh/available-heavy" but all pins were blue → FIXED: green pins for freshH ≤ 24, selected pin = ink + scale-125, white ring added
+
+NEW FEATURES (all browser-verified):
+- SavedView (src/components/keja/views/saved.tsx) — renter shortlist + renter dashboard metrics (Saved / Fresh matches / Leads / Reports) + empty state + "More like your shortlist" rail + privacy note; wired to store "saved" ViewName, header nav w/ heart-count badge, mobile bottom nav, footer quick link
+- RatingSheet (src/components/keja/rating.tsx) — "Was this keja real?" 1-5 stars w/ hover labels (Scam vibes→Legit! 🎉) + Sheng comment; persists localStorage keja-rating-{agentId}; renders "YOUR RATING" gold row on agent profile reviews; two entry points: agent profile "Rate agent" button + post-lead "Rate after viewing?" card in listing view
+- Community upvote — "▲ {n} legit" button on agent profile (store.activity.upvotes persisted); toast "This agent is legit • Upvoted • Trust score +1"
+- Low-data mode — store.lowData persisted; header Data Saver toggle (desktop) + mobile menu switch; listing view skips oEmbed fetch entirely when ON, shows "Low-data • autoplay off" chip + alt caption (Phase-8 "low-data toggle saves autoplay" wireframe requirement)
+- Mobile sticky call bar — listing detail fixed Call/WhatsApp bar above bottom nav (wireframe File C), safe-area padded
+- ContactModal gained optional onLeadLogged callback (backward-compatible); listing view bumps store.activity.leads → drives renter dashboard + rate prompts
+- a11y: skip-to-content link; styling: footer quick links + Hakuna Kulipa quote box
+
+Verification: eslint 0 problems; tsc clean for app code; flows verified in browser — save 2 listings → shortlist shows 2 + badge 2; lead logged → rate card appears → 5★ submitted → "YOUR RATING" on profile; 26 legit upvote; lowdata chip visible; pins 13 green/4 blue; mobile call bar renders
+
+Stage Summary:
+- Files: NEW src/components/keja/views/saved.tsx, src/components/keja/rating.tsx; MODIFIED store.ts (saved ViewName, activity, lowData), nav.tsx (Saved nav + Data Saver + footer links + bottom nav), listing.tsx (rate card + call bar + lowdata embed), agent.tsx (identity card fix + upvote/rate), map.tsx (pin colors), modals.tsx (onLeadLogged), page.tsx (saved route + skip link)
+- Store additions are backward-compatible (persisted keys: activity, lowData merge into existing keja-halisi-state)
+- Next-round ideas: dark mode (needs token refactor), renter reports view, admin export CSV, listing edit for posters, i18n Swahili toggle

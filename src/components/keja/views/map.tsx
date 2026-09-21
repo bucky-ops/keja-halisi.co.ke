@@ -161,16 +161,21 @@ export default function MapView() {
               {listings.map((l, i) => {
                 const p = pinPos(l);
                 const active = l.id === selectedId;
+                const fresh = l.freshH <= 24; // green = fresh/available-heavy per legend
                 return (
                   <div key={l.id} className="absolute" style={{ left: `${p.left}%`, top: `${p.top}%`, transform: "translate(-50%, -50%)" }}>
                     <button
                       onClick={() => setSelectedId(active ? null : l.id)}
-                      aria-label={`${l.estate} • ${kes(l.price)}`}
+                      aria-label={`${l.estate} • ${kes(l.price)}${fresh ? " • fresh" : ""}`}
                       aria-pressed={active}
                       style={{ animationDelay: `${(i % 12) * 110}ms` }}
                       className={cn(
-                        "bounce-pin grid place-items-center rounded-full p-1.5 shadow-md transition-all",
-                        active ? "z-10 scale-110 bg-verified text-white" : "bg-trust text-white hover:bg-trust/90"
+                        "bounce-pin grid place-items-center rounded-full p-1.5 shadow-md ring-2 ring-white transition-all",
+                        active
+                          ? "z-10 scale-125 bg-ink text-white"
+                          : fresh
+                            ? "bg-verified text-white hover:bg-verified/90"
+                            : "bg-trust text-white hover:bg-trust/90"
                       )}
                     >
                       <MapPin className="h-3.5 w-3.5 fill-white" />

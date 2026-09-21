@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft, Play, Flag, MessageCircle, Phone, BadgeCheck, Check, MapPin,
   CloudSun, ExternalLink, Clock, Eye, Zap, ChevronRight, Home as HomeIcon,
+  Star, ZapOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
@@ -12,16 +13,20 @@ import { fetchListing, fetchListings } from "../api";
 import { MiniListingCard } from "../listing-card";
 import { VerificationBadge, TrustChecksNotice, PrivacyNotice, FeeWarning } from "../badges";
 import { ReportModal, ContactModal } from "../modals";
+import { RatingSheet } from "../rating";
 import type { ListingDTO } from "@/lib/types";
 
 type Oembed = { thumb: string | null; author: string | null } | null;
 
 export default function ListingView() {
-  const { params, back, navigate } = useKeja();
+  const { params, back, navigate, lowData, bumpActivity } = useKeja();
   const [oembed, setOembed] = useState<Oembed>(null);
   const [similar, setSimilar] = useState<ListingDTO[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+  // trust feedback loop — after a lead is logged, invite the renter to rate the agent
+  const [leadLogged, setLeadLogged] = useState(false);
+  const [rateOpen, setRateOpen] = useState(false);
 
   /* payload keyed by listingId — loading/failed derived, no cascading setState */
   const id = params.listingId ?? null;
@@ -45,8 +50,9 @@ export default function ListingView() {
   }, [id]);
 
   /* ---------------- TikTok oEmbed (legal; falls back offline) ---------------- */
+  // low-data mode derives an invisible embed — no remote fetch at all
   useEffect(() => {
-    if (!listing?.tiktokUrl) return;
+    if (!listing?.tiktokUrl || lowData) return;
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 4000);
     fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(listing.tiktokUrl)}`, {
@@ -59,7 +65,8 @@ export default function ListingView() {
       .catch(() => setOembed(null))
       .finally(() => clearTimeout(timer));
     return () => { ctrl.abort(); clearTimeout(timer); };
-  }, [listing?.tiktokUrl]);
+  }, [listing?.tiktokUrl, lowData]);
+  const oembedShown = lowData ? null : oembed;
 
   /* ---------------- similar kejas (same estate, exclude self) ---------------- */
   useEffect(() => {
@@ -192,10 +199,10 @@ export default function ListingView() {
 
             {/* embed area — real oEmbed attempted, styled fallback offline */}
             <div className="relative mx-auto mt-3.5 flex max-h-[480px] w-full max-w-[270px] items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-white/10 to-black/40 keja-building" style={{ aspectRatio: "9 / 16" }}>
-              {oembed?.thumb ? (
+              {oembedShown?.thumb ? (
                 <div
                   className="absolute inset-0 bg-cover bg-center opacity-60"
-                  style={{ backgroundImage: `url(${oembed.thumb})` }}
+                  style={{ backgroundImage: `url(${oembedShown.thumb})` }}
                   aria-hidden
                 />
               ) : null}
@@ -207,7 +214,7 @@ export default function ListingView() {
                   {l.title} • {l.poster.tiktokHandle}
                 </p>
                 <p className="mt-1 text-[10px] font-semibold text-white/60">
-                  {oembed?.author ? `oEmbed OK • ${oembed.author}` : `${l.beds} walkthrough • ${l.estate}`}
+                  {oembedShown?.author ? `oEmbed OK • ${oembedShown.author}` : `${l.beds} walkthrough • ${l.estate}`}
                 </p>
               </div>
               <span className="absolute bottom-2.5 left-2.5 z-10 rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-bold text-white/80 backdrop-blur-sm">
@@ -216,11 +223,16 @@ export default function ListingView() {
               <span className="absolute right-2.5 top-2.5 z-10 rounded-full bg-tiktok-pink px-2 py-0.5 text-[9px] font-extrabold">
                 {l.freshH <= 24 ? "Fresh" : "Catalog"}
               </span>
+              {lowData && (
+                <span className="absolute left-2.5 top-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-safaricom px-2 py-0.5 text-[9px] font-extrabold text-white">
+                  <ZapOff className="h-2.5 w-2.5" /> Low-data • autoplay off
+                </span>
+              )}
             </div>
 
             {/* muted note + photo thumbs */}
             <p className="mt-2.5 text-center text-[9.5px] font-semibold text-white/45">
-              Autoplay muted • captions burned in • vertical evidence
+              {lowData ? "Low-data mode • autoplay disabled • tap to play in production" : "Autoplay muted • captions burned in • vertical evidence"}
             </p>
             <div className="mt-3 grid grid-cols-3 gap-2">
               {(l.photos.length > 0 ? l.photos : ["p1", "p2", "p3"]).slice(0, 3).map((p, i) => (
@@ -406,7 +418,25 @@ export default function ListingView() {
             </p>
           </section>
 
-          {/* 8. report */}
+          {/* 8. rate-after-call trust loop */}
+          {leadLogged && (
+            <section className="pop rounded-3xl border border-gold/40 bg-gold/10 p-4" aria-label="Rate after viewing">
+              <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-[#8c6700]">
+                <Star className="h-4 w-4 fill-gold text-gold" /> Rate after viewing?
+              </p>
+              <p className="mt-1 text-[11.5px] font-semibold text-[#8c6700]/90">
+                Was this keja real? Rate {l.poster.tiktokHandle} — shows on their agent card.
+              </p>
+              <button
+                onClick={() => setRateOpen(true)}
+                className="touch-target mt-2.5 w-full rounded-full bg-gold py-2.5 text-[12px] font-extrabold text-ink transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                ⭐ Rate {l.poster.tiktokHandle}
+              </button>
+            </section>
+          )}
+
+          {/* 9. report */}
           <button
             onClick={() => setReportOpen(true)}
             className="touch-target flex w-full items-center justify-center gap-1.5 rounded-full border-2 border-scam py-3 text-[12.5px] font-extrabold text-scam transition-colors hover:bg-scam hover:text-white"
@@ -416,9 +446,46 @@ export default function ListingView() {
         </aside>
       </div>
 
-      {/* modals */}
+      {/* mobile sticky call bar — above bottom nav (wireframe File C) */}
+      {l.status === "Available" && (
+        <div
+          className="fixed inset-x-0 bottom-[68px] z-40 flex gap-2 border-t border-kline bg-white/95 p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] backdrop-blur-md md:hidden"
+          role="navigation"
+          aria-label="Quick contact"
+        >
+          <button
+            onClick={() => setContactOpen(true)}
+            className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-full bg-verified py-2.5 text-[12.5px] font-extrabold text-white active:scale-[0.98]"
+          >
+            <Phone className="h-4 w-4" /> Call
+          </button>
+          <button
+            onClick={() => setContactOpen(true)}
+            className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-full bg-wa py-2.5 text-[12.5px] font-extrabold text-white active:scale-[0.98]"
+          >
+            <MessageCircle className="h-4 w-4" /> WhatsApp
+          </button>
+        </div>
+      )}
+
+      {/* modals + rating sheet */}
       <ReportModal listing={l} open={reportOpen} onClose={closeReport} />
-      <ContactModal listing={l} open={contactOpen} onClose={() => setContactOpen(false)} />
+      <ContactModal
+        listing={l}
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        onLeadLogged={() => {
+          setLeadLogged(true);
+          bumpActivity({ leads: 1 });
+        }}
+      />
+      <RatingSheet
+        open={rateOpen}
+        onClose={() => setRateOpen(false)}
+        agentHandle={l.poster.tiktokHandle}
+        agentId={l.poster.id}
+        estateHint={l.estate}
+      />
     </div>
   );
 }

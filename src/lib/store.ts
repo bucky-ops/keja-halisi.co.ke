@@ -8,6 +8,7 @@ import { persist } from "zustand/middleware";
 export type ViewName =
   | "home"
   | "estate"
+  | "saved"
   | "listing"
   | "agent"
   | "verify"
@@ -53,12 +54,19 @@ interface KejaState {
   saved: string[];
   // demo session (OTP-verified user)
   session: { phone: string | null; verified: boolean };
+  // renter activity (trust feedback loop — persisted)
+  activity: { leads: number; reports: number; ratings: number; upvotes: Record<string, true> };
+  // low-data mode (disables embed autoplay / heavy effects)
+  lowData: boolean;
   navigate: (view: ViewName, params?: ViewParams) => void;
   back: () => void;
   setFilters: (patch: Partial<KejaState["filters"]>) => void;
   resetFilters: () => void;
   toggleSaved: (id: string) => void;
   setSession: (s: Partial<KejaState["session"]>) => void;
+  bumpActivity: (patch: Partial<Pick<KejaState["activity"], "leads" | "reports" | "ratings">>) => void;
+  toggleUpvote: (agentId: string) => void;
+  setLowData: (v: boolean) => void;
 }
 
 const DEFAULT_FILTERS: KejaState["filters"] = {
@@ -85,6 +93,8 @@ export const useKeja = create<KejaState>()(
       filters: DEFAULT_FILTERS,
       saved: [],
       session: { phone: null, verified: false },
+      activity: { leads: 0, reports: 0, ratings: 0, upvotes: {} },
+      lowData: false,
       navigate: (view, params = {}) => {
         const { view: v, params: p, history } = get();
         set({
@@ -110,10 +120,34 @@ export const useKeja = create<KejaState>()(
         set({ saved: saved.includes(id) ? saved.filter((s) => s !== id) : [...saved, id] });
       },
       setSession: (s) => set({ session: { ...get().session, ...s } }),
+      bumpActivity: (patch) => {
+        const a = get().activity;
+        set({
+          activity: {
+            ...a,
+            leads: a.leads + (patch.leads ?? 0),
+            reports: a.reports + (patch.reports ?? 0),
+            ratings: a.ratings + (patch.ratings ?? 0),
+          },
+        });
+      },
+      toggleUpvote: (agentId) => {
+        const upvotes = { ...get().activity.upvotes };
+        if (upvotes[agentId]) delete upvotes[agentId];
+        else upvotes[agentId] = true;
+        set({ activity: { ...get().activity, upvotes } });
+      },
+      setLowData: (v) => set({ lowData: v }),
     }),
     {
       name: "keja-halisi-state",
-      partialize: (s) => ({ filters: s.filters, saved: s.saved, session: s.session }),
+      partialize: (s) => ({
+        filters: s.filters,
+        saved: s.saved,
+        session: s.session,
+        activity: { leads: s.activity.leads, reports: s.activity.reports, ratings: s.activity.ratings, upvotes: s.activity.upvotes },
+        lowData: s.lowData,
+      }),
     }
   )
 );

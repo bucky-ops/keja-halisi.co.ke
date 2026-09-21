@@ -6,6 +6,7 @@ import { useKeja } from "@/lib/store";
 import { TopBar, Header, Footer, BottomNav } from "@/components/keja/nav";
 import HomeView from "@/components/keja/views/home";
 import EstateView from "@/components/keja/views/estate";
+import SavedView from "@/components/keja/views/saved";
 import ListingView from "@/components/keja/views/listing";
 import VerifyView from "@/components/keja/views/verify";
 import PostView from "@/components/keja/views/post";
@@ -20,6 +21,8 @@ function ActiveView() {
   switch (view) {
     case "estate":
       return <EstateView />;
+    case "saved":
+      return <SavedView />;
     case "listing":
       return <ListingView />;
     case "agent":
@@ -50,6 +53,7 @@ export default function Page() {
     const titles: Record<string, string> = {
       home: "Keja Halisi — Real House Verified | Nairobi Verified Rentals",
       estate: "Browse estates — Keja Halisi",
+      saved: "Your shortlist — Keja Halisi",
       listing: "Listing — Keja Halisi",
       agent: "Agent profile — Keja Halisi",
       verify: "Verify agent — Keja Halisi",
@@ -64,9 +68,15 @@ export default function Page() {
 
   return (
     <div className="flex min-h-screen flex-col bg-kbg">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-[200] focus:rounded-full focus:bg-ink focus:px-4 focus:py-2 focus:text-[12px] focus:font-extrabold focus:text-white"
+      >
+        Skip to content
+      </a>
       <TopBar />
       <Header />
-      <main className="flex-1 pb-16 md:pb-0">
+      <main id="main-content" className="flex-1 pb-16 md:pb-0">
         <ActiveView />
       </main>
       <Footer />

@@ -9,6 +9,7 @@ import {
   Store,
   SearchX,
   ArrowLeft,
+  ArrowBigUp,
   BadgeCheck,
   MapPin,
   Vault,
@@ -18,6 +19,7 @@ import { useKeja, toast } from "@/lib/store";
 import { fetchAgentProfile } from "../api";
 import { VerificationBadge } from "../badges";
 import { ListingCard, ListingCardSkeleton } from "../listing-card";
+import { RatingSheet } from "../rating";
 import type { AgentDTO, ListingDTO } from "@/lib/types";
 
 interface ProfileData {
@@ -38,8 +40,9 @@ function fmtDate(iso: string | null): string {
 }
 
 export default function AgentView() {
-  const { params, back, navigate } = useKeja();
+  const { params, back, navigate, activity, toggleUpvote } = useKeja();
   const handle = params.handle || "@keja_kile";
+  const [rateOpen, setRateOpen] = useState(false);
 
   const [data, setData] = useState<ProfileData | null>(null);
   const [error, setError] = useState(false);
@@ -135,6 +138,15 @@ export default function AgentView() {
   const { agent, listings, verifications } = data;
   const initials = agent.tiktokHandle.replace("@", "").slice(0, 2).toUpperCase();
 
+  // trust feedback loop — community "legit" upvotes (demo base + local vote)
+  const upvoted = Boolean(activity.upvotes[agent.id]);
+  const legitBase = 24 + (agent.tiktokHandle.length % 9);
+
+  // renter's own rating for this agent (persisted locally, demo)
+  const myRating = JSON.parse(
+    (typeof window !== "undefined" && localStorage.getItem(`keja-rating-${agent.id}`)) || "null"
+  ) as { stars: number; comment: string } | null;
+
   // verification timeline — status per docType (verified / pending / missing)
   const findV = (match: string) =>
     verifications.find((v) => v.docType.toLowerCase().includes(match));
@@ -158,8 +170,8 @@ export default function AgentView() {
       {/* ============ COVER ============ */}
       <header>
         <div className="h-36 rounded-3xl bg-gradient-to-r from-tiktok via-trust/80 to-verified/80" role="img" aria-label={`${agent.tiktokHandle} profile cover`} />
-        <div className="-mt-8 px-1 sm:px-4">
-          <div className="flex flex-wrap items-center gap-4">
+        <div className="-mt-10 px-1 sm:px-4">
+          <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-kline bg-card p-4 pt-5 shadow-[0_10px_30px_rgba(17,25,40,0.08)]">
             <span
               className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-ink font-display text-lg font-extrabold text-white ring-4 ring-white"
               aria-hidden
@@ -176,9 +188,30 @@ export default function AgentView() {
                 {agent.verifiedSince
                   ? `Verified since ${fmtDate(agent.verifiedSince)}`
                   : "Under review — not verified yet"}
-                <span aria-hidden>•</span> Response {agent.rating}★
+                <span aria-hidden>•</span> Rating {agent.rating}★
                 <span aria-hidden>•</span> Reports {agent.reportsCount}
               </p>
+            </div>
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => {
+                  const before = Boolean(upvoted);
+                  toggleUpvote(agent.id);
+                  toast("success", before ? "Upvote removed" : "This agent is legit • Upvoted • Trust score +1");
+                }}
+                className={`touch-target inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[11.5px] font-extrabold transition-colors ${
+                  upvoted ? "border-verified bg-verified-soft text-[#0a6b40]" : "border-kline bg-white text-ink hover:bg-kbg"
+                }`}
+              >
+                <ArrowBigUp className={`h-4 w-4 ${upvoted ? "fill-verified text-verified" : "text-kmuted"}`} />
+                {legitBase + (upvoted ? 1 : 0)} legit
+              </button>
+              <button
+                onClick={() => setRateOpen(true)}
+                className="touch-target inline-flex items-center gap-1.5 rounded-full bg-gold px-3.5 py-2 text-[11.5px] font-extrabold text-ink transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <Star className="h-3.5 w-3.5 fill-ink" /> Rate agent
+              </button>
             </div>
           </div>
         </div>
@@ -294,6 +327,19 @@ export default function AgentView() {
           {/* reviews */}
           <div className="rounded-2xl border border-kline bg-card p-4">
             <p className="text-[10.5px] font-extrabold uppercase tracking-[0.14em] text-kmuted">Reviews</p>
+            {myRating && (
+              <div className="mt-3 flex items-center gap-3 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2.5">
+                <span className="flex shrink-0 items-center gap-0.5">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className={cn("h-3 w-3", i < myRating.stars ? "fill-gold text-gold" : "text-kline")} />
+                  ))}
+                </span>
+                <p className="min-w-0 flex-1 truncate text-[12px] font-bold text-ink">
+                  {myRating.comment || "Asante — rated after viewing"}
+                </p>
+                <span className="shrink-0 text-[10px] font-extrabold text-[#8c6700]">YOUR RATING</span>
+              </div>
+            )}
             <ul className="mt-3 divide-y divide-kline">
               {DEMO_REVIEWS.map((r) => (
                 <li key={r.handle} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
@@ -325,6 +371,14 @@ export default function AgentView() {
           </div>
         </div>
       </div>
+
+      <RatingSheet
+        open={rateOpen}
+        onClose={() => setRateOpen(false)}
+        agentHandle={agent.tiktokHandle}
+        agentId={agent.id}
+        estateHint={listings[0]?.estate}
+      />
     </div>
   );
 }

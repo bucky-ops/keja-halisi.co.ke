@@ -104,10 +104,12 @@ export function ContactModal({
   listing,
   open,
   onClose,
+  onLeadLogged,
 }: {
   listing: ListingDTO | null;
   open: boolean;
   onClose: () => void;
+  onLeadLogged?: (action: "call" | "whatsapp") => void;
 }) {
   const [revealed, setRevealed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -124,6 +126,7 @@ export function ContactModal({
     try {
       await logLead(listing.id, "call");
       setRevealed(true);
+      onLeadLogged?.("call");
       toast("success", "Phone masked until contact • Lead logged • Response time tracked");
     } finally {
       setBusy(false);
@@ -159,7 +162,7 @@ export function ContactModal({
           href={revealed ? `https://wa.me/${listing.poster.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi, I saw your keja in ${listing.estate} on Keja Halisi`)}` : "#"}
           onClick={(e) => {
             if (!revealed) { e.preventDefault(); toast("warning", "Log the lead first — phone masked until contact"); }
-            else toast("success", `WhatsApp • wa.me lead logged • ${listing.estate}`);
+            else { onLeadLogged?.("whatsapp"); toast("success", `WhatsApp • wa.me lead logged • ${listing.estate}`); }
           }}
           className="touch-target flex items-center justify-center gap-1.5 rounded-full bg-wa font-extrabold text-[12px] text-white"
         >
