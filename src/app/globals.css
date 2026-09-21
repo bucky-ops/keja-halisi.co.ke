@@ -215,6 +215,20 @@
   .view-in { animation: none; }
 }
 
+/* staggered card entrance (listing grids) — pair with inline animationDelay */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.card-in {
+  opacity: 0;
+  animation: cardIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-in { animation: none; opacity: 1; }
+}
+.low-data .card-in { animation: none; opacity: 1; }
+
 /* ---- Keja custom scrollbar ---- */
 .keja-scroll::-webkit-scrollbar {
   height: 6px;

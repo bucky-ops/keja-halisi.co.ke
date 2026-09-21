@@ -16,6 +16,7 @@ import { ReportModal, ContactModal } from "../modals";
 import { ViewingModal } from "../viewing";
 import { RatingSheet } from "../rating";
 import { FairPriceWidget } from "../fair-price";
+import { MoveInCost } from "../move-in-cost";
 import type { ListingDTO } from "@/lib/types";
 
 type Oembed = { thumb: string | null; author: string | null } | null;
@@ -327,7 +328,7 @@ export default function ListingView() {
           {/* 1. price panel */}
           <section className="rounded-3xl border border-kline bg-surface p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="font-display text-2xl font-extrabold text-body">
+              <p className="font-display text-2xl font-extrabold tabular-nums text-body">
                 {kes(l.price)}<span className="text-[13px] font-bold text-kmuted"> /mo</span>
               </p>
               <span className={cn("inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-extrabold", statusPill.cls)}>
@@ -505,6 +506,9 @@ export default function ListingView() {
           {/* 5. fair-price radar (anti-bait) */}
           <FairPriceWidget listing={l} />
 
+          {/* 5b. move-in cost estimator (budget trust tool) */}
+          <MoveInCost listing={l} />
+
           {/* 6. location */}
           <section className="rounded-3xl border border-kline bg-surface p-4" aria-label="Location">
             <p className="flex items-start gap-1.5 text-[12px] font-bold leading-relaxed text-body">
@@ -598,6 +602,21 @@ export default function ListingView() {
             action === "call" ? "Lead logged — call connected" : "Lead logged — WhatsApp",
             `${l.estate} • ${l.beds} • agent ${l.poster.tiktokHandle} contacted. Rate after viewing!`
           );
+          // simulated agent reply (production: Africa's Talking delivery report → push)
+          const replies = [
+            `Karibu! Hiyo ${l.beds} iko available — come see it anytime`,
+            `Sawa, niko jobo around. Can we do the viewing today?`,
+            `Yes the house is ready — water iko and gate keeper anajua mimi`,
+            `Pole kwa delay — nitakuwa estate after 5pm, viewing iko free`,
+          ];
+          const delay = 6000 + Math.floor(Math.random() * 4000);
+          window.setTimeout(() => {
+            notify(
+              "info",
+              `${l.poster.tiktokHandle} replied • SMS (simulated)`,
+              replies[Math.floor(Math.random() * replies.length)]
+            );
+          }, delay);
         }}
       />
       <RatingSheet

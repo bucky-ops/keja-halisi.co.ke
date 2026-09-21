@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search, ArrowRight, BadgeCheck, ShieldCheck, Building2, Flag, CalendarClock,
   Play, Zap, MapPin, Smartphone, Ban, ChevronRight, History as HistoryIcon,
-  GraduationCap, Trophy, Star,
+  GraduationCap, Trophy, Star, CalendarCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
@@ -96,10 +96,48 @@ export default function HomeView() {
     return recent.map((id) => byId.get(id)).filter((l): l is ListingDTO => Boolean(l)).slice(0, 6);
   }, [recent, catalog]);
 
+  /* --- saved-search alerts: sync on load + poll every 45s while on home --- */
+  const syncSavedSearches = useKeja((s) => s.syncSavedSearches);
+  const hasSearches = useKeja((s) => s.savedSearches.length > 0);
+  useEffect(() => {
+    if (catalog.length > 0) {
+      syncSavedSearches(
+        catalog.map((l) => ({
+          id: l.id, title: l.title, estate: l.estate, subCounty: l.subCounty, borough: l.borough,
+          road: l.road, beds: l.beds, price: l.price, fee: l.fee, freshH: l.freshH,
+          status: l.status, posterVerified: l.poster.verificationStatus === "verified" || l.poster.verificationStatus === "gold",
+        }))
+      );
+    }
+    if (!hasSearches) return;
+    const iv = window.setInterval(() => {
+      fetchListings({ limit: 60 })
+        .then((rows) =>
+          syncSavedSearches(
+            rows.map((l) => ({
+              id: l.id, title: l.title, estate: l.estate, subCounty: l.subCounty, borough: l.borough,
+              road: l.road, beds: l.beds, price: l.price, fee: l.fee, freshH: l.freshH,
+              status: l.status, posterVerified: l.poster.verificationStatus === "verified" || l.poster.verificationStatus === "gold",
+            }))
+          )
+        )
+        .catch(() => { /* offline — keep previous baseline */ });
+    }, 45000);
+    return () => window.clearInterval(iv);
+  }, [catalog, hasSearches, syncSavedSearches]);
+
   /* count-ups for trust snapshot */
   const agents = useCountUp(stats?.verifiedAgents ?? 1247);
   const units = useCountUp(stats?.units ?? 3421);
   const scams = useCountUp(stats?.scamsBlocked ?? 892);
+
+  /* upcoming viewing reminder — next booking within ±36h window */
+  const upcomingViewing = useMemo(() => {
+    const now = Date.now();
+    return (activity.viewingLog ?? [])
+      .filter((v) => typeof v.ts === "number" && v.ts > now - 2 * 3600e3 && v.ts < now + 36 * 3600e3)
+      .sort((a, b) => (a.ts ?? 0) - (b.ts ?? 0))[0];
+  }, [activity.viewingLog]);
 
   const runSearch = () => {
     setFilters({ estate: estateInput.trim(), beds, minPrice: budget.min, maxPrice: budget.max });
@@ -188,6 +226,32 @@ export default function HomeView() {
           </div>
         </div>
       </section>
+
+      {/* ================== 1b. UPCOMING VIEWING REMINDER ================== */}
+      {upcomingViewing && (
+        // mb-24 compensates the Find Keja card's -mt-16 pull-up so the card
+        // overlaps empty margin instead of covering this banner
+        <div className="relative z-10 mx-auto -mt-2 mb-24 max-w-[880px]">
+          <button
+            onClick={() => navigate("listing", { listingId: upcomingViewing.listingId })}
+            className="card-lift flex w-full items-center gap-3 rounded-2xl border border-trust/30 bg-trust-soft/60 px-4 py-3 text-left"
+            aria-label="Open your upcoming viewing"
+          >
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-trust text-white">
+              <CalendarCheck className="h-4.5 w-4.5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[12.5px] font-extrabold text-body">
+                Viewing {upcomingViewing.estate} • {upcomingViewing.date} • {upcomingViewing.slot} EAT
+              </span>
+              <span className="block truncate text-[10.5px] font-semibold text-kmuted">
+                Reminder • go with your ID, ask for water + gate, viewing is free — hakuna kulipa.
+              </span>
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-trust" />
+          </button>
+        </div>
+      )}
 
       {/* ====================== 2. FIND KEJA SEARCH CARD ====================== */}
       <div className="relative z-10 mx-auto -mt-16 max-w-[880px]">

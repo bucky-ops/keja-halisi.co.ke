@@ -59,11 +59,13 @@ function ActiveView() {
 export default function Page() {
   const view = useKeja((s) => s.view);
   const theme = useKeja((s) => s.theme);
+  const lowData = useKeja((s) => s.lowData);
 
-  // apply persisted theme to <html> (dark mode token flips in globals.css)
+  // apply persisted theme + data-saver flag to <html> (tokens flip in globals.css)
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
+    document.documentElement.classList.toggle("low-data", lowData);
+  }, [theme, lowData]);
 
   // keep document title in sync with the active view (SEO nicety inside SPA)
   useEffect(() => {

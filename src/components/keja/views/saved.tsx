@@ -2,7 +2,7 @@
 // KEJA HALISI — SavedView: renter's shortlist + personal dashboard
 // Blueprint "Renter dashboard": Saved / Fresh matches / Leads / Reports + rate-after-viewing loop.
 import { useEffect, useMemo, useState } from "react";
-import { Heart, Zap, Phone, Flag, SearchX, ArrowRight, Star, ShieldCheck, ArrowLeft, Bell, CalendarCheck } from "lucide-react";
+import { Heart, Zap, Phone, Flag, SearchX, ArrowRight, Star, ShieldCheck, ArrowLeft, Bell, CalendarCheck, BellRing, Play, Trash2, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
 import { fetchListings } from "../api";
@@ -18,7 +18,7 @@ interface RatingMemory {
 }
 
 export default function SavedView() {
-  const { saved, toggleSaved, activity, navigate, back } = useKeja();
+  const { saved, toggleSaved, activity, navigate, back, savedSearches, runSearch, removeSearch } = useKeja();
   const [all, setAll] = useState<ListingDTO[] | null>(null);
   const [rateTarget, setRateTarget] = useState<RatingMemory | null>(null);
 
@@ -97,6 +97,85 @@ export default function SavedView() {
           </div>
         ))}
       </div>
+
+      {/* ===== saved searches (alert manager) ===== */}
+      <section className="mt-5 rounded-3xl border border-kline bg-card p-4" aria-label="Saved searches">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-body">
+            <BellRing className="h-4 w-4 text-trust" /> Saved searches • {savedSearches.length}
+          </p>
+          <span className="rounded-full bg-trust-soft px-2.5 py-1 text-[9.5px] font-extrabold uppercase tracking-wider text-trust">
+            alerts on
+          </span>
+        </div>
+        <p className="mt-0.5 text-[11px] font-semibold text-kmuted">
+          We scan the catalog while you are here — new matches ring the bell. Set them up from any estate search.
+        </p>
+        {savedSearches.length === 0 ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => navigate("estate")}
+              className="touch-target rounded-full bg-trust px-4 py-2 text-[11.5px] font-extrabold text-white transition-transform hover:scale-[1.02]"
+            >
+              Create your first alert
+            </button>
+            <span className="text-[10.5px] font-semibold text-kmuted">e.g. “Kasarani • Bedsitter • KES 7k-10k”</span>
+          </div>
+        ) : (
+          <ul className="keja-scroll mt-3 max-h-72 space-y-2 overflow-y-auto">
+            {savedSearches.map((s) => (
+              <li
+                key={s.id}
+                className="flex flex-wrap items-center gap-2 rounded-xl border border-kline/70 bg-kbg/50 px-3 py-2.5"
+              >
+                <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-xl", s.newCount > 0 ? "bg-verified-soft text-ok-strong pop" : "bg-trust-soft text-trust")}>
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-1.5 truncate text-[11.5px] font-extrabold text-body">
+                    {s.label}
+                    {s.newCount > 0 && (
+                      <span className="shrink-0 rounded-full bg-verified px-1.5 py-0.5 text-[8.5px] font-extrabold text-white">
+                        {s.newCount} new
+                      </span>
+                    )}
+                  </p>
+                  <p className="truncate text-[9.5px] font-semibold text-kmuted">
+                    {[
+                      s.filters.estate || s.filters.subCounty || s.filters.borough || "All Nairobi",
+                      s.filters.beds,
+                      `KES ${s.filters.minPrice >= 1000 ? `${Math.round(s.filters.minPrice / 1000)}k` : s.filters.minPrice}-${s.filters.maxPrice >= 100000 ? "100k+" : `${Math.round(s.filters.maxPrice / 1000)}k`}`,
+                      s.filters.fresh ? "fresh" : null,
+                      s.filters.verified ? "verified" : null,
+                      s.filters.noFee ? "no fee" : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" • ")}
+                    {" • "}
+                    {s.lastSeen.length} matches
+                  </p>
+                </div>
+                <button
+                  onClick={() => runSearch(s.id)}
+                  className="touch-target inline-flex shrink-0 items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-[10px] font-extrabold text-white transition-transform hover:scale-105"
+                >
+                  <Play className="h-3 w-3" /> Run
+                </button>
+                <button
+                  onClick={() => {
+                    removeSearch(s.id);
+                    toast("info", "Search alert removed");
+                  }}
+                  aria-label={`Delete saved search ${s.label}`}
+                  className="touch-target grid h-8 w-8 shrink-0 place-items-center rounded-full text-kmuted hover:bg-scam-soft hover:text-scam"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {/* rate-after-viewing loop */}
       {pendingRatings.length > 0 && (
@@ -257,10 +336,11 @@ export default function SavedView() {
             </p>
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {savedListings.map((l) => (
+            {savedListings.map((l, i) => (
               <ListingCard
                 key={l.id}
                 listing={l}
+                index={i}
                 onCall={() => {
                   navigate("listing", { listingId: l.id });
                   toast("info", "Open the listing to call — phone masked until contact");

@@ -13,9 +13,11 @@ interface ListingCardProps {
   compact?: boolean;
   onOpen?: (listing: ListingDTO) => void;
   onCall?: (listing: ListingDTO) => void;
+  /** grid position — drives the staggered entrance animation */
+  index?: number;
 }
 
-export function ListingCard({ listing: l, compact = false, onOpen, onCall }: ListingCardProps) {
+export function ListingCard({ listing: l, compact = false, onOpen, onCall, index }: ListingCardProps) {
   const { saved, toggleSaved, navigate, compare, toggleCompare } = useKeja();
   const isSaved = saved.includes(l.id);
   const inCompare = compare.includes(l.id);
@@ -45,10 +47,11 @@ export function ListingCard({ listing: l, compact = false, onOpen, onCall }: Lis
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && open()}
       className={cn(
-        "group card-lift cursor-pointer rounded-3xl bg-card border border-kline shadow-[0_7px_22px_rgba(17,25,40,0.05)] overflow-hidden focus-visible:outline-2 focus-visible:outline-trust",
+        "group card-lift card-in cursor-pointer rounded-3xl bg-card border border-kline shadow-[0_7px_22px_rgba(17,25,40,0.05)] overflow-hidden focus-visible:outline-2 focus-visible:outline-trust",
         reported && "border-2 border-scam",
         grayed && "opacity-60 saturate-50"
       )}
+      style={index !== undefined ? { animationDelay: `${Math.min(index, 11) * 55}ms` } : undefined}
     >
       {/* cover */}
       <div className={cn("relative keja-building", compact ? "h-28" : "h-40 sm:h-44")}>
@@ -117,7 +120,7 @@ export function ListingCard({ listing: l, compact = false, onOpen, onCall }: Lis
       <div className={cn("p-4", compact && "p-3")}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className={cn("font-display font-bold text-body leading-tight", compact ? "text-[12.5px]" : "text-[14px]")}>
+            <p className={cn("font-display font-bold tabular-nums text-body leading-tight", compact ? "text-[12.5px]" : "text-[14px]")}>
               {kes(l.price)}
               <span className="text-kmuted font-sans font-medium text-[11px]"> /mo</span>
             </p>

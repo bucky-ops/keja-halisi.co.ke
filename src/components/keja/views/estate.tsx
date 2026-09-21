@@ -4,20 +4,21 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ChevronRight, Search, SlidersHorizontal, LayoutGrid, Map as MapIcon,
-  RotateCcw, MapPin, CloudSun, X, Home as HomeIcon,
+  RotateCcw, MapPin, CloudSun, X, Home as HomeIcon, BellPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
 import { ALL_SUB_COUNTIES, AMENITY_OPTIONS, BEDS_OPTIONS, estateWeather, kes } from "@/lib/nairobi";
 import { fetchListings } from "../api";
 import { ListingCard, ListingCardSkeleton } from "../listing-card";
+import { EstateGuide } from "../estate-guide";
 import type { ListingDTO } from "@/lib/types";
 
 const PRICE_MIN = 3000;
 const PRICE_MAX = 100000;
 
 export default function EstateView() {
-  const { filters, setFilters, resetFilters, navigate } = useKeja();
+  const { filters, setFilters, resetFilters, navigate, saveSearch } = useKeja();
 
   const [amenities, setAmenities] = useState<string[]>([]);
   const [mapMode, setMapMode] = useState(false);
@@ -341,7 +342,15 @@ export default function EstateView() {
                 {loading ? "Scanning catalog…" : `${visible.length} listings match your Nairobi filters`}
               </p>
             </div>
-            <div className="flex items-center gap-1 rounded-full bg-surface p-1 ring-1 ring-kline" role="group" aria-label="View mode">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => saveSearch(`${titleScope}${filters.beds ? ` • ${filters.beds}` : ""} • KES ${filters.minPrice.toLocaleString()}-${filters.maxPrice >= 100000 ? "100k+" : filters.maxPrice.toLocaleString()}`)}
+                className="touch-target inline-flex items-center gap-1.5 rounded-full border border-trust/40 bg-trust-soft px-3.5 py-2 text-[11.5px] font-extrabold text-trust transition-colors hover:bg-trust hover:text-white"
+                title="Get notified when fresh kejas match these filters"
+              >
+                <BellPlus className="h-3.5 w-3.5" /> Save this search
+              </button>
+              <div className="flex items-center gap-1 rounded-full bg-surface p-1 ring-1 ring-kline" role="group" aria-label="View mode">
               <button
                 onClick={() => setMapMode(false)}
                 aria-pressed={!mapMode}
@@ -362,6 +371,7 @@ export default function EstateView() {
               >
                 <MapIcon className="h-3.5 w-3.5" /> Map
               </button>
+              </div>
             </div>
           </div>
 
@@ -453,11 +463,23 @@ export default function EstateView() {
           ) : visible.length === 0 ? (
             /* ---------- empty state ---------- */
             <div className="mt-5 rounded-3xl border border-dashed border-kline bg-surface p-10 text-center">
-              <MapPin className="mx-auto h-8 w-8 text-kline" aria-hidden />
+              <MapPin className="bounce-pin mx-auto h-8 w-8 text-kline" aria-hidden />
               <p className="mt-3 font-display text-[15px] font-extrabold text-body">No matching demo listings</p>
               <p className="mx-auto mt-1.5 max-w-md text-[12.5px] font-semibold leading-relaxed text-kmuted">
                 Try a wider budget, another sub-county, or clear the freshness filters.
               </p>
+              {/* one-tap suggestions — real estates with live stock */}
+              <div className="mt-4 flex flex-wrap justify-center gap-2" aria-label="Suggested estates">
+                {["Kasarani", "Kileleshwa", "Umoja", "Pipeline", "South C"].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => { setFilters({ estate: s, borough: "", subCounty: "", minPrice: 3000, maxPrice: 100000 }); }}
+                    className="min-h-11 rounded-full bg-kbg px-4 py-2.5 text-[11.5px] font-extrabold text-body/80 transition-colors hover:bg-trust hover:text-white"
+                  >
+                    Try {s}
+                  </button>
+                ))}
+              </div>
               <button
                 onClick={clearAll}
                 className="touch-target mt-4 rounded-full bg-ink px-5 py-2.5 text-[12px] font-extrabold text-white"
@@ -468,11 +490,18 @@ export default function EstateView() {
           ) : (
             /* ---------- listing grid ---------- */
             <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {visible.map((l) => (
-                <ListingCard key={l.id} listing={l} />
+              {visible.map((l, i) => (
+                <ListingCard key={l.id} listing={l} index={i} />
               ))}
             </div>
           )}
+
+          {/* ============ 8a. AI ESTATE GUIDE ============ */}
+          {filters.estate ? (
+            <div className="mt-5">
+              <EstateGuide estate={filters.estate} />
+            </div>
+          ) : null}
 
           {/* ============================ 8. SEO TEXT BOX ============================ */}
           <p className="mt-8 rounded-2xl bg-kbg px-4 py-3.5 text-[11.5px] font-medium leading-relaxed text-kmuted">

@@ -55,6 +55,19 @@ function ViewingForm({ listing, onClose }: { listing: ListingDTO; onClose: () =>
   const pick = days[dayIdx];
   const dateLabel = pick.toLocaleDateString("en-KE", { weekday: "long", day: "numeric", month: "short" });
 
+  // target viewing timestamp from day + slot (drives the home reminder banner)
+  const targetTs = useMemo(() => {
+    const m = /^(\d+):(\d+)\s*(AM|PM)$/.exec(slot || "");
+    const d = new Date(pick);
+    if (m) {
+      let h = Number(m[1]);
+      if (m[3] === "PM" && h !== 12) h += 12;
+      if (m[3] === "AM" && h === 12) h = 0;
+      d.setHours(h, Number(m[2]), 0, 0);
+    }
+    return d.getTime();
+  }, [pick, slot]);
+
   const confirm = async () => {
     if (!slot) {
       toast("warning", "Pick a time slot first");
@@ -63,7 +76,7 @@ function ViewingForm({ listing, onClose }: { listing: ListingDTO; onClose: () =>
     setBusy(true);
     // simulated SMS latency
     await new Promise((r) => setTimeout(r, 700));
-    logViewing({ listingId: listing.id, estate: listing.estate, date: dateLabel, slot });
+    logViewing({ listingId: listing.id, estate: listing.estate, date: dateLabel, slot, ts: targetTs });
     toast("success", `Viewing booked • ${dateLabel} ${slot} • SMS sent (simulated)`);
     setBusy(false);
     onClose();
