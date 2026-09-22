@@ -2,14 +2,14 @@
 // KEJA HALISI — AdminView: trust console (verification queue, reports, AI flags, audit, cron)
 import { useCallback, useEffect, useState } from "react";
 import {
-  BadgeCheck, Bot, Clock, Flag, Inbox, Play, ScrollText, ShieldCheck,
+  BadgeCheck, Bot, Clock, Flag, Inbox, KeyRound, LockKeyhole, Play, ScrollText, ShieldCheck,
   Terminal, UserRound, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { kes, maskPhone, timeAgo } from "@/lib/nairobi";
 import { toast, useKeja } from "@/lib/store";
 import { Download } from "lucide-react";
-import { fetchAdminAnalytics, fetchAdminQueue, reviewAgent, reviewListing, runCron, type AdminAnalytics } from "@/components/keja/api";
+import { adminLogin, adminLogout, ADMIN_PIN_KEY, fetchAdminAnalytics, fetchAdminQueue, reviewAgent, reviewListing, runCron, type AdminAnalytics } from "@/components/keja/api";
 import { Sparkline } from "../sparkline";
 import type { AgentDTO, AiFlag } from "@/lib/types";
 
@@ -126,6 +126,18 @@ export default function AdminView() {
   const [busy, setBusy] = useState(false);
   const [cronBusy, setCronBusy] = useState<string | null>(null);
   const { notify } = useKeja();
+  // PIN gate — null = checking session, false = locked, true = unlocked
+  const [authed, setAuthed] = useState<boolean | null>(null);
+
+  // Session restore: if a PIN is stored, validate it by loading the queue once.
+  useEffect(() => {
+    const stored = typeof window !== "undefined" ? sessionStorage.getItem(ADMIN_PIN_KEY) : null;
+    if (!stored) {
+      setAuthed(false);
+      return;
+    }
+    setAuthed(true); // optimistic — load() flips back to locked on 401
+  }, []);
 
   // CSV export — moderation data leaves the browser as a local download (privacy: masked fields only)
   const exportCsv = () => {
@@ -177,15 +189,20 @@ export default function AdminView() {
     try {
       setFailed(false);
       setQueue(await fetchAdminQueue());
-    } catch {
+    } catch (e) {
+      // 401 from the PIN gate → lock the console
+      const res = (e as { message?: string })?.message ?? "";
       setFailed(true);
+      if (res) setAuthed(false);
     }
   }, []);
 
   useEffect(() => {
-    void load();
-    fetchAdminAnalytics().then(setAnalytics).catch(() => {}); // trend row is additive — never blocks the queue
-  }, [load]);
+    if (authed) {
+      void load();
+      fetchAdminAnalytics().then(setAnalytics).catch(() => {}); // trend row is additive — never blocks the queue
+    }
+  }, [authed, load]);
 
   const approveAgent = async (id: string) => {
     setBusy(true);
@@ -270,6 +287,19 @@ export default function AdminView() {
   // queue response spreads _verifications into agent rows (private vault stays server-side)
   const pendingAgents = (queue?.pendingAgents ?? []) as PendingAgent[];
 
+  // PIN gate — locked (or checking) shows the login card instead of the console
+  if (authed !== true) {
+    return (
+      <AdminLogin
+        checking={authed === null}
+        onSuccess={() => {
+          setAuthed(true);
+          toast("success", "Console unlocked — welcome back");
+        }}
+      />
+    );
+  }
+
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-6">
       {/* header */}
@@ -278,9 +308,23 @@ export default function AdminView() {
           <h1 className="font-display text-[20px] font-extrabold text-body">Admin trust console</h1>
           <p className="mt-0.5 text-[12px] text-kmuted">Verification queue • reports • AI flags • append-only audit</p>
         </div>
-        <span className="flex items-center gap-1.5 rounded-full bg-verified-soft px-3 py-1 text-[10.5px] font-extrabold text-ok">
-          <ShieldCheck className="h-3.5 w-3.5" /> No viewing fee before viewing — enforced
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1.5 rounded-full bg-verified-soft px-3 py-1 text-[10.5px] font-extrabold text-ok">
+            <ShieldCheck className="h-3.5 w-3.5" /> No viewing fee before viewing — enforced
+          </span>
+          <button
+            onClick={() => {
+              adminLogout();
+              setQueue(null);
+              setAuthed(false);
+              toast("info", "Console locked — PIN required on next visit");
+            }}
+            aria-label="Lock admin console"
+            className="touch-target flex items-center gap-1.5 rounded-full border border-kline bg-card px-3 py-1 text-[10.5px] font-extrabold text-body hover:bg-ink/5"
+          >
+            <LockKeyhole className="h-3.5 w-3.5" /> Lock
+          </button>
+        </div>
       </div>
 
       {/* cron panel */}
@@ -695,6 +739,93 @@ export default function AdminView() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ===================== ADMIN LOGIN — shared-PIN gate ===================== */
+
+function AdminLogin({ checking, onSuccess }: { checking: boolean; onSuccess: () => void }) {
+  const [pin, setPin] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  const unlock = async () => {
+    if (!pin.trim() || busy) return;
+    setBusy(true);
+    setShake(false);
+    const ok = await adminLogin(pin.trim());
+    setBusy(false);
+    if (ok) {
+      onSuccess();
+    } else {
+      setShake(true); // wrong PIN — shake the card, keep the input
+      setTimeout(() => setShake(false), 600);
+      toast("error", "Wrong PIN — console stays locked");
+    }
+  };
+
+  return (
+    <div className="mx-auto flex max-w-[480px] flex-col items-center px-4 py-14">
+      <div
+        className={cn(
+          "w-full rounded-3xl border border-kline bg-card p-7 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.35)]",
+          shake && "buzz",
+        )}
+        role="form"
+        aria-label="Admin login"
+      >
+        <div className="flex items-center gap-3">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-trust to-verified text-white">
+            <KeyRound className="h-5 w-5" />
+          </span>
+          <div>
+            <h1 className="font-display text-[17px] font-extrabold text-body">Admin login</h1>
+            <p className="text-[11.5px] text-kmuted">Keja Halisi trust console • staff only</p>
+          </div>
+        </div>
+
+        <label className="mt-6 block text-[10.5px] font-extrabold tracking-wide text-kmuted">
+          ADMIN PIN
+          <input
+            type="password"
+            inputMode="numeric"
+            autoComplete="off"
+            value={pin}
+            onChange={(e) => setPin(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && void unlock()}
+            placeholder="••••••"
+            aria-label="Admin PIN"
+            className="mt-1.5 w-full rounded-2xl border border-kline bg-surface px-4 py-3 font-display text-[16px] tracking-[0.35em] text-body outline-none placeholder:tracking-[0.35em] placeholder:text-kmuted/50 focus:border-trust"
+          />
+        </label>
+
+        <button
+          onClick={() => void unlock()}
+          disabled={busy || checking || !pin.trim()}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-trust py-3 font-display text-[13.5px] font-extrabold text-white transition hover:brightness-110 disabled:opacity-50"
+        >
+          {busy || checking ? (
+            <>
+              <Clock className="h-4 w-4 animate-spin" /> {checking ? "Checking session…" : "Unlocking…"}
+            </>
+          ) : (
+            <>
+              <LockKeyhole className="h-4 w-4" /> Unlock console
+            </>
+          )}
+        </button>
+
+        <p className="mt-4 rounded-2xl bg-trust-soft px-3.5 py-2.5 text-[10.5px] font-semibold leading-relaxed text-trust">
+          Demo PIN: <b className="font-extrabold">keja254</b> — set the <code>ADMIN_PIN</code> env in production to
+          rotate it. The PIN travels only in an <code>x-admin-pin</code> header and lives in this tab&apos;s session
+          storage; closing the tab locks the console again.
+        </p>
+      </div>
+
+      <p className="mt-4 flex items-center gap-1.5 text-center text-[10.5px] font-bold text-kmuted">
+        <ShieldCheck className="h-3.5 w-3.5 text-verified" /> Every admin action is written to the append-only audit log
+      </p>
     </div>
   );
 }

@@ -217,10 +217,32 @@ export async function fetchFairPrice(estate: string, beds: string, price: number
   return res.json();
 }
 
+/* ===================== ADMIN AUTH (shared-PIN console gate) ===================== */
+
+export const ADMIN_PIN_KEY = "kh_admin_pin"; // sessionStorage — cleared on tab close
+
+/** Session PIN injected into every admin API call via x-admin-pin header. */
+export function adminHeaders(): Record<string, string> {
+  const pin = typeof window !== "undefined" ? sessionStorage.getItem(ADMIN_PIN_KEY) ?? "" : "";
+  return pin ? { "x-admin-pin": pin } : {};
+}
+
+/** Validate a PIN against the server; store it only when the queue answers 200. */
+export async function adminLogin(pin: string): Promise<boolean> {
+  const res = await fetch("/api/admin/queue", { cache: "no-store", headers: { "x-admin-pin": pin } });
+  if (!res.ok) return false;
+  sessionStorage.setItem(ADMIN_PIN_KEY, pin);
+  return true;
+}
+
+export function adminLogout() {
+  sessionStorage.removeItem(ADMIN_PIN_KEY);
+}
+
 export async function reviewAgent(agentId: string, decision: "verified" | "rejected", reason?: string) {
   const res = await fetch("/api/admin/review-agent", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...adminHeaders() },
     body: JSON.stringify({ agentId, decision, reason }),
   });
   if (!res.ok) throw new Error("Review failed");
@@ -230,7 +252,7 @@ export async function reviewAgent(agentId: string, decision: "verified" | "rejec
 export async function reviewListing(listingId: string, decision: "approved" | "rejected", reason?: string) {
   const res = await fetch("/api/admin/review-listing", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...adminHeaders() },
     body: JSON.stringify({ listingId, decision, reason }),
   });
   if (!res.ok) throw new Error("Review failed");
@@ -244,7 +266,7 @@ export async function fetchAdminQueue(): Promise<{
   reports: { id: string; reason: string; details: string | null; createdAt: string; listing: { title: string; estate: string } }[];
   audits: AuditDTO[];
 }> {
-  const res = await fetch("/api/admin/queue", { cache: "no-store" });
+  const res = await fetch("/api/admin/queue", { cache: "no-store", headers: adminHeaders() });
   if (!res.ok) throw new Error("Admin queue failed");
   return res.json();
 }
@@ -281,7 +303,7 @@ export async function fetchMarketTrends(): Promise<{ borough: string; subCounty:
 }
 
 export async function runCron(job: "expire-listings" | "nudge-availability"): Promise<Record<string, unknown>> {
-  const res = await fetch(`/api/cron/${job}`, { method: "POST" });
+  const res = await fetch(`/api/cron/${job}`, { method: "POST", headers: adminHeaders() });
   return res.json();
 }
 
@@ -295,7 +317,7 @@ export interface AdminAnalytics {
 }
 
 export async function fetchAdminAnalytics(): Promise<AdminAnalytics> {
-  const res = await fetch("/api/admin/analytics", { cache: "no-store" });
+  const res = await fetch("/api/admin/analytics", { cache: "no-store", headers: adminHeaders() });
   if (!res.ok) throw new Error("Analytics failed");
   return res.json();
 }

@@ -1,0 +1,15 @@
+# KEJA HALISI — agent seeds (optional)
+#
+# The TikTok ingest agent reads candidate video links from this file on every
+# scheduled run (see .github/workflows/tiktok-agent.yml). TikTok aggressively
+# bot-walls public search, so this file is the always-available discovery
+# path: open TikTok's search (rental houses nairobi), copy video links, paste
+# them here — one per line. The agent does the rest automatically:
+#   resolve (tikwm) → verify (region/estate/price gates) →
+#   snapshot (ffmpeg frames) → store (link-only listing + Snapshot rows)
+#
+# Lines that aren't tiktok.com video links are ignored. Duplicates collapse;
+# videos already in the link index are skipped by the dedupe gate.
+#
+# Examples:
+# https://www.tiktok.com/@kesmarthomes/video/7605572084667829524

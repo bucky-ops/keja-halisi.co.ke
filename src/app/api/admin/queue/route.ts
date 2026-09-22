@@ -1,11 +1,15 @@
 // GET /api/admin/queue — verification queue, flagged listings, reports, audit trail
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { isAdminRequest } from "@/lib/admin-auth";
 import { toAgentDTO, toListingDTO, toAuditDTO } from "@/lib/serialize";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: "Admin authentication required" }, { status: 401 });
+  }
   const [pendingAgents, flaggedListings, pendingListings, reports, audits] = await Promise.all([
     db.agent.findMany({ where: { verificationStatus: "pending" }, include: { verifications: true } }),
     db.listing.findMany({ where: { reportsCount: { gte: 1 } }, include: { poster: true }, orderBy: { reportsCount: "desc" } }),

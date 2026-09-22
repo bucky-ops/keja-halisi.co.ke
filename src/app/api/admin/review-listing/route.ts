@@ -2,9 +2,13 @@ export const dynamic = "force-dynamic";
 // POST /api/admin/review-listing — approve/reject listing (publish_state)
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { isAdminRequest } from "@/lib/admin-auth";
 import { audit } from "@/lib/serialize";
 
 export async function POST(req: NextRequest) {
+if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: "Admin authentication required" }, { status: 401 });
+  }
   const { listingId, decision, reason } = await req.json();
   if (!listingId || !["approved", "rejected"].includes(decision)) {
     return NextResponse.json({ error: "listingId and decision (approved|rejected) required" }, { status: 400 });

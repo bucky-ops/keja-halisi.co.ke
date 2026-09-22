@@ -1,7 +1,8 @@
 // GET|POST /api/cron/nudge-availability — "Is keja still available? Reply YES/NO" (Africa's Talking mock)
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/serialize";
+import { isAdminRequest } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +33,10 @@ export async function GET() {
   return NextResponse.json({ job: "nudge-availability", ...result, ranAt: new Date().toISOString() });
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: "Admin authentication required" }, { status: 401 });
+  }
   const result = await nudge();
   return NextResponse.json({ job: "nudge-availability", ...result, ranAt: new Date().toISOString() });
 }

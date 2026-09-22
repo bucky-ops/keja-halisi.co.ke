@@ -1,12 +1,16 @@
 export const dynamic = "force-dynamic";
 // GET /api/admin/analytics — 14-day trust trend buckets (listings / reports / leads).
 // SQLite-friendly: fetch last-14d createdAt rows and bucket in JS (demo dataset is small).
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { isAdminRequest } from "@/lib/admin-auth";
 
 const DAYS = 14;
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: "Admin authentication required" }, { status: 401 });
+  }
   const now = Date.now();
   // window = the 14 calendar days ENDING today (inclusive) — rows from "today" must land in the last bucket
   const today = new Date(now);

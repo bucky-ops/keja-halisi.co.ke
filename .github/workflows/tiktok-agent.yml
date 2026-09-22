@@ -1,0 +1,52 @@
+# KEJA HALISI — TikTok Ingest Agent (scheduled)
+#
+# Runs the full autonomous pipeline hourly from GitHub's runner IPs (which are
+# NOT behind the Cloudflare walls that block sandbox/datacenter IPs):
+#   discover (web-search battery + agent-seeds.txt) → resolve (tikwm) →
+#   verify (region/estate/price gates) → snapshot (ffmpeg frames) → store
+#
+# ONE-TIME SETUP (repo Settings → Secrets and variables → Actions):
+#   DATABASE_URL  = Neon POOLED connection string (with ?sslmode=require)
+#   DIRECT_URL    = Neon DIRECT connection string
+# The workflow generates the Postgres Prisma client, then runs the agent LIVE.
+
+name: tiktok-agent
+
+on:
+  schedule:
+    - cron: "23 * * * *" # hourly at :23 — off the busy top-of-hour
+  workflow_dispatch: {} # manual trigger button in the Actions tab
+
+concurrency:
+  group: tiktok-agent
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Generate Postgres Prisma client
+        run: bunx prisma generate --schema prisma/schema.postgres.prisma
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Run ingest agent (live)
+        run: |
+          bun run scripts/agent-tiktok/index.ts --live --limit 8
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+
+      - name: Summary
+        if: always()
+        run: echo "TikTok agent round complete — see logs above for the run summary."

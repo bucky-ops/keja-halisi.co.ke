@@ -576,7 +576,7 @@ export default function PostView() {
               {role && roleInfo?.docKey && (
                 <div className="mt-4 rounded-2xl border border-pending/25 bg-pending-soft/60 p-4">
                   <Field
-                    label={roleInfo.doc}
+                    label={roleInfo?.doc ?? "Required document"}
                     hint={
                       <span className="inline-flex items-center gap-1">
                         <EyeOff className="h-3 w-3" /> vault link — never public

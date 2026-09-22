@@ -84,7 +84,8 @@ const OEMBED_TIMEOUT_MS = 4000;
 const FEE_RE = /viewing fee|viewing\s*fee|booking\s*fee|pay.*before.*view/i;
 const FEE_NEGATION_RE = /\b(?:no|hakuna|zero|without|free)\s+(?:viewing\s*fee|booking\s*fee|fee)\b/i;
 const PRICE_K_RE = /(\d+(?:\.\d+)?)\s*k\b/i;
-const PRICE_CURRENCY_RE = /(?:ksh|kes|\/=|\bsh\b)\s*(\d{3,6})/i;
+// currency-prefixed amount, with or without thousands commas: "Ksh 85000" • "KES 85,000" • "/= 12,500"
+const PRICE_CURRENCY_RE = /(?:ksh|kes|\/=|\bsh\b)\s*(\d{1,3}(?:,\d{3})+|\d{3,6})/i;
 const HASHTAG_RE = /#([a-z0-9_]+)/gi;
 
 // ---------------------------------------------------------------------------
@@ -149,7 +150,7 @@ export function parsePrice(caption: string): number {
   }
   const curMatch = text.match(PRICE_CURRENCY_RE);
   if (curMatch) {
-    const v = parseInt(curMatch[1], 10);
+    const v = parseInt(curMatch[1].replace(/,/g, ""), 10); // strip thousands commas
     // Ignore stray small numbers (deposits, door refs) — rent is ≥ 1000.
     if (v >= 1000) return v;
   }
