@@ -2,9 +2,11 @@
 // KEJA HALISI — SavedView: renter's shortlist + personal dashboard
 // Blueprint "Renter dashboard": Saved / Fresh matches / Leads / Reports + rate-after-viewing loop.
 import { useEffect, useMemo, useState } from "react";
-import { Heart, Zap, Phone, Flag, SearchX, ArrowRight, Star, ShieldCheck, ArrowLeft, Bell, CalendarCheck, BellRing, Play, Trash2, SlidersHorizontal, Sparkles, Backpack, AtSign } from "lucide-react";
+import { Heart, Zap, Phone, Flag, SearchX, ArrowRight, Star, ShieldCheck, ArrowLeft, Bell, CalendarCheck, BellRing, Play, Trash2, SlidersHorizontal, Sparkles, Backpack, AtSign, Brain, Eye, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
+import { getLearningStats, clearLearning, recordInteraction } from "@/lib/learning";
+import { priceBucketOf, bucketLabelOf } from "@/lib/search-index";
 import { fetchListings } from "../api";
 import { ListingCard, ListingCardSkeleton, MiniListingCard } from "../listing-card";
 import { RatingSheet } from "../rating";
@@ -24,11 +26,27 @@ export default function SavedView() {
   const [rateTarget, setRateTarget] = useState<RatingMemory | null>(null);
   const [kitFor, setKitFor] = useState<number | null>(null);
   const [shieldChecks, setShieldChecks] = useState(0);
+  // learning loop (spec D) — kh_* link-id stats, read straight from localStorage
+  const [learning, setLearning] = useState(() => getLearningStats(priceBucketOf));
 
   useEffect(() => {
     let alive = true;
     fetchListings({ limit: 60 })
-      .then((rows) => alive && setAll(rows))
+      .then((rows) => {
+        if (!alive) return;
+        setAll(rows);
+        // backfill the learning "save" signal from the device shortlist — the heart
+        // action lives in listing-card.tsx (not this view), so the kh_* link ids are
+        // recorded here for every shortlisted listing not yet learned. Re-taps are
+        // deduped inside recordInteraction (no affinity inflation).
+        let anyNew = false;
+        for (const l of rows) {
+          if (useKeja.getState().saved.includes(l.id)) {
+            if (recordInteraction(l, "save", priceBucketOf).first) anyNew = true;
+          }
+        }
+        if (anyNew) setLearning(getLearningStats(priceBucketOf));
+      })
       .catch(() => alive && setAll([]));
     try {
       const raw = JSON.parse(localStorage.getItem("keja-shield-history") || "[]") as { at: number }[];
@@ -106,6 +124,25 @@ export default function SavedView() {
     { icon: Flag, label: "reports", value: digest.reports, color: "text-scam", action: null },
     { icon: AtSign, label: "shield checks", value: digest.shieldChecks, color: "text-trust", action: "shield" },
   ];
+
+  /* learning card model (spec D) */
+  const learningStats = [
+    { label: "Viewed", value: learning.viewed, icon: Eye, color: "text-trust" },
+    { label: "Saved", value: learning.saved, icon: Heart, color: "text-tiktok-pink" },
+    { label: "Called", value: learning.called, icon: Phone, color: "text-ok-strong" },
+    { label: "Reported", value: learning.reported, icon: Flag, color: "text-scam" },
+  ];
+  const learningLoves = [
+    learning.topEstate ? learning.topEstate[0] : null,
+    learning.topBucket ? bucketLabelOf(learning.topBucket[0]) : null,
+    learning.topAmenity ? learning.topAmenity[0] : null,
+  ].filter(Boolean) as string[];
+
+  const resetLearning = () => {
+    clearLearning();
+    setLearning(getLearningStats(priceBucketOf));
+    toast("info", "Learning reset — start fresh");
+  };
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-6">
@@ -190,6 +227,51 @@ export default function SavedView() {
             </button>
           ))}
         </div>
+      </section>
+
+      {/* ===== learning card (search personalization, device-local) ===== */}
+      <section className="mt-5 rounded-3xl border border-trust/25 bg-trust-soft/30 p-4" aria-label="Search learning">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="flex items-center gap-2 text-[12.5px] font-extrabold text-body">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-trust text-white shadow-sm">
+              <Brain className="h-4 w-4" />
+            </span>
+            🧠 Learning
+          </p>
+          <span className="rounded-full bg-surface px-2.5 py-1 text-[9.5px] font-extrabold uppercase tracking-wider text-trust ring-1 ring-trust/25">
+            device-local only
+          </span>
+        </div>
+        <p className="mt-2 text-[11px] font-semibold text-kmuted">
+          Every tap teaches search — the kejas you view, save and call rank higher next time. Only TikTok link ids are
+          remembered, never your identity.
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {learningStats.map((s) => (
+            <div key={s.label} className="rounded-2xl border border-kline/70 bg-surface/80 p-3">
+              <p className="flex items-center gap-1.5 text-[9.5px] font-extrabold uppercase tracking-wide text-kmuted">
+                <s.icon className={`h-3.5 w-3.5 ${s.color}`} /> {s.label}
+              </p>
+              <p className={`mt-0.5 font-display text-xl font-extrabold ${s.color} tabular-nums`}>{s.value}</p>
+            </div>
+          ))}
+        </div>
+        {learningLoves.length > 0 && (
+          <p className="mt-3 flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-body/80">
+            Loves:
+            {learningLoves.map((v) => (
+              <span key={v} className="rounded-full border border-trust/30 bg-surface px-2.5 py-1 text-[10px] font-extrabold text-trust">
+                {v}
+              </span>
+            ))}
+          </p>
+        )}
+        <button
+          onClick={resetLearning}
+          className="touch-target mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-full border border-scam/50 bg-surface px-4 py-2 text-[11.5px] font-extrabold text-scam transition-colors hover:bg-scam hover:text-white"
+        >
+          <RotateCcw className="h-3.5 w-3.5" /> Reset learning
+        </button>
       </section>
 
       {/* ===== saved searches (alert manager) ===== */}
