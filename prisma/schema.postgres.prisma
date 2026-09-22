@@ -12,7 +12,11 @@
 //    are NEVER exposed through public API routes
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // rhel-openssl-3.0.x = Vercel serverless runtime (Amazon Linux 2023).
+  // Without it the client generated on debian fails at runtime:
+  //   "Prisma Client could not locate the Query Engine for runtime rhel-openssl-3.0.x"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
