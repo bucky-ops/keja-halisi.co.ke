@@ -1,6 +1,8 @@
 "use client";
 // KEJA HALISI — Listing card with ALL states
 // default / hover lift / skeleton shimmer / expired-taken grayed / reported red border
+// Thumbnail-first (B): cover is a static lazy <img> + play overlay — TikTok iframes are NEVER rendered in cards.
+import { useState } from "react";
 import { Heart, MapPin, TriangleAlert, Play, BadgeCheck, Clock, Scale, Fingerprint } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { kes } from "@/lib/nairobi";
@@ -26,6 +28,9 @@ export function ListingCard({ listing: l, compact = false, onOpen, onCall, index
   const taken = l.status === "Taken";
   const reported = l.reportsCount >= 2;
   const grayed = expired || taken;
+  // thumbnail-first: first poster photo when present, gradient fallback on error/absence
+  const [failedThumb, setFailedThumb] = useState<string | null>(null);
+  const thumbSrc = l.photos[0] && failedThumb !== l.photos[0] ? l.photos[0] : null;
 
   const open = () => (onOpen ? onOpen(l) : navigate("listing", { listingId: l.id }));
 
@@ -54,8 +59,19 @@ export function ListingCard({ listing: l, compact = false, onOpen, onCall, index
       )}
       style={index !== undefined ? { animationDelay: `${Math.min(index, 11) * 55}ms` } : undefined}
     >
-      {/* cover */}
-      <div className={cn("relative keja-building", compact ? "h-28" : "h-40 sm:h-44")}>
+      {/* cover — thumbnail-first: static lazy image (never a TikTok iframe) + play overlay */}
+      <div className={cn("relative keja-building overflow-hidden", compact ? "h-28" : "h-40 sm:h-44")}>
+        {thumbSrc ? (
+          <img
+            src={thumbSrc}
+            alt={`${l.beds} for rent in ${l.estate} — ${l.title}`}
+            loading="lazy"
+            decoding="async"
+            onError={() => setFailedThumb(l.photos[0])}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : null}
+        {thumbSrc ? <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-black/25" aria-hidden /> : null}
         {/* faux TikTok play */}
         <div className="absolute inset-0 grid place-items-center">
           <span className="h-11 w-11 grid place-items-center rounded-full bg-surface/20 backdrop-blur-sm border border-white/30 transition-transform group-hover:scale-110">
@@ -211,13 +227,26 @@ export function ListingCardSkeleton() {
 
 /** Mini card for horizontal rails / similar kejas */
 export function MiniListingCard({ listing: l, onOpen }: { listing: ListingDTO; onOpen?: () => void }) {
+  const [failedThumb, setFailedThumb] = useState<string | null>(null);
+  const thumbSrc = l.photos[0] && failedThumb !== l.photos[0] ? l.photos[0] : null;
   return (
     <button
       onClick={onOpen}
       className="w-44 shrink-0 card-lift rounded-2xl bg-card border border-kline overflow-hidden text-left"
     >
-      <div className="relative h-24 keja-building grid place-items-center">
-        <Play className="h-4 w-4 text-white fill-white" />
+      <div className="relative h-24 keja-building grid place-items-center overflow-hidden">
+        {thumbSrc ? (
+          <img
+            src={thumbSrc}
+            alt={`${l.beds} in ${l.estate} — ${l.title}`}
+            loading="lazy"
+            decoding="async"
+            onError={() => setFailedThumb(l.photos[0])}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : null}
+        {thumbSrc ? <span className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-black/25" aria-hidden /> : null}
+        <Play className="relative h-4 w-4 text-white fill-white" />
         <span className="absolute bottom-1.5 left-1.5 rounded-full bg-surface/90 px-2 py-0.5 text-[9.5px] font-extrabold text-body">
           {kes(l.price)}
         </span>

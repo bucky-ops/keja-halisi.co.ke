@@ -1,13 +1,15 @@
 "use client";
-// KEJA HALISI — ListingView: TikTok embed + trust stack + evidence gate + agent panel.
-import { useEffect, useMemo, useState } from "react";
+// KEJA HALISI — ListingView: TikTok embed (staged, thumbnail-first) + trust stack + evidence gate + agent panel.
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft, Play, Flag, MessageCircle, Phone, BadgeCheck, Check, MapPin,
   CloudSun, ExternalLink, Clock, Eye, Zap, ChevronRight, ChevronLeft, Home as HomeIcon,
-  Star, ZapOff, CalendarCheck, Share2, Printer, Heart, ZoomIn, X, Images,
+  Star, ZapOff, CalendarCheck, Share2, Printer, Heart, ZoomIn, X, Images, Link2Off,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKeja, toast } from "@/lib/store";
+import { cached, TTL_OEMBED } from "@/lib/cache";
+import { recordInteraction, bumpTrending } from "@/lib/learning";
 import { EVIDENCE_ITEMS, kes, kesShort, timeAgo } from "@/lib/nairobi";
 import { fetchListing, fetchListings, fetchFairPrice, type FairPrice } from "../api";
 import { MiniListingCard } from "../listing-card";
@@ -22,11 +24,20 @@ import { TrustTimeline } from "../trust-timeline";
 import { ShareSheet } from "../share-sheet";
 import type { ListingDTO } from "@/lib/types";
 
-type Oembed = { thumb: string | null; author: string | null } | null;
+type OembedData = { thumb: string | null; author: string | null; html: string | null } | null;
+
+/**
+ * Embed state machine (spec B+E) — thumbnail-first, exactly ONE iframe ever mounted:
+ *   thumb     → static thumbnail / styled fallback + tap-to-play button (default; low-data stops here)
+ *   armed     → in viewport + browser idle + !lowData, waiting for oEmbed to settle
+ *   resolving → user tapped; oEmbed link resolving (shimmer)
+ *   live      → oEmbed html iframe mounted (sandboxed)
+ *   removed   → link 404/failed on tap — estate + road context kept
+ */
+type EmbedStage = "thumb" | "armed" | "resolving" | "live" | "removed";
 
 export default function ListingView() {
   const { params, back, navigate, lowData, bumpActivity, notify, logReport, pushRecent, toggleSaved, saved } = useKeja();
-  const [oembed, setOembed] = useState<Oembed>(null);
   const [similar, setSimilar] = useState<ListingDTO[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
@@ -67,6 +78,15 @@ export default function ListingView() {
     if (id && payload.id === id && payload.l) pushRecent(id);
   }, [id, payload.id, payload.l]);
 
+  /* ---------------- learning loop (D): view interaction + anonymous trending bump ---------------- */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const l = payload.id === id ? payload.l : null;
+    if (!l) return;
+    recordInteraction(l, "view");
+    bumpTrending(l);
+  }, [id, payload.id, payload.l]);
+
   /* ---------------- fair-price comps (shared: score + radar) ---------------- */
   useEffect(() => {
     const l = payload.id === id ? payload.l : null;
@@ -91,24 +111,10 @@ export default function ListingView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [lightbox, listing]);
 
-  /* ---------------- TikTok oEmbed (legal; falls back offline) ---------------- */
-  // low-data mode derives an invisible embed — no remote fetch at all
-  useEffect(() => {
-    if (!listing?.tiktokUrl || lowData) return;
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 4000);
-    fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(listing.tiktokUrl)}`, {
-      signal: ctrl.signal,
-    })
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("oembed unavailable"))))
-      .then((d: { thumbnail_url?: string; author_name?: string }) =>
-        setOembed({ thumb: d.thumbnail_url ?? null, author: d.author_name ?? null })
-      )
-      .catch(() => setOembed(null))
-      .finally(() => clearTimeout(timer));
-    return () => { ctrl.abort(); clearTimeout(timer); };
-  }, [listing?.tiktokUrl, lowData]);
-  const oembedShown = lowData ? null : oembed;
+  /* ---------------- TikTok embed moved to <TikTokStage> (staged loader, bottom of file) ---------------- */
+  // Thumbnail-first: static thumb + tap-to-play; the oEmbed iframe mounts only when the card is
+  // in viewport AND the browser is idle AND !lowData (auto) — or on an explicit tap. One iframe max.
+  // A 404/failed oEmbed on tap renders "Source removed" but keeps estate + road context.
 
   /* ---------------- similar kejas (same estate, exclude self) ---------------- */
   useEffect(() => {
@@ -262,38 +268,8 @@ export default function ListingView() {
               </button>
             </header>
 
-            {/* embed area — real oEmbed attempted, styled fallback offline */}
-            <div className="relative mx-auto mt-3.5 flex max-h-[480px] w-full max-w-[270px] items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-white/10 to-black/40 keja-building" style={{ aspectRatio: "9 / 16" }}>
-              {oembedShown?.thumb ? (
-                <div
-                  className="absolute inset-0 bg-cover bg-center opacity-60"
-                  style={{ backgroundImage: `url(${oembedShown.thumb})` }}
-                  aria-hidden
-                />
-              ) : null}
-              <div className="relative z-10 grid place-items-center px-4 text-center">
-                <span className="grid h-14 w-14 place-items-center rounded-full bg-white/15 backdrop-blur-sm ring-1 ring-white/30">
-                  <Play className="h-6 w-6 fill-white text-white" />
-                </span>
-                <p className="mt-3 line-clamp-2 font-display text-[13px] font-extrabold">
-                  {l.title} • {l.poster.tiktokHandle}
-                </p>
-                <p className="mt-1 text-[10px] font-semibold text-white/60">
-                  {oembedShown?.author ? `oEmbed OK • ${oembedShown.author}` : `${l.beds} walkthrough • ${l.estate}`}
-                </p>
-              </div>
-              <span className="absolute bottom-2.5 left-2.5 z-10 rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-bold text-white/80 backdrop-blur-sm">
-                TikTok embed • simulated (legal oEmbed iframe in production)
-              </span>
-              <span className="absolute right-2.5 top-2.5 z-10 rounded-full bg-tiktok-pink px-2 py-0.5 text-[9px] font-extrabold">
-                {l.freshH <= 24 ? "Fresh" : "Catalog"}
-              </span>
-              {lowData && (
-                <span className="absolute left-2.5 top-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-safaricom px-2 py-0.5 text-[9px] font-extrabold text-white">
-                  <ZapOff className="h-2.5 w-2.5" /> Low-data • autoplay off
-                </span>
-              )}
-            </div>
+            {/* embed area — staged loader (TikTokStage): thumb → armed → live | removed */}
+            <TikTokStage key={l.id} listing={l} />
 
             {/* muted note + photo gallery — real photos when the poster completed evidence, placeholders otherwise */}
             <p className="mt-2.5 text-center text-[9.5px] font-semibold text-white/45">
@@ -314,6 +290,7 @@ export default function ListingView() {
                       alt={`${l.title} — ${l.estate} main photo`}
                       className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-[1.04] sm:h-52"
                       loading="lazy"
+                      decoding="async"
                     />
                     <span className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" aria-hidden />
                     <span className="absolute bottom-2 left-2.5 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-extrabold text-white/90 backdrop-blur-sm">
@@ -338,6 +315,7 @@ export default function ListingView() {
                           alt={`${l.title} ${l.estate} photo ${i + 1}`}
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                           loading="lazy"
+                          decoding="async"
                         />
                         <span className="absolute inset-0 grid place-items-center bg-black/25 opacity-0 transition-opacity group-hover:opacity-100">
                           <ZoomIn className="h-4 w-4 text-white" />
@@ -501,6 +479,7 @@ export default function ListingView() {
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => {
+                  recordInteraction(l, "call"); // learning loop (D): call intent on this link
                   toast("success", "Number copied • Lead logged • Haptic vibrate");
                   setContactOpen(true);
                 }}
@@ -510,6 +489,7 @@ export default function ListingView() {
               </button>
               <button
                 onClick={() => {
+                  recordInteraction(l, "call"); // learning loop (D): WhatsApp = call intent on this link
                   toast("success", "Opening WhatsApp • wa.me/2547...");
                   setContactOpen(true);
                 }}
@@ -736,6 +716,8 @@ export default function ListingView() {
               src={l.photos[lightbox]}
               alt={`${l.title} — ${l.estate} photo ${lightbox + 1}`}
               className="pop max-h-full max-w-full rounded-2xl object-contain shadow-2xl ring-1 ring-white/20"
+              loading="lazy"
+              decoding="async"
             />
             {l.photos.length > 1 && (
               <button
@@ -763,7 +745,7 @@ export default function ListingView() {
                 aria-label={`View photo ${i + 1}`}
                 aria-current={i === lightbox}
               >
-                <img src={p} alt="" className="h-full w-full object-cover" />
+                <img src={p} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
               </button>
             ))}
           </div>
@@ -773,6 +755,241 @@ export default function ListingView() {
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ================================================================
+   TikTokStage — staged embed loader (spec B+E, thumbnail-first)
+   ----------------------------------------------------------------
+   thumb     default. Static thumbnail (oEmbed thumb via 1h TTL cache,
+             styled keja-building fallback when the fetch fails or low-data)
+             + big "Tap to play" button (44px+). NO iframe.
+   armed     IntersectionObserver says in-viewport + requestIdleCallback
+             (800ms timeout fallback) fired + !lowData — waiting for the
+             cached oEmbed call to settle before mounting the iframe.
+   resolving transient after a tap — shimmer skeleton while the cached
+             oEmbed call settles.
+   live      oEmbed html iframe (sandboxed, lazy) — exactly ONE iframe ever
+             mounted; QA dev chip "1 iframe • thumbnail-first" shown.
+   removed   oEmbed returned null on a TAP (404/failed) — red-outline
+             "Source removed • estate + road context kept" + estate/road chips.
+
+   low-data: NEVER auto-loads; tap-to-play only (tapOverride). Toggling
+   low-data on without a tap reverts a live iframe back to the thumb stage.
+   IntersectionObserver unsupported → tap-to-play only.
+   ================================================================ */
+function TikTokStage({ listing: l }: { listing: ListingDTO }) {
+  const { lowData } = useKeja();
+  const [oembed, setOembed] = useState<OembedData>(null);
+  const [oembedState, setOembedState] = useState<"idle" | "ok" | "failed">("idle");
+  const [stage, setStage] = useState<EmbedStage>("thumb");
+  const [tapOverride, setTapOverride] = useState(false); // explicit renter opt-in (low-data path)
+  const [inView, setInView] = useState(false);
+  const [idle, setIdle] = useState(false);
+  const boxRef = useRef<HTMLDivElement | null>(null);
+
+  // low-data never renders a live iframe unless the renter explicitly tapped play
+  const effStage: EmbedStage = lowData && !tapOverride && stage === "live" ? "thumb" : stage;
+
+  /* oEmbed via the shared link TTL cache (1h, deduped) — skipped entirely in low-data until tap */
+  useEffect(() => {
+    if (!l.tiktokUrl) return;
+    if (lowData && stage !== "resolving") return;
+    let alive = true;
+    cached(`oembed:${l.tiktokUrl}`, TTL_OEMBED, async () => {
+      const ctrl = new AbortController();
+      const timer = window.setTimeout(() => ctrl.abort(), 4000);
+      try {
+        const r = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(l.tiktokUrl)}`, {
+          signal: ctrl.signal,
+        });
+        if (!r.ok) return null;
+        const d = (await r.json()) as { thumbnail_url?: string; author_name?: string; html?: string };
+        return { thumb: d.thumbnail_url ?? null, author: d.author_name ?? null, html: d.html ?? null };
+      } catch {
+        return null; // offline / 404 — caller falls back to the styled thumb
+      } finally {
+        window.clearTimeout(timer);
+      }
+    }, null).then((d) => {
+      if (!alive) return;
+      setOembed(d);
+      setOembedState(d ? "ok" : "failed");
+    });
+    return () => { alive = false; };
+  }, [l.tiktokUrl, lowData, stage]);
+
+  /* in-viewport gate — unsupported observer → tap-to-play only */
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+    const el = boxRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => setInView(entries.some((e) => e.isIntersecting)),
+      { rootMargin: "120px", threshold: 0.15 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  /* browser-idle gate — requestIdleCallback, 800ms setTimeout fallback */
+  useEffect(() => {
+    const w = window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (h: number) => void;
+    };
+    let h: number;
+    if (typeof w.requestIdleCallback === "function") {
+      h = w.requestIdleCallback(() => setIdle(true), { timeout: 1200 });
+    } else {
+      h = window.setTimeout(() => setIdle(true), 800);
+    }
+    return () => {
+      if (typeof w.cancelIdleCallback === "function") w.cancelIdleCallback(h);
+      else window.clearTimeout(h);
+    };
+  }, []);
+
+  /* auto-promotion: viewport + idle + !lowData + oEmbed html → ONE iframe (never on low-data) */
+  useEffect(() => {
+    if (lowData || tapOverride) return;
+    if (stage !== "thumb" && stage !== "armed") return;
+    if (!inView || !idle) return;
+    const t = window.setTimeout(() => {
+      if (oembedState === "ok" && oembed?.html) setStage("live");
+      else if (oembedState === "idle") setStage("armed"); // oEmbed still resolving
+      else if (stage === "armed") setStage("thumb"); // failed → styled fallback stays (never auto-removed)
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [stage, lowData, tapOverride, inView, idle, oembedState, oembed]);
+
+  /* tap resolution: oEmbed html → live; null/failed on a TAP → "Source removed" (context kept) */
+  useEffect(() => {
+    if (stage !== "resolving") return;
+    if (oembedState === "idle") return; // fetch still in flight
+    const t = window.setTimeout(() => {
+      setStage(oembed?.html ? "live" : "removed");
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [stage, oembedState, oembed]);
+
+  const tapPlay = () => {
+    if (!l.tiktokUrl || stage === "live" || stage === "resolving") return;
+    setTapOverride(true);
+    setStage("resolving");
+  };
+
+  /* practical sandbox hardening of the oEmbed iframe at string level (no new deps) */
+  const liveHtml = useMemo(() => {
+    if (!oembed?.html) return "";
+    const h = oembed.html;
+    if (h.includes("<iframe")) {
+      return h.replace(
+        "<iframe",
+        '<iframe sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"',
+      );
+    }
+    return h;
+  }, [oembed?.html]);
+
+  const showThumb = !!oembed?.thumb && (!lowData || tapOverride) && effStage !== "live" && effStage !== "removed";
+  const authorLine =
+    oembed?.author && showThumb ? `oEmbed OK • ${oembed.author}` : `${l.beds} walkthrough • ${l.estate}`;
+
+  return (
+    <div
+      ref={boxRef}
+      data-embed-stage={effStage}
+      className={cn(
+        "relative mx-auto mt-3.5 flex max-h-[480px] w-full max-w-[270px] items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-white/10 to-black/40 keja-building",
+        effStage === "resolving" && "shimmer",
+        effStage === "removed" && "ring-2 ring-scam"
+      )}
+      style={{ aspectRatio: "9 / 16" }}
+    >
+      {/* static thumbnail layer — never an iframe */}
+      {showThumb && oembed?.thumb ? (
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-60"
+          style={{ backgroundImage: `url(${oembed.thumb})` }}
+          aria-hidden
+        />
+      ) : null}
+
+      {effStage === "live" ? (
+        /* the ONE iframe — oEmbed html, sandboxed + lazy, stretched to the 9:16 container */
+        <div
+          className="absolute inset-0 [&_blockquote]:h-full [&_blockquote]:w-full [&_iframe]:absolute [&_iframe]:inset-0 [&_iframe]:h-full [&_iframe]:w-full [&_iframe]:border-0"
+          dangerouslySetInnerHTML={{ __html: liveHtml }}
+          title="TikTok walkthrough — muted"
+        />
+      ) : effStage === "removed" ? (
+        <div className="relative z-10 grid place-items-center px-4 py-6 text-center">
+          <span className="grid h-14 w-14 place-items-center rounded-full bg-scam/20 ring-1 ring-scam/70">
+            <Link2Off className="h-6 w-6 text-[#ff6b6b]" aria-hidden />
+          </span>
+          <p className="mt-3 font-display text-[13px] font-extrabold text-white">Source removed</p>
+          <p className="mt-1 text-[10px] font-semibold leading-relaxed text-white/60">
+            Source removed • estate + road context kept
+          </p>
+          <div className="mt-2.5 flex flex-wrap items-center justify-center gap-1.5">
+            <span className="rounded-full bg-trust px-2.5 py-1 text-[10px] font-extrabold text-white">{l.estate}</span>
+            <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-extrabold text-white ring-1 ring-white/25">
+              {l.road || "main road"}
+            </span>
+          </div>
+        </div>
+      ) : effStage === "resolving" ? (
+        <div className="relative z-10 grid place-items-center px-4 text-center">
+          <span className="grid h-14 w-14 place-items-center rounded-full bg-white/15 backdrop-blur-sm ring-1 ring-white/30">
+            <Play className="h-6 w-6 fill-white text-white" />
+          </span>
+          <p className="mt-3 text-[11px] font-extrabold text-white/85">Resolving TikTok link…</p>
+        </div>
+      ) : (
+        /* thumb / armed — big tap-to-play overlay (whole media area is the 44px+ target) */
+        <button
+          type="button"
+          onClick={tapPlay}
+          className="absolute inset-0 z-10 grid min-h-[44px] w-full cursor-pointer place-items-center px-4 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-tiktok-cyan"
+          aria-label={`Tap to play TikTok walkthrough — ${l.title} • ${l.estate}`}
+        >
+          <span className="grid place-items-center">
+            <span className="grid h-14 w-14 place-items-center rounded-full bg-white/15 backdrop-blur-sm ring-1 ring-white/30 transition-transform hover:scale-110">
+              <Play className="h-6 w-6 fill-white text-white" />
+            </span>
+            <p className="mt-3 line-clamp-2 font-display text-[13px] font-extrabold">
+              {l.title} • {l.poster.tiktokHandle}
+            </p>
+            <p className="mt-1 text-[10px] font-semibold text-white/60">{authorLine}</p>
+            <span className="mt-3 inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[11px] font-extrabold text-ink shadow-lg">
+              <Play className="h-3.5 w-3.5 fill-ink text-ink" /> Tap to play TikTok
+            </span>
+          </span>
+        </button>
+      )}
+
+      {/* corner pills — preserved from Phase-1 (pointer-events-none keeps the full-area tap) */}
+      <span className="pointer-events-none absolute bottom-2.5 left-2.5 z-20 rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-bold text-white/80 backdrop-blur-sm">
+        TikTok embed • simulated (legal oEmbed iframe in production)
+      </span>
+      <span className="pointer-events-none absolute right-2.5 top-2.5 z-20 rounded-full bg-tiktok-pink px-2 py-0.5 text-[9px] font-extrabold">
+        {l.freshH <= 24 ? "Fresh" : "Catalog"}
+      </span>
+      <div className="pointer-events-none absolute left-2.5 top-2.5 z-20 flex flex-col items-start gap-1">
+        {lowData && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-safaricom px-2 py-0.5 text-[9px] font-extrabold text-white">
+            <ZapOff className="h-2.5 w-2.5" /> Low-data • autoplay off
+          </span>
+        )}
+        {/* QA dev chip — proves exactly one thumbnail-first iframe is mounted */}
+        {effStage === "live" && (
+          <span className="rounded-full bg-black/65 px-2 py-0.5 text-[8.5px] font-bold text-tiktok-cyan backdrop-blur-sm">
+            1 iframe • thumbnail-first
+          </span>
+        )}
+      </div>
     </div>
   );
 }
