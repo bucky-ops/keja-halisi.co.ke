@@ -12,10 +12,15 @@ import { ALL_SUB_COUNTIES, AMENITY_OPTIONS, BEDS_OPTIONS, estateWeather, kes } f
 import { fetchListings } from "../api";
 import { ListingCard, ListingCardSkeleton } from "../listing-card";
 import { EstateGuide } from "../estate-guide";
+import { buildIndex, smartSearch, tokenizeQuery, bucketLabelOf, amenityLabelOf } from "@/lib/search-index";
+import { trendingCount } from "@/lib/learning";
 import type { ListingDTO } from "@/lib/types";
 
 const PRICE_MIN = 3000;
 const PRICE_MAX = 100000;
+
+/** emoji per smart-search amenity id (Estates.json vocabulary) */
+const AMENITY_EMOJI: Record<string, string> = { water: "💧", parking: "🅿️", security: "🛡️", tokens: "⚡", fibre: "📶" };
 
 export default function EstateView() {
   const { filters, setFilters, resetFilters, navigate, saveSearch } = useKeja();
@@ -38,10 +43,15 @@ export default function EstateView() {
     if (Object.keys(patch).length > 0) setFilters(patch);
   }, [setFilters]);
 
+  /* ------- smart-search tokenization: q with recognizable tokens is resolved client-side -------
+     ("1br kile 18k water" would text-match nothing server-side — drop q from the API call
+      and let the inverted index in lib/search-index do the work in-memory)               */
+  const parsedQ = useMemo(() => tokenizeQuery(filters.q), [filters.q]);
+
   /* ------- fetch on every filter change (loading is derived from the query key) ------- */
   const query = useMemo(
     () => ({
-      q: filters.q || undefined,
+      q: parsedQ.hasTokens ? undefined : filters.q || undefined,
       borough: filters.borough || undefined,
       subCounty: filters.subCounty || undefined,
       estate: filters.estate || undefined,
@@ -55,7 +65,7 @@ export default function EstateView() {
       sort: filters.sort,
       limit: 60,
     }),
-    [filters]
+    [filters, parsedQ.hasTokens]
   );
   const queryKey = JSON.stringify(query);
   const [payload, setPayload] = useState<{ key: string; rows: ListingDTO[] }>({ key: "", rows: [] });
@@ -70,14 +80,37 @@ export default function EstateView() {
     return () => { alive = false; };
   }, [query, queryKey]);
 
-  /* ------- amenity filtering is client-side (API has no amenity param) ------- */
+  /* ------- inverted index + smart search (spec C+D): sync, pure Maps, rebuilt on listings ------- */
+  const index = useMemo(() => buildIndex(listings), [listings]);
+  const search = useMemo(() => {
+    const t0 = performance.now();
+    const res = smartSearch(listings, filters.q, filters, index);
+    const ms = performance.now() - t0;
+    return { ...res, ms: Math.round(ms * 100) / 100 };
+  }, [listings, filters, index]);
+
+  /* ------- sidebar amenity filtering stays client-side (API has no amenity param) ------- */
   const visible = useMemo(
     () =>
       amenities.length === 0
-        ? listings
-        : listings.filter((l) => amenities.every((a) => l.amenities.includes(a))),
-    [listings, amenities]
+        ? search.results
+        : search.results.filter((l) => amenities.every((a) => l.amenities.includes(a))),
+    [search.results, amenities]
   );
+
+  /* ------- trending chip: most-opened keja in scope (server views + device-local opens) ------- */
+  const trending = useMemo(() => {
+    let top: ListingDTO | null = null;
+    let topViews = -1;
+    for (const l of visible) {
+      const v = l.views + trendingCount(l);
+      if (v > topViews) {
+        topViews = v;
+        top = l;
+      }
+    }
+    return top ? { listing: top, views: topViews } : null;
+  }, [visible]);
 
   /* ------- map bounds (normalized with padding) ------- */
   const bounds = useMemo(() => {
@@ -341,8 +374,20 @@ export default function EstateView() {
               <p className="mt-1 text-[12.5px] font-semibold text-kmuted">
                 {loading ? "Scanning catalog…" : `${visible.length} listings match your Nairobi filters`}
               </p>
+              <p className="mt-0.5 text-[11px] font-medium text-kmuted/80">
+                🧠 Search learns from your taps — saved + viewed kejas rank higher
+              </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              {!loading && trending && (
+                <button
+                  onClick={() => navigate("listing", { listingId: trending.listing.id })}
+                  className="touch-target inline-flex items-center gap-1.5 rounded-full border border-gold/50 bg-gold/10 px-3.5 py-2 text-[11.5px] font-extrabold text-warn transition-colors hover:bg-gold hover:text-white"
+                  title="Most-opened keja in this scope — server views + taps on this device"
+                >
+                  ⚡ Trending in {titleScope} • {trending.views} views
+                </button>
+              )}
               <button
                 onClick={() => saveSearch(`${titleScope}${filters.beds ? ` • ${filters.beds}` : ""} • KES ${filters.minPrice.toLocaleString()}-${filters.maxPrice >= 100000 ? "100k+" : filters.maxPrice.toLocaleString()}`)}
                 className="touch-target inline-flex items-center gap-1.5 rounded-full border border-trust/40 bg-trust-soft px-3.5 py-2 text-[11.5px] font-extrabold text-trust transition-colors hover:bg-trust hover:text-white"
@@ -391,6 +436,41 @@ export default function EstateView() {
               </button>
             ))}
           </div>
+
+          {/* smart match summary — only when the query parsed into real tokens (🎯 estate • 🛏 beds • 💰 bucket • amenities) */}
+          {!loading && search.parsed.hasTokens && (
+            <div className="mt-3 flex flex-wrap items-center gap-1.5" aria-label="Smart match summary">
+              <span className="rounded-full bg-ink px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white">
+                🎯 Smart match
+              </span>
+              {search.matched.estate && (
+                <span className="rounded-full border border-trust/30 bg-trust-soft px-2.5 py-1 text-[10px] font-extrabold text-trust">
+                  🎯 estate: {search.matched.estate}
+                </span>
+              )}
+              {search.matched.beds && (
+                <span className="rounded-full border border-verified/30 bg-verified-soft px-2.5 py-1 text-[10px] font-extrabold text-ok-strong">
+                  🛏 {search.matched.beds}
+                </span>
+              )}
+              {search.matched.bucket && (
+                <span className="rounded-full border border-gold/40 bg-gold/10 px-2.5 py-1 text-[10px] font-extrabold text-warn">
+                  💰 {bucketLabelOf(search.matched.bucket)}
+                </span>
+              )}
+              {search.matched.amenities.map((a) => (
+                <span
+                  key={a}
+                  className="rounded-full border border-trust/30 bg-trust-soft px-2.5 py-1 text-[10px] font-extrabold text-trust"
+                >
+                  {AMENITY_EMOJI[a] ?? "✓"} {amenityLabelOf(a)}
+                </span>
+              ))}
+              <span className="rounded-full bg-kbg px-2.5 py-1 text-[10px] font-extrabold text-kmuted tabular-nums">
+                {visible.length} match{visible.length === 1 ? "" : "es"} in {search.ms}ms
+              </span>
+            </div>
+          )}
 
           {/* ============ 5/6. GRID or MAP ============ */}
           {loading ? (
@@ -466,7 +546,9 @@ export default function EstateView() {
               <MapPin className="bounce-pin mx-auto h-8 w-8 text-kline" aria-hidden />
               <p className="mt-3 font-display text-[15px] font-extrabold text-body">No matching demo listings</p>
               <p className="mx-auto mt-1.5 max-w-md text-[12.5px] font-semibold leading-relaxed text-kmuted">
-                Try a wider budget, another sub-county, or clear the freshness filters.
+                {search.parsed.hasTokens
+                  ? "Nothing matches your smart-search tokens — try removing one, or widen the budget."
+                  : "Try a wider budget, another sub-county, or clear the freshness filters."}
               </p>
               {/* one-tap suggestions — real estates with live stock */}
               <div className="mt-4 flex flex-wrap justify-center gap-2" aria-label="Suggested estates">
