@@ -781,8 +781,8 @@ export default function ListingView() {
    ================================================================ */
 function TikTokStage({ listing: l }: { listing: ListingDTO }) {
   const { lowData } = useKeja();
-  const [oembed, setOembed] = useState<OembedData>(null);
-  const [oembedState, setOembedState] = useState<"idle" | "ok" | "failed">("idle");
+  const [asyncOembed, setAsyncOembed] = useState<OembedData>(null);
+  const [asyncState, setAsyncState] = useState<"idle" | "ok" | "failed">("idle");
   const [stage, setStage] = useState<EmbedStage>("thumb");
   const [tapOverride, setTapOverride] = useState(false); // explicit renter opt-in (low-data path)
   const [inView, setInView] = useState(false);
@@ -792,33 +792,49 @@ function TikTokStage({ listing: l }: { listing: ListingDTO }) {
   // low-data never renders a live iframe unless the renter explicitly tapped play
   const effStage: EmbedStage = lowData && !tapOverride && stage === "live" ? "thumb" : stage;
 
-  /* oEmbed via the shared link TTL cache (1h, deduped) — skipped entirely in low-data until tap */
+  /* persisted LINKS (resolved server-side at create time) win — no fetch, no state sync */
+  const persistedOembed: OembedData =
+    l.thumbnailLink || l.embedHtmlLink
+      ? {
+          thumb: l.thumbnailLink,
+          author: l.authorLink?.match(/@([\w.\-]+)/)?.[1] ?? null,
+          html: l.embedHtmlLink,
+        }
+      : null;
+  const oembed: OembedData = persistedOembed ?? asyncOembed;
+  const oembedState: "idle" | "ok" | "failed" = persistedOembed ? "ok" : asyncState;
+
+  /* async resolve via our own /api/retrieval/resolve (server-side oEmbed→tikwm chain, TTL-cached)
+     — only for listings stored WITHOUT persisted link fields (e.g. legacy rows). */
   useEffect(() => {
+    if (persistedOembed) return; // derivation covers this — no fetch needed
     if (!l.tiktokUrl) return;
     if (lowData && stage !== "resolving") return;
     let alive = true;
     cached(`oembed:${l.tiktokUrl}`, TTL_OEMBED, async () => {
-      const ctrl = new AbortController();
-      const timer = window.setTimeout(() => ctrl.abort(), 4000);
       try {
-        const r = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(l.tiktokUrl)}`, {
-          signal: ctrl.signal,
-        });
+        const r = await fetch(`/api/retrieval/resolve?url=${encodeURIComponent(l.tiktokUrl)}`);
         if (!r.ok) return null;
-        const d = (await r.json()) as { thumbnail_url?: string; author_name?: string; html?: string };
-        return { thumb: d.thumbnail_url ?? null, author: d.author_name ?? null, html: d.html ?? null };
+        const d = (await r.json()) as {
+          ok: boolean;
+          linkObject?: { thumbnailLink: string | null; authorUrl: string | null; oembedHtmlLink: string | null };
+        };
+        if (!d.ok || !d.linkObject) return null;
+        return {
+          thumb: d.linkObject.thumbnailLink,
+          author: d.linkObject.authorUrl?.match(/@([\w.\-]+)/)?.[1] ?? null,
+          html: d.linkObject.oembedHtmlLink,
+        };
       } catch {
-        return null; // offline / 404 — caller falls back to the styled thumb
-      } finally {
-        window.clearTimeout(timer);
+        return null; // offline — caller falls back to the styled thumb
       }
     }, null).then((d) => {
       if (!alive) return;
-      setOembed(d);
-      setOembedState(d ? "ok" : "failed");
+      setAsyncOembed(d);
+      setAsyncState(d ? "ok" : "failed");
     });
     return () => { alive = false; };
-  }, [l.tiktokUrl, lowData, stage]);
+  }, [persistedOembed, l.tiktokUrl, lowData, stage]);
 
   /* in-viewport gate — unsupported observer → tap-to-play only */
   useEffect(() => {

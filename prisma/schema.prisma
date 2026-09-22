@@ -68,6 +68,16 @@ model Listing {
   poster          Agent     @relation(fields: [posterId], references: [id])
   title           String
   tiktokUrl       String
+  // LINK-ONLY LAW: media is never stored — only these resolved/derived links
+  videoId         String? // derived from tiktokUrl /video/(\d+)/ — link index key
+  thumbnailLink   String? // oEmbed thumbnail_url — external link, never bytes
+  embedHtmlLink   String? // oEmbed html embed string — resolved at render time
+  authorLink      String? // oEmbed author_url — external link
+  sourceState     String  @default("pending") // oembed | tikwm | removed | pending
+  role            String  @default("Agent") // Agent | Owner | Developer | Caretaker
+  mandateLink     String? // Caretaker: signed vault URL, expires 24h
+  kplcBillLink    String? // Owner: KPLC bill doc link (vault)
+  titleDocLink    String? // Developer: title/lease doc link (vault)
   estate          String
   subCounty       String
   borough         String

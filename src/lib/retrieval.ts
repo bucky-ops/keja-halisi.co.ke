@@ -20,7 +20,7 @@ import { AMENITIES_VOCAB, BEDS_VOCAB, ALIAS_MAP, ESTATE_ROWS, type EstateRow } f
 
 export { extractVideoId };
 
-export type LinkSource = "oembed" | "mock" | "removed";
+export type LinkSource = "oembed" | "tikwm" | "mock" | "removed";
 
 /** Default agent response time assumption; the API layer refines it per agent. */
 export const DEFAULT_RESPONSE_TIME = 30;
@@ -81,7 +81,8 @@ export interface ResolveOpts {
 const OEMBED_BASE = process.env.TIKTOK_OEMBED_URL || "https://www.tiktok.com/oembed";
 const OEMBED_TIMEOUT_MS = 4000;
 
-const FEE_RE = /viewing fee|viewing\s*fee|pay.*before.*view/i;
+const FEE_RE = /viewing fee|viewing\s*fee|booking\s*fee|pay.*before.*view/i;
+const FEE_NEGATION_RE = /\b(?:no|hakuna|zero|without|free)\s+(?:viewing\s*fee|booking\s*fee|fee)\b/i;
 const PRICE_K_RE = /(\d+(?:\.\d+)?)\s*k\b/i;
 const PRICE_CURRENCY_RE = /(?:ksh|kes|\/=|\bsh\b)\s*(\d{3,6})/i;
 const HASHTAG_RE = /#([a-z0-9_]+)/gi;
@@ -227,9 +228,12 @@ export function parseAmenities(caption: string): string[] {
   return hits;
 }
 
-/** Viewing-fee signal from the caption — "viewing fee" / "pay before viewing" phrasing. */
+/** Viewing-fee signal from the caption — "viewing fee" / "pay before viewing" phrasing.
+ *  Negations respected: "no viewing fee" / "hakuna viewing fee" → false (trust signal). */
 export function parseFee(caption: string): boolean {
-  return FEE_RE.test(String(caption ?? ""));
+  const c = String(caption ?? "");
+  if (!FEE_RE.test(c)) return false;
+  return !FEE_NEGATION_RE.test(c);
 }
 
 // ---------------------------------------------------------------------------
@@ -237,12 +241,17 @@ export function parseFee(caption: string): boolean {
 // ---------------------------------------------------------------------------
 
 /**
- * Fetch TikTok oEmbed metadata for a video URL. Server + client usable.
+ * Fetch TikTok metadata for a video URL. Server + client usable.
+ * Resolution chain (metadata ONLY — never the video bytes):
+ *   1. tiktok.com/oembed  — canonical embed iframe + thumbnail (works from
+ *      datacenter IPs, e.g. Vercel).
+ *   2. tikwm.com/api      — public metadata mirror (title/cover/author) used when
+ *      oEmbed is geo/bot-blocked (e.g. sandbox egress). Still LINKS ONLY.
  * Wrapped in the shared TTL cache (key `oembed:{url}`, TTL 1h). Successes are
  * cached; failures are NOT cached (loader throws → cached() returns the null
  * fallback without storing), so a transient sandbox/network failure retries on
  * the next resolve instead of sticking for an hour.
- * Returns null on any failure (timeout, non-2xx, malformed payload) — never throws.
+ * Returns null on total failure (timeout, non-2xx, malformed payload) — never throws.
  */
 export async function fetchOEmbed(tiktokUrl: string): Promise<OEmbedResponse | null> {
   const url = String(tiktokUrl ?? "").trim();
@@ -254,22 +263,74 @@ export async function fetchOEmbed(tiktokUrl: string): Promise<OEmbedResponse | n
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), OEMBED_TIMEOUT_MS);
       try {
-        const res = await fetch(`${OEMBED_BASE}?url=${encodeURIComponent(url)}`, {
-          signal: controller.signal,
-          headers: { Accept: "application/json" },
-        });
-        if (!res.ok) throw new Error(`oembed HTTP ${res.status}`);
-        const json = (await res.json()) as OEmbedResponse;
-        if (!json || typeof json !== "object" || typeof json.html !== "string" || !json.html) {
-          throw new Error("oembed payload malformed");
+        // --- 1. canonical oEmbed (redirect:"manual" — TikTok geo-blocks redirect to
+        //     an HTML page; following it yields 200 HTML whose json() parse throws.
+        //     ANY failure here falls through to the tikwm mirror.) ---
+        try {
+          const res = await fetch(`${OEMBED_BASE}?url=${encodeURIComponent(url)}`, {
+            signal: controller.signal,
+            redirect: "manual",
+            headers: { Accept: "application/json" },
+          });
+          if (res.ok) {
+            const json = (await res.json()) as OEmbedResponse;
+            if (json && typeof json === "object" && typeof json.html === "string" && json.html) {
+              return json;
+            }
+          }
+        } catch {
+          // fall through to tikwm — never abort the whole chain on oEmbed failure
         }
-        return json;
+        // --- 2. tikwm metadata fallback (links only) ---
+        const tikwm = await fetchTikwmMeta(url);
+        if (tikwm) return tikwm;
+        throw new Error("oembed unreachable");
       } finally {
         clearTimeout(timer);
       }
     },
     null,
   );
+}
+
+/**
+ * tikwm metadata fallback — returns an oEmbed-shaped payload (thumbnail_url is a
+ * TikTok CDN LINK, html is empty → the UI falls back to thumbnail rendering).
+ * Never fetches/stores video bytes. Null on any failure.
+ */
+async function fetchTikwmMeta(tiktokUrl: string): Promise<OEmbedResponse | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), OEMBED_TIMEOUT_MS);
+  try {
+    const res = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(tiktokUrl)}`, {
+      signal: controller.signal,
+      headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0 (compatible; KejaHalisi/1.0)" },
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as {
+      code?: number;
+      data?: { title?: string; cover?: string; author?: { unique_id?: string; nickname?: string } };
+    };
+    if (!json || json.code !== 0 || !json.data) return null;
+    const handle = json.data.author?.unique_id || "";
+    const videoId = extractVideoId(tiktokUrl);
+    return {
+      title: json.data.title ?? "",
+      author_name: json.data.author?.nickname ?? handle,
+      author_url: handle ? `https://www.tiktok.com/@${handle}` : "",
+      thumbnail_url: json.data.cover ?? "",
+      // tikwm exposes no oEmbed embed HTML — synthesize the canonical TikTok embed
+      // iframe LINK (https://www.tiktok.com/embed/v2/{videoId}). Still a LINK only.
+      html: videoId
+        ? `<iframe src="https://www.tiktok.com/embed/v2/${videoId}" width="325" height="580" frameborder="0" allow="encrypted-media;" scrolling="no"></iframe>`
+        : "",
+      via: "tikwm",
+    } as OEmbedResponse;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -288,14 +349,15 @@ export function parseCaptionToLinkObject(
   const url = String(tiktokUrl ?? "").trim();
   const caption = String(oembedTitle ?? "");
   const estate = parseEstateEntry(caption);
+  const viaTikwm = Boolean((oembed as { via?: string } | null | undefined)?.via === "tikwm");
   // freshH: oEmbed exposes no publish timestamp, so freshness cannot be derived
   // from the link — it stays 0 here; the API/listing layer may enrich it.
   return {
     videoId: extractVideoId(url),
     tiktokUrl: url,
-    oembedHtmlLink: oembed?.html ?? null,
-    thumbnailLink: oembed?.thumbnail_url ?? null,
-    authorUrl: oembed?.author_url ?? null,
+    oembedHtmlLink: oembed?.html || null,
+    thumbnailLink: oembed?.thumbnail_url || null,
+    authorUrl: oembed?.author_url || null,
     title: caption ? caption : null,
     estate: estate?.name ?? "",
     borough: estate?.borough ?? "",
@@ -307,7 +369,7 @@ export function parseCaptionToLinkObject(
     fee: parseFee(caption),
     freshH: 0,
     responseTime: DEFAULT_RESPONSE_TIME,
-    source: "oembed",
+    source: viaTikwm ? "tikwm" : "oembed",
   };
 }
 

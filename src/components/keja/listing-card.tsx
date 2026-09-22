@@ -28,9 +28,14 @@ export function ListingCard({ listing: l, compact = false, onOpen, onCall, index
   const taken = l.status === "Taken";
   const reported = l.reportsCount >= 2;
   const grayed = expired || taken;
-  // thumbnail-first: first poster photo when present, gradient fallback on error/absence
+  // thumbnail-first: oEmbed thumbnail LINK, then poster photo link; gradient fallback on error/absence
   const [failedThumb, setFailedThumb] = useState<string | null>(null);
-  const thumbSrc = l.photos[0] && failedThumb !== l.photos[0] ? l.photos[0] : null;
+  const sourceRemoved = l.sourceState === "removed";
+  const thumbSrc = l.thumbnailLink && failedThumb !== l.thumbnailLink
+    ? l.thumbnailLink
+    : l.photos[0] && failedThumb !== l.photos[0]
+      ? l.photos[0]
+      : null;
 
   const open = () => (onOpen ? onOpen(l) : navigate("listing", { listingId: l.id }));
 
@@ -67,10 +72,16 @@ export function ListingCard({ listing: l, compact = false, onOpen, onCall, index
             alt={`${l.beds} for rent in ${l.estate} — ${l.title}`}
             loading="lazy"
             decoding="async"
-            onError={() => setFailedThumb(l.photos[0])}
+            referrerPolicy="no-referrer"
+            onError={() => setFailedThumb(l.thumbnailLink && failedThumb !== l.thumbnailLink ? l.thumbnailLink : l.photos[0])}
             className="absolute inset-0 h-full w-full object-cover"
           />
         ) : null}
+        {sourceRemoved && (
+          <span className="absolute bottom-2.5 left-2.5 rounded-md bg-ink/80 px-2 py-1 text-[9px] font-extrabold uppercase tracking-wide text-white" title="TikTok removed this source — estate + road context kept">
+            source removed
+          </span>
+        )}
         {thumbSrc ? <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-black/25" aria-hidden /> : null}
         {/* faux TikTok play */}
         <div className="absolute inset-0 grid place-items-center">
@@ -228,7 +239,11 @@ export function ListingCardSkeleton() {
 /** Mini card for horizontal rails / similar kejas */
 export function MiniListingCard({ listing: l, onOpen }: { listing: ListingDTO; onOpen?: () => void }) {
   const [failedThumb, setFailedThumb] = useState<string | null>(null);
-  const thumbSrc = l.photos[0] && failedThumb !== l.photos[0] ? l.photos[0] : null;
+  const thumbSrc = l.thumbnailLink && failedThumb !== l.thumbnailLink
+    ? l.thumbnailLink
+    : l.photos[0] && failedThumb !== l.photos[0]
+      ? l.photos[0]
+      : null;
   return (
     <button
       onClick={onOpen}
@@ -241,7 +256,7 @@ export function MiniListingCard({ listing: l, onOpen }: { listing: ListingDTO; o
             alt={`${l.beds} in ${l.estate} — ${l.title}`}
             loading="lazy"
             decoding="async"
-            onError={() => setFailedThumb(l.photos[0])}
+            onError={() => setFailedThumb(l.thumbnailLink && failedThumb !== l.thumbnailLink ? l.thumbnailLink : l.photos[0])}
             className="absolute inset-0 h-full w-full object-cover"
           />
         ) : null}
@@ -253,6 +268,11 @@ export function MiniListingCard({ listing: l, onOpen }: { listing: ListingDTO; o
         {l.freshH <= 24 && (
           <span className="absolute top-1.5 right-1.5 rounded-full bg-ink/80 text-white px-1.5 py-0.5 text-[9px] font-bold">
             {l.freshH < 1 ? "<1" : Math.round(l.freshH)}h
+          </span>
+        )}
+        {l.fee && (
+          <span className="absolute top-1.5 left-1.5 rounded-full bg-scam px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase tracking-wide text-white" title="Viewing-fee signal — report if asked to pay before viewing">
+            viewing fee
           </span>
         )}
       </div>

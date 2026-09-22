@@ -299,3 +299,107 @@ export async function fetchAdminAnalytics(): Promise<AdminAnalytics> {
   if (!res.ok) throw new Error("Analytics failed");
   return res.json();
 }
+
+/* ===================== LINK-ONLY LIVE DATA INPUT (Phase 2) ===================== */
+
+export interface EstatesData {
+  version: string;
+  boroughs: { id: string; name: string; subCounties: string[] }[];
+  subCounties: { name: string; borough: string; boroughId: string }[];
+  estates: {
+    name: string;
+    subCounty: string;
+    borough: string;
+    lat: number;
+    lng: number;
+    mainRoad: string;
+    mainRoadLat: number;
+    mainRoadLng: number;
+    priceRange: string;
+    avgPrice: Record<string, number>;
+  }[];
+  aliasMap: Record<string, string>;
+  priceBuckets: { id: string; label: string; min: number; max: number }[];
+  beds: { id: string; label: string; aliases: string[] }[];
+  amenities: { id: string; label: string; keywords: string[] }[];
+  mainRoads: { name: string; lat: number; lng: number }[];
+}
+
+export async function fetchEstates(): Promise<EstatesData> {
+  const res = await fetch("/api/estates", { cache: "no-store" });
+  if (!res.ok) throw new Error("Estates catalog failed");
+  return res.json();
+}
+
+export interface ResolveResponse {
+  ok: boolean;
+  error?: string;
+  videoId: string;
+  tiktokUrl: string;
+  thumbnailLink: string | null;
+  embedHtmlLink: string | null;
+  authorLink: string | null;
+  title: string | null;
+  handle: string;
+  source: "oembed" | "tikwm" | "removed" | "pending";
+  parsed: { price: number; beds: string; estate: string; amenities: string[]; fee: boolean };
+  checks: {
+    bait: { bait: boolean; pctOfAvg: number; label: string };
+    repost: { repost: boolean; matchHandle: string; pct: number; label: string };
+    fee: { fee: boolean; label: string };
+  };
+}
+
+export async function resolveTikTok(url: string): Promise<ResolveResponse> {
+  const res = await fetch(`/api/listings/resolve?url=${encodeURIComponent(url)}`, { cache: "no-store" });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json?.error ?? "Resolve failed");
+  return json as ResolveResponse;
+}
+
+export interface CreateListingResponse {
+  id: string;
+  videoId: string;
+  tiktokUrl: string;
+  thumbnailLink: string | null;
+  embedHtmlLink: string | null;
+  status: string;
+  publishState: string;
+  fee: boolean;
+  bait: boolean;
+  source: string;
+  aiFlags: { type: string; label: string; severity: string }[];
+  error?: string;
+  detail?: string;
+  repostOf?: string;
+}
+
+export async function createListing(payload: Record<string, unknown>): Promise<CreateListingResponse> {
+  const res = await fetch("/api/listings/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const json = await res.json();
+  if (!res.ok) throw Object.assign(new Error(json?.error ?? "Create failed"), { payload: json });
+  return json as CreateListingResponse;
+}
+
+export async function fetchWeather(lat: number, lng: number): Promise<{ tempC: number; note: string } | null> {
+  try {
+    const res = await fetch(`/api/geo/weather?lat=${lat}&lng=${lng}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    return (await res.json()) as { tempC: number; note: string };
+  } catch {
+    return null;
+  }
+}
+
+export async function logLeadByVideo(videoId: string, action: "Call" | "WhatsApp" | "TikTok") {
+  const res = await fetch("/api/leads/log", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ videoId, action }),
+  });
+  return res.json();
+}

@@ -1,5 +1,5 @@
 {
-  "version": "v3-merged",
+  "version": "v3-merged+syokimau",
   "description": "Keja Halisi - Nairobi Boroughs x 17 Sub-counties x Estates - Link-only index source",
   "generated_for": "Z.ai",
   "boroughs": [
@@ -1087,6 +1087,22 @@
         "bedsitter": 4500,
         "1BR": 7000,
         "2BR": 10000
+      }
+    },
+    {
+      "name": "Syokimau",
+      "subCounty": "Embakasi South",
+      "borough": "South Eastern",
+      "lat": -1.3186,
+      "lng": 36.9278,
+      "mainRoad": "Mombasa Rd",
+      "mainRoadLat": -1.3186,
+      "mainRoadLng": 36.9,
+      "priceRange": "15k-28k",
+      "avgPrice": {
+        "bedsitter": 10000,
+        "1BR": 18000,
+        "2BR": 24000
       }
     }
   ],

@@ -1,9 +1,11 @@
-// KEJA HALISI — canonical estates data (single import of upload/Estates.json)
+// KEJA HALISI — canonical estates data (single tracked import)
 // Shared catalog config for the whole app: boroughs, sub-counties, estates,
 // Sheng alias map, price buckets, beds + amenity vocabularies, main roads.
 // Import ESTATES_DATA from here — NEVER re-read or duplicate the JSON elsewhere.
+// NOTE: src/lib/estates.json is the tracked canonical copy (md5-identical to the
+// original upload/Estates.json, which stays untracked). Keeps Vercel builds green.
 
-import rawJson from "../../upload/Estates.json";
+import rawJson from "./estates.json";
 
 export interface PriceBucket {
   id: string; // "0-7k" | "7-10k" | ... | "70k+"

@@ -31,6 +31,13 @@ export interface ListingDTO {
   id: string;
   title: string;
   tiktokUrl: string;
+  // LINK-ONLY fields — resolved links, never media bytes
+  videoId: string | null;
+  thumbnailLink: string | null;
+  embedHtmlLink: string | null;
+  authorLink: string | null;
+  sourceState: string; // oembed | tikwm | removed | pending
+  role: string; // Agent | Owner | Developer | Caretaker
   estate: string;
   subCounty: string;
   borough: string;

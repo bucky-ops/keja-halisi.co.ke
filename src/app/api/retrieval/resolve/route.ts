@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const linkObject = await resolveLinkObject(tiktokUrl, { caption, estate, beds, price });
-    return NextResponse.json({ ok: linkObject.source === "oembed", linkObject });
+    return NextResponse.json({ ok: (linkObject.source === "oembed" || linkObject.source === "tikwm"), linkObject });
   } catch {
     // Total failure — graceful "removed", never a 500.
     const linkObject = removedLinkObject(tiktokUrl);
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
   const tiktokUrl = req.nextUrl.searchParams.get("url") ?? "";
   try {
     const linkObject = await resolveLinkObject(tiktokUrl);
-    return NextResponse.json({ ok: linkObject.source === "oembed", linkObject });
+    return NextResponse.json({ ok: (linkObject.source === "oembed" || linkObject.source === "tikwm"), linkObject });
   } catch {
     const linkObject = removedLinkObject(tiktokUrl);
     return NextResponse.json({ ok: false, linkObject });
