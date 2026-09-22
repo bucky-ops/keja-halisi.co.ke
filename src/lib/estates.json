@@ -1,0 +1,1333 @@
+{
+  "version": "v3-merged",
+  "description": "Keja Halisi - Nairobi Boroughs x 17 Sub-counties x Estates - Link-only index source",
+  "generated_for": "Z.ai",
+  "boroughs": [
+    {
+      "id": "western",
+      "name": "Western",
+      "subCounties": [
+        "Westlands",
+        "Dagoretti North",
+        "Dagoretti South"
+      ]
+    },
+    {
+      "id": "southern",
+      "name": "Southern",
+      "subCounties": [
+        "Langata",
+        "Kibra"
+      ]
+    },
+    {
+      "id": "central",
+      "name": "Central",
+      "subCounties": [
+        "Starehe",
+        "Kamukunji",
+        "Mathare"
+      ]
+    },
+    {
+      "id": "eastern",
+      "name": "Eastern",
+      "subCounties": [
+        "Embakasi North",
+        "Embakasi West",
+        "Embakasi Central"
+      ]
+    },
+    {
+      "id": "south_eastern",
+      "name": "South Eastern",
+      "subCounties": [
+        "Embakasi South",
+        "Embakasi East",
+        "Makadara"
+      ]
+    },
+    {
+      "id": "northern",
+      "name": "Northern",
+      "subCounties": [
+        "Ruaraka",
+        "Roysambu",
+        "Kasarani"
+      ]
+    }
+  ],
+  "subCounties": [
+    {
+      "name": "Westlands",
+      "borough": "Western",
+      "boroughId": "western"
+    },
+    {
+      "name": "Dagoretti North",
+      "borough": "Western",
+      "boroughId": "western"
+    },
+    {
+      "name": "Dagoretti South",
+      "borough": "Western",
+      "boroughId": "western"
+    },
+    {
+      "name": "Langata",
+      "borough": "Southern",
+      "boroughId": "southern"
+    },
+    {
+      "name": "Kibra",
+      "borough": "Southern",
+      "boroughId": "southern"
+    },
+    {
+      "name": "Starehe",
+      "borough": "Central",
+      "boroughId": "central"
+    },
+    {
+      "name": "Kamukunji",
+      "borough": "Central",
+      "boroughId": "central"
+    },
+    {
+      "name": "Mathare",
+      "borough": "Central",
+      "boroughId": "central"
+    },
+    {
+      "name": "Embakasi North",
+      "borough": "Eastern",
+      "boroughId": "eastern"
+    },
+    {
+      "name": "Embakasi West",
+      "borough": "Eastern",
+      "boroughId": "eastern"
+    },
+    {
+      "name": "Embakasi Central",
+      "borough": "Eastern",
+      "boroughId": "eastern"
+    },
+    {
+      "name": "Embakasi South",
+      "borough": "South Eastern",
+      "boroughId": "south_eastern"
+    },
+    {
+      "name": "Embakasi East",
+      "borough": "South Eastern",
+      "boroughId": "south_eastern"
+    },
+    {
+      "name": "Makadara",
+      "borough": "South Eastern",
+      "boroughId": "south_eastern"
+    },
+    {
+      "name": "Ruaraka",
+      "borough": "Northern",
+      "boroughId": "northern"
+    },
+    {
+      "name": "Roysambu",
+      "borough": "Northern",
+      "boroughId": "northern"
+    },
+    {
+      "name": "Kasarani",
+      "borough": "Northern",
+      "boroughId": "northern"
+    }
+  ],
+  "estates": [
+    {
+      "name": "Kileleshwa",
+      "subCounty": "Westlands",
+      "borough": "Western",
+      "lat": -1.2781,
+      "lng": 36.7881,
+      "mainRoad": "Oloitokitok Rd",
+      "mainRoadLat": -1.275,
+      "mainRoadLng": 36.785,
+      "priceRange": "28k-45k",
+      "avgPrice": {
+        "bedsitter": 18000,
+        "1BR": 35000,
+        "2BR": 55000
+      }
+    },
+    {
+      "name": "Lavington",
+      "subCounty": "Westlands",
+      "borough": "Western",
+      "lat": -1.273,
+      "lng": 36.772,
+      "mainRoad": "James Gichuru Rd",
+      "mainRoadLat": -1.27,
+      "mainRoadLng": 36.77,
+      "priceRange": "35k-60k",
+      "avgPrice": {
+        "bedsitter": 22000,
+        "1BR": 45000,
+        "2BR": 70000
+      }
+    },
+    {
+      "name": "Parklands",
+      "subCounty": "Westlands",
+      "borough": "Western",
+      "lat": -1.263,
+      "lng": 36.815,
+      "mainRoad": "Parklands Rd",
+      "mainRoadLat": -1.262,
+      "mainRoadLng": 36.812,
+      "priceRange": "25k-40k",
+      "avgPrice": {
+        "bedsitter": 15000,
+        "1BR": 32000,
+        "2BR": 48000
+      }
+    },
+    {
+      "name": "Kangemi",
+      "subCounty": "Westlands",
+      "borough": "Western",
+      "lat": -1.264,
+      "lng": 36.748,
+      "mainRoad": "Waiyaki Way",
+      "mainRoadLat": -1.263,
+      "mainRoadLng": 36.745,
+      "priceRange": "8k-14k",
+      "avgPrice": {
+        "bedsitter": 7000,
+        "1BR": 11000,
+        "2BR": 16000
+      }
+    },
+    {
+      "name": "Mountain View",
+      "subCounty": "Westlands",
+      "borough": "Western",
+      "lat": -1.259,
+      "lng": 36.734,
+      "mainRoad": "Waiyaki Way",
+      "mainRoadLat": -1.258,
+      "mainRoadLng": 36.732,
+      "priceRange": "10k-20k",
+      "avgPrice": {
+        "bedsitter": 9000,
+        "1BR": 14000,
+        "2BR": 20000
+      }
+    },
+    {
+      "name": "Kilimani",
+      "subCounty": "Dagoretti North",
+      "borough": "Western",
+      "lat": -1.292,
+      "lng": 36.784,
+      "mainRoad": "Ngong Rd",
+      "mainRoadLat": -1.29,
+      "mainRoadLng": 36.782,
+      "priceRange": "30k-55k",
+      "avgPrice": {
+        "bedsitter": 20000,
+        "1BR": 38000,
+        "2BR": 58000
+      }
+    },
+    {
+      "name": "Kawangware",
+      "subCounty": "Dagoretti North",
+      "borough": "Western",
+      "lat": -1.286,
+      "lng": 36.765,
+      "mainRoad": "Naivasha Rd",
+      "mainRoadLat": -1.284,
+      "mainRoadLng": 36.763,
+      "priceRange": "7k-12k",
+      "avgPrice": {
+        "bedsitter": 6000,
+        "1BR": 9500,
+        "2BR": 14000
+      }
+    },
+    {
+      "name": "Gatina",
+      "subCounty": "Dagoretti North",
+      "borough": "Western",
+      "lat": -1.289,
+      "lng": 36.758,
+      "mainRoad": "Naivasha Rd",
+      "mainRoadLat": -1.287,
+      "mainRoadLng": 36.756,
+      "priceRange": "6k-11k",
+      "avgPrice": {
+        "bedsitter": 5500,
+        "1BR": 9000,
+        "2BR": 13000
+      }
+    },
+    {
+      "name": "Riruta",
+      "subCounty": "Dagoretti South",
+      "borough": "Western",
+      "lat": -1.305,
+      "lng": 36.754,
+      "mainRoad": "Ngong Rd",
+      "mainRoadLat": -1.303,
+      "mainRoadLng": 36.752,
+      "priceRange": "8k-14k",
+      "avgPrice": {
+        "bedsitter": 7000,
+        "1BR": 11000,
+        "2BR": 16000
+      }
+    },
+    {
+      "name": "Satellite",
+      "subCounty": "Dagoretti South",
+      "borough": "Western",
+      "lat": -1.31,
+      "lng": 36.748,
+      "mainRoad": "Wanyee Rd",
+      "mainRoadLat": -1.308,
+      "mainRoadLng": 36.746,
+      "priceRange": "7k-13k",
+      "avgPrice": {
+        "bedsitter": 6500,
+        "1BR": 10000,
+        "2BR": 15000
+      }
+    },
+    {
+      "name": "Waithaka",
+      "subCounty": "Dagoretti South",
+      "borough": "Western",
+      "lat": -1.315,
+      "lng": 36.74,
+      "mainRoad": "Dagoretti Rd",
+      "mainRoadLat": -1.313,
+      "mainRoadLng": 36.738,
+      "priceRange": "7k-12k",
+      "avgPrice": {
+        "bedsitter": 6000,
+        "1BR": 9500,
+        "2BR": 14000
+      }
+    },
+    {
+      "name": "Mutuini",
+      "subCounty": "Dagoretti South",
+      "borough": "Western",
+      "lat": -1.32,
+      "lng": 36.735,
+      "mainRoad": "Mutuini Rd",
+      "mainRoadLat": -1.318,
+      "mainRoadLng": 36.733,
+      "priceRange": "6k-10k",
+      "avgPrice": {
+        "bedsitter": 5500,
+        "1BR": 8500,
+        "2BR": 12000
+      }
+    },
+    {
+      "name": "Karen",
+      "subCounty": "Langata",
+      "borough": "Southern",
+      "lat": -1.336,
+      "lng": 36.712,
+      "mainRoad": "Karen Rd",
+      "mainRoadLat": -1.334,
+      "mainRoadLng": 36.71,
+      "priceRange": "50k+",
+      "avgPrice": {
+        "bedsitter": 25000,
+        "1BR": 50000,
+        "2BR": 85000
+      }
+    },
+    {
+      "name": "Langata",
+      "subCounty": "Langata",
+      "borough": "Southern",
+      "lat": -1.344,
+      "lng": 36.747,
+      "mainRoad": "Langata Rd",
+      "mainRoadLat": -1.342,
+      "mainRoadLng": 36.745,
+      "priceRange": "15k-30k",
+      "avgPrice": {
+        "bedsitter": 12000,
+        "1BR": 20000,
+        "2BR": 30000
+      }
+    },
+    {
+      "name": "South C",
+      "subCounty": "Langata",
+      "borough": "Southern",
+      "lat": -1.324,
+      "lng": 36.828,
+      "mainRoad": "Mombasa Rd",
+      "mainRoadLat": -1.322,
+      "mainRoadLng": 36.826,
+      "priceRange": "22k-35k",
+      "avgPrice": {
+        "bedsitter": 14000,
+        "1BR": 28000,
+        "2BR": 40000
+      }
+    },
+    {
+      "name": "Nairobi West",
+      "subCounty": "Langata",
+      "borough": "Southern",
+      "lat": -1.313,
+      "lng": 36.817,
+      "mainRoad": "Gandhi Ave",
+      "mainRoadLat": -1.311,
+      "mainRoadLng": 36.815,
+      "priceRange": "18k-28k",
+      "avgPrice": {
+        "bedsitter": 12000,
+        "1BR": 22000,
+        "2BR": 32000
+      }
+    },
+    {
+      "name": "Kibra",
+      "subCounty": "Kibra",
+      "borough": "Southern",
+      "lat": -1.312,
+      "lng": 36.785,
+      "mainRoad": "Kibra Dr",
+      "mainRoadLat": -1.31,
+      "mainRoadLng": 36.783,
+      "priceRange": "5k-10k",
+      "avgPrice": {
+        "bedsitter": 4000,
+        "1BR": 6500,
+        "2BR": 9000
+      }
+    },
+    {
+      "name": "Woodley",
+      "subCounty": "Kibra",
+      "borough": "Southern",
+      "lat": -1.301,
+      "lng": 36.791,
+      "mainRoad": "Joseph Kangethe Rd",
+      "mainRoadLat": -1.299,
+      "mainRoadLng": 36.789,
+      "priceRange": "14k-24k",
+      "avgPrice": {
+        "bedsitter": 11000,
+        "1BR": 18000,
+        "2BR": 26000
+      }
+    },
+    {
+      "name": "Ngara",
+      "subCounty": "Starehe",
+      "borough": "Central",
+      "lat": -1.272,
+      "lng": 36.823,
+      "mainRoad": "Ngara Rd",
+      "mainRoadLat": -1.27,
+      "mainRoadLng": 36.821,
+      "priceRange": "12k-20k",
+      "avgPrice": {
+        "bedsitter": 9000,
+        "1BR": 16000,
+        "2BR": 23000
+      }
+    },
+    {
+      "name": "Pangani",
+      "subCounty": "Starehe",
+      "borough": "Central",
+      "lat": -1.267,
+      "lng": 36.834,
+      "mainRoad": "Juja Rd",
+      "mainRoadLat": -1.265,
+      "mainRoadLng": 36.832,
+      "priceRange": "12k-22k",
+      "avgPrice": {
+        "bedsitter": 10000,
+        "1BR": 18000,
+        "2BR": 25000
+      }
+    },
+    {
+      "name": "Ziwani",
+      "subCounty": "Starehe",
+      "borough": "Central",
+      "lat": -1.28,
+      "lng": 36.832,
+      "mainRoad": "Racecourse Rd",
+      "mainRoadLat": -1.278,
+      "mainRoadLng": 36.83,
+      "priceRange": "8k-16k",
+      "avgPrice": {
+        "bedsitter": 7000,
+        "1BR": 12000,
+        "2BR": 18000
+      }
+    },
+    {
+      "name": "Eastleigh North",
+      "subCounty": "Kamukunji",
+      "borough": "Central",
+      "lat": -1.264,
+      "lng": 36.85,
+      "mainRoad": "Eastleigh 1st Ave",
+      "mainRoadLat": -1.262,
+      "mainRoadLng": 36.848,
+      "priceRange": "10k-16k",
+      "avgPrice": {
+        "bedsitter": 8000,
+        "1BR": 13000,
+        "2BR": 19000
+      }
+    },
+    {
+      "name": "Eastleigh South",
+      "subCounty": "Kamukunji",
+      "borough": "Central",
+      "lat": -1.273,
+      "lng": 36.853,
+      "mainRoad": "Eastleigh 7th St",
+      "mainRoadLat": -1.271,
+      "mainRoadLng": 36.851,
+      "priceRange": "9k-15k",
+      "avgPrice": {
+        "bedsitter": 7500,
+        "1BR": 12000,
+        "2BR": 18000
+      }
+    },
+    {
+      "name": "California",
+      "subCounty": "Kamukunji",
+      "borough": "Central",
+      "lat": -1.278,
+      "lng": 36.844,
+      "mainRoad": "Jogoo Rd",
+      "mainRoadLat": -1.276,
+      "mainRoadLng": 36.842,
+      "priceRange": "8k-14k",
+      "avgPrice": {
+        "bedsitter": 7000,
+        "1BR": 11000,
+        "2BR": 16000
+      }
+    },
+    {
+      "name": "Mathare",
+      "subCounty": "Mathare",
+      "borough": "Central",
+      "lat": -1.262,
+      "lng": 36.855,
+      "mainRoad": "Juja Rd",
+      "mainRoadLat": -1.26,
+      "mainRoadLng": 36.853,
+      "priceRange": "4k-8k",
+      "avgPrice": {
+        "bedsitter": 3500,
+        "1BR": 5500,
+        "2BR": 8000
+      }
+    },
+    {
+      "name": "Huruma",
+      "subCounty": "Mathare",
+      "borough": "Central",
+      "lat": -1.258,
+      "lng": 36.862,
+      "mainRoad": "Outering Rd",
+      "mainRoadLat": -1.256,
+      "mainRoadLng": 36.86,
+      "priceRange": "5k-9k",
+      "avgPrice": {
+        "bedsitter": 4500,
+        "1BR": 7000,
+        "2BR": 10000
+      }
+    },
+    {
+      "name": "Dandora Phase 1",
+      "subCounty": "Embakasi North",
+      "borough": "Eastern",
+      "lat": -1.249,
+      "lng": 36.891,
+      "mainRoad": "Dandora Rd",
+      "mainRoadLat": -1.247,
+      "mainRoadLng": 36.889,
+      "priceRange": "6k-11k",
+      "avgPrice": {
+        "bedsitter": 5000,
+        "1BR": 8000,
+        "2BR": 12000
+      }
+    },
+    {
+      "name": "Dandora Phase 4",
+      "subCounty": "Embakasi North",
+      "borough": "Eastern",
+      "lat": -1.255,
+      "lng": 36.897,
+      "mainRoad": "Dandora Rd",
+      "mainRoadLat": -1.253,
+      "mainRoadLng": 36.895,
+      "priceRange": "6k-12k",
+      "avgPrice": {
+        "bedsitter": 5500,
+        "1BR": 8500,
+        "2BR": 12500
+      }
+    },
+    {
+      "name": "Kariobangi North",
+      "subCounty": "Embakasi North",
+      "borough": "Eastern",
+      "lat": -1.242,
+      "lng": 36.881,
+      "mainRoad": "Outering Rd",
+      "mainRoadLat": -1.24,
+      "mainRoadLng": 36.879,
+      "priceRange": "5k-10k",
+      "avgPrice": {
+        "bedsitter": 5000,
+        "1BR": 7500,
+        "2BR": 11000
+      }
+    },
+    {
+      "name": "Umoja I",
+      "subCounty": "Embakasi West",
+      "borough": "Eastern",
+      "lat": -1.283,
+      "lng": 36.893,
+      "mainRoad": "Moi Dr",
+      "mainRoadLat": -1.281,
+      "mainRoadLng": 36.891,
+      "priceRange": "9k-14k",
+      "avgPrice": {
+        "bedsitter": 7000,
+        "1BR": 11000,
+        "2BR": 16000
+      }
+    },
+    {
+      "name": "Umoja II",
+      "subCounty": "Embakasi West",
+      "borough": "Eastern",
+      "lat": -1.288,
+      "lng": 36.898,
+      "mainRoad": "Moi Dr",
+      "mainRoadLat": -1.286,
+      "mainRoadLng": 36.896,
+      "priceRange": "10k-16k",
+      "avgPrice": {
+        "bedsitter": 7500,
+        "1BR": 12000,
+        "2BR": 17000
+      }
+    },
+    {
+      "name": "Buruburu Phase 1",
+      "subCounty": "Embakasi West",
+      "borough": "Eastern",
+      "lat": -1.283,
+      "lng": 36.877,
+      "mainRoad": "Mumias South Rd",
+      "mainRoadLat": -1.281,
+      "mainRoadLng": 36.875,
+      "priceRange": "15k-22k",
+      "avgPrice": {
+        "bedsitter": 10000,
+        "1BR": 18000,
+        "2BR": 25000
+      }
+    },
+    {
+      "name": "Buruburu Phase 5",
+      "subCounty": "Embakasi West",
+      "borough": "Eastern",
+      "lat": -1.291,
+      "lng": 36.885,
+      "mainRoad": "Mumias South Rd",
+      "mainRoadLat": -1.289,
+      "mainRoadLng": 36.883,
+      "priceRange": "16k-24k",
+      "avgPrice": {
+        "bedsitter": 11000,
+        "1BR": 19000,
+        "2BR": 27000
+      }
+    },
+    {
+      "name": "Kariobangi South",
+      "subCounty": "Embakasi West",
+      "borough": "Eastern",
+      "lat": -1.271,
+      "lng": 36.882,
+      "mainRoad": "Outering Rd",
+      "mainRoadLat": -1.269,
+      "mainRoadLng": 36.88,
+      "priceRange": "7k-12k",
+      "avgPrice": {
+        "bedsitter": 6000,
+        "1BR": 9000,
+        "2BR": 13000
+      }
+    },
+    {
+      "name": "Kayole Central",
+      "subCounty": "Embakasi Central",
+      "borough": "Eastern",
+      "lat": -1.283,
+      "lng": 36.919,
+      "mainRoad": "Kangundo Rd",
+      "mainRoadLat": -1.281,
+      "mainRoadLng": 36.917,
+      "priceRange": "6k-11k",
+      "avgPrice": {
+        "bedsitter": 5500,
+        "1BR": 8500,
+        "2BR": 12000
+      }
+    },
+    {
+      "name": "Komarock",
+      "subCounty": "Embakasi Central",
+      "borough": "Eastern",
+      "lat": -1.278,
+      "lng": 36.907,
+      "mainRoad": "Komarock Rd",
+      "mainRoadLat": -1.276,
+      "mainRoadLng": 36.905,
+      "priceRange": "8k-14k",
+      "avgPrice": {
+        "bedsitter": 6500,
+        "1BR": 10000,
+        "2BR": 15000
+      }
+    },
+    {
+      "name": "Matopeni",
+      "subCounty": "Embakasi Central",
+      "borough": "Eastern",
+      "lat": -1.29,
+      "lng": 36.925,
+      "mainRoad": "Kayole Spine Rd",
+      "mainRoadLat": -1.288,
+      "mainRoadLng": 36.923,
+      "priceRange": "5k-10k",
+      "avgPrice": {
+        "bedsitter": 5000,
+        "1BR": 7500,
+        "2BR": 11000
+      }
+    },
+    {
+      "name": "Pipeline",
+      "subCounty": "Embakasi South",
+      "borough": "South Eastern",
+      "lat": -1.309,
+      "lng": 36.894,
+      "mainRoad": "Outering Rd",
+      "mainRoadLat": -1.307,
+      "mainRoadLng": 36.892,
+      "priceRange": "7k-12k",
+      "avgPrice": {
+        "bedsitter": 6000,
+        "1BR": 9500,
+        "2BR": 14000
+      }
+    },
+    {
+      "name": "Imara Daima",
+      "subCounty": "Embakasi South",
+      "borough": "South Eastern",
+      "lat": -1.326,
+      "lng": 36.877,
+      "mainRoad": "Mombasa Rd",
+      "mainRoadLat": -1.324,
+      "mainRoadLng": 36.875,
+      "priceRange": "10k-16k",
+      "avgPrice": {
+        "bedsitter": 8000,
+        "1BR": 13000,
+        "2BR": 19000
+      }
+    },
+    {
+      "name": "Kware",
+      "subCounty": "Embakasi South",
+      "borough": "South Eastern",
+      "lat": -1.315,
+      "lng": 36.899,
+      "mainRoad": "Kware Rd",
+      "mainRoadLat": -1.313,
+      "mainRoadLng": 36.897,
+      "priceRange": "6k-10k",
+      "avgPrice": {
+        "bedsitter": 5500,
+        "1BR": 8000,
+        "2BR": 11500
+      }
+    },
+    {
+      "name": "Utawala",
+      "subCounty": "Embakasi East",
+      "borough": "South Eastern",
+      "lat": -1.295,
+      "lng": 36.958,
+      "mainRoad": "Eastern Bypass",
+      "mainRoadLat": -1.293,
+      "mainRoadLng": 36.956,
+      "priceRange": "9k-15k",
+      "avgPrice": {
+        "bedsitter": 7000,
+        "1BR": 11000,
+        "2BR": 16000
+      }
+    },
+    {
+      "name": "Embakasi Village",
+      "subCounty": "Embakasi East",
+      "borough": "South Eastern",
+      "lat": -1.309,
+      "lng": 36.923,
+      "mainRoad": "Airport North Rd",
+      "mainRoadLat": -1.307,
+      "mainRoadLng": 36.921,
+      "priceRange": "8k-13k",
+      "avgPrice": {
+        "bedsitter": 6500,
+        "1BR": 10000,
+        "2BR": 15000
+      }
+    },
+    {
+      "name": "Njiru",
+      "subCounty": "Embakasi East",
+      "borough": "South Eastern",
+      "lat": -1.284,
+      "lng": 36.939,
+      "mainRoad": "Kangundo Rd",
+      "mainRoadLat": -1.282,
+      "mainRoadLng": 36.937,
+      "priceRange": "6k-11k",
+      "avgPrice": {
+        "bedsitter": 5000,
+        "1BR": 8000,
+        "2BR": 12000
+      }
+    },
+    {
+      "name": "Makadara",
+      "subCounty": "Makadara",
+      "borough": "South Eastern",
+      "lat": -1.296,
+      "lng": 36.865,
+      "mainRoad": "Jogoo Rd",
+      "mainRoadLat": -1.294,
+      "mainRoadLng": 36.863,
+      "priceRange": "9k-15k",
+      "avgPrice": {
+        "bedsitter": 7500,
+        "1BR": 12000,
+        "2BR": 17000
+      }
+    },
+    {
+      "name": "Harambee",
+      "subCounty": "Makadara",
+      "borough": "South Eastern",
+      "lat": -1.301,
+      "lng": 36.873,
+      "mainRoad": "Rabai Rd",
+      "mainRoadLat": -1.299,
+      "mainRoadLng": 36.871,
+      "priceRange": "8k-14k",
+      "avgPrice": {
+        "bedsitter": 7000,
+        "1BR": 11000,
+        "2BR": 16000
+      }
+    },
+    {
+      "name": "Maringo",
+      "subCounty": "Makadara",
+      "borough": "South Eastern",
+      "lat": -1.291,
+      "lng": 36.869,
+      "mainRoad": "Maringo Rd",
+      "mainRoadLat": -1.289,
+      "mainRoadLng": 36.867,
+      "priceRange": "8k-13k",
+      "avgPrice": {
+        "bedsitter": 6500,
+        "1BR": 10000,
+        "2BR": 15000
+      }
+    },
+    {
+      "name": "Mathare North",
+      "subCounty": "Ruaraka",
+      "borough": "Northern",
+      "lat": -1.246,
+      "lng": 36.865,
+      "mainRoad": "Outering Rd",
+      "mainRoadLat": -1.244,
+      "mainRoadLng": 36.863,
+      "priceRange": "5k-10k",
+      "avgPrice": {
+        "bedsitter": 5000,
+        "1BR": 7500,
+        "2BR": 11000
+      }
+    },
+    {
+      "name": "Babadogo",
+      "subCounty": "Ruaraka",
+      "borough": "Northern",
+      "lat": -1.235,
+      "lng": 36.872,
+      "mainRoad": "Babadogo Rd",
+      "mainRoadLat": -1.233,
+      "mainRoadLng": 36.87,
+      "priceRange": "6k-11k",
+      "avgPrice": {
+        "bedsitter": 5500,
+        "1BR": 8000,
+        "2BR": 12000
+      }
+    },
+    {
+      "name": "Korogocho",
+      "subCounty": "Ruaraka",
+      "borough": "Northern",
+      "lat": -1.243,
+      "lng": 36.891,
+      "mainRoad": "Korogocho Rd",
+      "mainRoadLat": -1.241,
+      "mainRoadLng": 36.889,
+      "priceRange": "3k-6k",
+      "avgPrice": {
+        "bedsitter": 3000,
+        "1BR": 4500,
+        "2BR": 7000
+      }
+    },
+    {
+      "name": "Roysambu",
+      "subCounty": "Roysambu",
+      "borough": "Northern",
+      "lat": -1.209,
+      "lng": 36.887,
+      "mainRoad": "Thika Rd",
+      "mainRoadLat": -1.207,
+      "mainRoadLng": 36.885,
+      "priceRange": "9k-16k",
+      "avgPrice": {
+        "bedsitter": 7000,
+        "1BR": 11000,
+        "2BR": 16000
+      }
+    },
+    {
+      "name": "Zimmerman",
+      "subCounty": "Roysambu",
+      "borough": "Northern",
+      "lat": -1.214,
+      "lng": 36.896,
+      "mainRoad": "Kamiti Rd",
+      "mainRoadLat": -1.212,
+      "mainRoadLng": 36.894,
+      "priceRange": "8k-15k",
+      "avgPrice": {
+        "bedsitter": 6500,
+        "1BR": 10000,
+        "2BR": 15000
+      }
+    },
+    {
+      "name": "Githurai 44",
+      "subCounty": "Roysambu",
+      "borough": "Northern",
+      "lat": -1.199,
+      "lng": 36.903,
+      "mainRoad": "Kamiti Rd",
+      "mainRoadLat": -1.197,
+      "mainRoadLng": 36.901,
+      "priceRange": "6k-10k",
+      "avgPrice": {
+        "bedsitter": 5000,
+        "1BR": 8000,
+        "2BR": 12000
+      }
+    },
+    {
+      "name": "Kahawa West",
+      "subCounty": "Roysambu",
+      "borough": "Northern",
+      "lat": -1.19,
+      "lng": 36.899,
+      "mainRoad": "Kamiti Rd",
+      "mainRoadLat": -1.188,
+      "mainRoadLng": 36.897,
+      "priceRange": "7k-12k",
+      "avgPrice": {
+        "bedsitter": 6000,
+        "1BR": 9000,
+        "2BR": 13500
+      }
+    },
+    {
+      "name": "Mirema",
+      "subCounty": "Roysambu",
+      "borough": "Northern",
+      "lat": -1.208,
+      "lng": 36.874,
+      "mainRoad": "Mirema Dr",
+      "mainRoadLat": -1.206,
+      "mainRoadLng": 36.872,
+      "priceRange": "8k-14k",
+      "avgPrice": {
+        "bedsitter": 7000,
+        "1BR": 11000,
+        "2BR": 16000
+      }
+    },
+    {
+      "name": "Garden Estate",
+      "subCounty": "Roysambu",
+      "borough": "Northern",
+      "lat": -1.2,
+      "lng": 36.863,
+      "mainRoad": "Thika Rd",
+      "mainRoadLat": -1.198,
+      "mainRoadLng": 36.861,
+      "priceRange": "11k-18k",
+      "avgPrice": {
+        "bedsitter": 9000,
+        "1BR": 14000,
+        "2BR": 20000
+      }
+    },
+    {
+      "name": "Kasarani",
+      "subCounty": "Kasarani",
+      "borough": "Northern",
+      "lat": -1.22,
+      "lng": 36.904,
+      "mainRoad": "Thika Rd",
+      "mainRoadLat": -1.218,
+      "mainRoadLng": 36.902,
+      "priceRange": "10k-18k",
+      "avgPrice": {
+        "bedsitter": 7000,
+        "1BR": 11000,
+        "2BR": 16000
+      }
+    },
+    {
+      "name": "Clay City",
+      "subCounty": "Kasarani",
+      "borough": "Northern",
+      "lat": -1.227,
+      "lng": 36.912,
+      "mainRoad": "Clay City Rd",
+      "mainRoadLat": -1.225,
+      "mainRoadLng": 36.91,
+      "priceRange": "8k-13k",
+      "avgPrice": {
+        "bedsitter": 6000,
+        "1BR": 9500,
+        "2BR": 14000
+      }
+    },
+    {
+      "name": "Mwiki",
+      "subCounty": "Kasarani",
+      "borough": "Northern",
+      "lat": -1.236,
+      "lng": 36.925,
+      "mainRoad": "Mwiki Rd",
+      "mainRoadLat": -1.234,
+      "mainRoadLng": 36.923,
+      "priceRange": "7k-12k",
+      "avgPrice": {
+        "bedsitter": 5500,
+        "1BR": 8500,
+        "2BR": 12500
+      }
+    },
+    {
+      "name": "Ruai",
+      "subCounty": "Kasarani",
+      "borough": "Northern",
+      "lat": -1.266,
+      "lng": 36.972,
+      "mainRoad": "Kangundo Rd",
+      "mainRoadLat": -1.264,
+      "mainRoadLng": 36.97,
+      "priceRange": "5k-9k",
+      "avgPrice": {
+        "bedsitter": 4500,
+        "1BR": 7000,
+        "2BR": 10000
+      }
+    }
+  ],
+  "aliasMap": {
+    "baba": "Babadogo",
+    "babadogo": "Babadogo",
+    "buru": "Buruburu Phase 1",
+    "buruburu": "Buruburu Phase 1",
+    "clay": "Clay City",
+    "dando": "Dandora Phase 1",
+    "dandora": "Dandora Phase 1",
+    "eastlei": "Eastleigh North",
+    "eastleigh": "Eastleigh North",
+    "embakasi": "Embakasi Village",
+    "garden": "Garden Estate",
+    "githu": "Githurai 44",
+    "githurai": "Githurai 44",
+    "huruma": "Huruma",
+    "imara": "Imara Daima",
+    "kahawa": "Kahawa West",
+    "kangemi": "Kangemi",
+    "karen": "Karen",
+    "kariobangi": "Kariobangi South",
+    "kasa": "Kasarani",
+    "kasarani": "Kasarani",
+    "kawang": "Kawangware",
+    "kawangware": "Kawangware",
+    "kayole": "Kayole Central",
+    "kibra": "Kibra",
+    "kile": "Kileleshwa",
+    "kileleshwa": "Kileleshwa",
+    "kilimani": "Kilimani",
+    "komarock": "Komarock",
+    "langata": "Langata",
+    "lavi": "Lavington",
+    "lavington": "Lavington",
+    "makadara": "Makadara",
+    "mathare": "Mathare",
+    "mirema": "Mirema",
+    "mwiki": "Mwiki",
+    "ngara": "Ngara",
+    "pangani": "Pangani",
+    "parkie": "Parklands",
+    "parklands": "Parklands",
+    "pipe": "Pipeline",
+    "pipeline": "Pipeline",
+    "riruta": "Riruta",
+    "roysa": "Roysambu",
+    "roysambu": "Roysambu",
+    "ruai": "Ruai",
+    "sate": "Satellite",
+    "satellite": "Satellite",
+    "south c": "South C",
+    "syoki": "Syokimau",
+    "syokimau": "Syokimau",
+    "umo": "Umoja I",
+    "umoja": "Umoja I",
+    "utaw": "Utawala",
+    "utawala": "Utawala",
+    "zimm": "Zimmerman",
+    "zimmerman": "Zimmerman"
+  },
+  "priceBuckets": [
+    {
+      "id": "0-7k",
+      "label": "0 - 7k",
+      "min": 0,
+      "max": 7000
+    },
+    {
+      "id": "7-10k",
+      "label": "7k - 10k",
+      "min": 7000,
+      "max": 10000
+    },
+    {
+      "id": "10-15k",
+      "label": "10k - 15k",
+      "min": 10000,
+      "max": 15000
+    },
+    {
+      "id": "15-20k",
+      "label": "15k - 20k",
+      "min": 15000,
+      "max": 20000
+    },
+    {
+      "id": "20-30k",
+      "label": "20k - 30k",
+      "min": 20000,
+      "max": 30000
+    },
+    {
+      "id": "30-45k",
+      "label": "30k - 45k",
+      "min": 30000,
+      "max": 45000
+    },
+    {
+      "id": "45-70k",
+      "label": "45k - 70k",
+      "min": 45000,
+      "max": 70000
+    },
+    {
+      "id": "70k+",
+      "label": "70k+",
+      "min": 70000,
+      "max": 200000
+    }
+  ],
+  "beds": [
+    {
+      "id": "bedsitter",
+      "label": "Bedsitter",
+      "aliases": [
+        "bedsitter",
+        "bedsiter",
+        "single"
+      ]
+    },
+    {
+      "id": "1BR",
+      "label": "1BR",
+      "aliases": [
+        "1br",
+        "1 bedroom",
+        "one bedroom"
+      ]
+    },
+    {
+      "id": "2BR",
+      "label": "2BR",
+      "aliases": [
+        "2br",
+        "2 bedroom"
+      ]
+    },
+    {
+      "id": "3BR",
+      "label": "3BR",
+      "aliases": [
+        "3br",
+        "3 bedroom"
+      ]
+    }
+  ],
+  "amenities": [
+    {
+      "id": "water",
+      "label": "Water 24/7",
+      "keywords": [
+        "water",
+        "borehole",
+        "24/7"
+      ]
+    },
+    {
+      "id": "parking",
+      "label": "Parking",
+      "keywords": [
+        "parking",
+        "garage"
+      ]
+    },
+    {
+      "id": "security",
+      "label": "Security",
+      "keywords": [
+        "security",
+        "guard",
+        "cctv"
+      ]
+    },
+    {
+      "id": "tokens",
+      "label": "Tokens",
+      "keywords": [
+        "tokens",
+        "prepaid",
+        "kplc"
+      ]
+    },
+    {
+      "id": "fibre",
+      "label": "Fibre",
+      "keywords": [
+        "fibre",
+        "fiber",
+        "wifi",
+        "internet"
+      ]
+    },
+    {
+      "id": "no_fee",
+      "label": "No Viewing Fee",
+      "keywords": [],
+      "isTrustFilter": true
+    }
+  ],
+  "mainRoads": [
+    {
+      "name": "Ngong Road",
+      "lat": -1.29,
+      "lng": 36.78
+    },
+    {
+      "name": "Waiyaki Way",
+      "lat": -1.26,
+      "lng": 36.74
+    },
+    {
+      "name": "Thika Road",
+      "lat": -1.22,
+      "lng": 36.89
+    },
+    {
+      "name": "Mombasa Road",
+      "lat": -1.32,
+      "lng": 36.88
+    },
+    {
+      "name": "Eastern Bypass",
+      "lat": -1.29,
+      "lng": 36.95
+    },
+    {
+      "name": "Jogoo Road",
+      "lat": -1.29,
+      "lng": 36.86
+    },
+    {
+      "name": "Outering Road",
+      "lat": -1.26,
+      "lng": 36.88
+    },
+    {
+      "name": "Kangundo Road",
+      "lat": -1.28,
+      "lng": 36.92
+    }
+  ]
+}
