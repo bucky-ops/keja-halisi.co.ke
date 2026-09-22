@@ -1034,7 +1034,9 @@ export default function PostView() {
                 onChange={(next) => setEvidence(next)}
               />
               <p className={cn("text-[11.5px] font-extrabold", evidenceCount === 5 ? "text-ok" : "text-warn-strong")}>
-                {evidenceCount}/5 evidence clips checked — publishing is blocked until all 5 are ticked.
+                {evidenceCount === 5
+                  ? "5/5 evidence clips checked — full evidence verified, publish is unlocked."
+                  : `${evidenceCount}/5 evidence clips checked — publishing is blocked until all 5 are ticked.`}
               </p>
 
               <div className="grid gap-5 md:grid-cols-2">
