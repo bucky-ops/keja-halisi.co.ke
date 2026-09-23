@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Home, Building2, PlusCircle, ShieldCheck, Menu, X, MapPin, Bell, Sun, Moon,
-  Scale, LayoutDashboard, ShieldAlert, Wallet, Zap, ZapOff, Globe, ChevronDown, Heart, Search,
+  Scale, LayoutDashboard, Wallet, Zap, ZapOff, Globe, ChevronDown, Heart, Search,
   Trophy, GraduationCap, Calculator, ShieldQuestion,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,7 +28,8 @@ const MORE_ITEMS: { key: string; labelKey: DictKey; icon: typeof LayoutDashboard
   { key: "verify", labelKey: "navVerify", icon: ShieldCheck },
   { key: "dashboard", labelKey: "navDashboard", icon: LayoutDashboard },
   { key: "payments", labelKey: "navPayments", icon: Wallet },
-  { key: "admin", labelKey: "navAdmin", icon: ShieldAlert },
+  // admin intentionally unlisted — console is hidden from all public menus;
+  // operators reach it via the direct deep-link /?admin (PIN-gated server-side)
 ];
 
 export function TopBar() {
@@ -343,7 +344,7 @@ export function Header() {
               { key: "shield", labelKey: "navShield" as DictKey },
               { key: "dashboard", labelKey: "navDashboard" as DictKey },
               { key: "payments", labelKey: "navPayments" as DictKey },
-              { key: "admin", labelKey: "navAdmin" as DictKey },
+              // no admin — hidden console, direct URL only
             ].map((item) => (
               <button
                 key={item.key}

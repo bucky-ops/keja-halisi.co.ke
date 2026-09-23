@@ -5,7 +5,7 @@
 // (React Compiler auto-memoizes; no manual useMemo/useCallback here).
 import { useEffect, useRef, useState } from "react";
 import {
-  Search, Home, MapPin, Heart, Scale, ShieldCheck, LayoutDashboard, ShieldAlert,
+  Search, Home, MapPin, Heart, Scale, ShieldCheck, LayoutDashboard,
   Wallet, Play, Moon, Sun, Globe, Zap, ZapOff, Building2, CornerDownLeft, ListFilter,
   Trophy, GraduationCap, Calculator, ShieldQuestion,
 } from "lucide-react";
@@ -95,7 +95,6 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
     post: Play,
     dashboard: LayoutDashboard,
     payments: Wallet,
-    admin: ShieldAlert,
     agents: Trophy,
     quiz: GraduationCap,
     afford: Calculator,
@@ -113,7 +112,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
     post: "Post a house",
     dashboard: "Dashboard — owner/developer",
     payments: "Pricing & payments",
-    admin: "Admin trust console",
+    // admin unlisted — hidden console (direct /?admin deep-link only)
     agents: "Agents — trust leaderboard",
     quiz: "Scam safety quiz — Scam au Legit?",
     afford: "Rent reality check — can you afford it?",

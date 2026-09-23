@@ -82,6 +82,13 @@ export default function Page() {
     if (shieldQ) navigate("shield", { q: shieldQ });
   }, [navigate]);
 
+  // HIDDEN admin entry — no public menu/palette link anywhere. Operators reach the
+  // PIN-gated console only via the direct deep-link /?admin (API routes stay guarded
+  // server-side by x-admin-pin; this just routes to the view, it grants nothing).
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("admin")) navigate("admin");
+  }, [navigate]);
+
   // keep document title in sync with the active view (SEO nicety inside SPA)
   useEffect(() => {
     const titles: Record<string, string> = {
